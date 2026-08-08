@@ -700,7 +700,7 @@ class FixedTraceAffineAnalyzer:
         w_in = np.asarray(weight.quantize(model.input_weights), dtype=np.float64)
         w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
         bias = np.asarray(state.quantize(model.bias), dtype=np.float64)
-        base_drive = events @ w_in + bias
+        input_drive = events @ w_in
         voltage = _HybridAffine.exact(np.zeros((1, model.hidden_size)))
         threshold = _HybridAffine.semantic_interval(
             model.threshold[None, :] * box.threshold_scale_bounds[0],
@@ -741,7 +741,9 @@ class FixedTraceAffineAnalyzer:
                     first_uncertain = step
 
         for step in range(events.shape[1]):
-            exact_current = base_drive[:, step, :] + previous_spikes @ w_rec
+            exact_current = (
+                input_drive[:, step, :] + previous_spikes @ w_rec + bias
+            )
             current = _HybridAffine.exact(
                 np.asarray(state.quantize(exact_current), dtype=np.float64)
             )
@@ -844,7 +846,7 @@ class PolygonBranchCertifier:
         w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
         w_out = np.asarray(weight.quantize(model.output_weights), dtype=np.float64)
         bias = np.asarray(state.quantize(model.bias), dtype=np.float64)
-        base_drive = events @ w_in + bias
+        input_drive = events @ w_in
         threshold = _HybridAffine.semantic_interval(
             model.threshold[None, :] * box.threshold_scale_bounds[0],
             model.threshold[None, :] * box.threshold_scale_bounds[1],
@@ -877,8 +879,9 @@ class PolygonBranchCertifier:
             next_branches: list[_PolygonBranch] = []
             for branch in branches:
                 exact_current = (
-                    base_drive[0, step, :]
+                    input_drive[0, step, :]
                     + branch.previous_spikes @ w_rec
+                    + bias
                 )
                 current = _HybridAffine.exact(
                     np.asarray(
