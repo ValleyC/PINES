@@ -94,12 +94,28 @@ uniformly tight across architectures and semantic regimes.
   \label{fig:recurrent-vs-feedforward}
 \end{figure}
 
-A label-free repair pilot on one reset-to-value seed recovers 83.5\% of the lost
-accuracy, exceeding the 70\% recovery target and global threshold scaling.
-However, its post-repair disagreement bound is still 17.1\%, rejecting every
-practical budget. Repair can therefore restore aggregate accuracy without
-restoring decision identity. The current evidence supports the semantic
-transport problem and repair opportunity, but it does \emph{not} support the
-intended tight-certificate claim. The next formulation must either target a
-different certifiable quantity, introduce and validate additional assumptions,
-or accept a systems/risk-ranking contribution.
+Across five reset-to-value seeds, certificate-directed repair recovers
+$77.2\pm4.5\%$ of lost test accuracy, compared with $74.2\pm3.8\%$ for pure
+logit distillation and $40.1\pm11.6\%$ for global threshold scaling. It clears
+the 70\% recovery target for every seed. This favorable accuracy result does not
+yield a deployable certificate: its mean post-repair upper bound is 15.1 points,
+no seed is accepted at a five-point budget, and the bound is 1.85 points looser
+than logit-only distillation on average. Figure~\ref{fig:shd-repair} makes the
+two criteria explicit.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/shd_repair_comparison.pdf}
+  \caption{Five-seed, label-free repair of reset-to-value semantics. The
+  proposed objective recovers the most accuracy on average, but no method
+  restores sufficient decision identity to certify a five-point budget on the
+  untouched audit split. Dashed lines are the preregistered targets.}
+  \label{fig:shd-repair}
+\end{figure}
+
+Repair can therefore restore aggregate accuracy without restoring decision
+identity. The current evidence supports the semantic transport problem and
+repair opportunity, but it does \emph{not} support the intended tight-certificate
+claim. The next formulation must either target a different certifiable quantity,
+introduce and validate additional assumptions, or accept a systems/risk-ranking
+contribution.

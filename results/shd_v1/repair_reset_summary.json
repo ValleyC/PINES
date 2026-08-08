@@ -1,0 +1,88 @@
+{
+  "audit_samples_per_seed": 861,
+  "calibration_samples_per_seed": 800,
+  "code_revision": "6e896b1a15d2964b8e15ddf83c278daf1ef8ed4f",
+  "condition": "reset_to_value",
+  "formulation_assessment": "Certificate-directed repair restores more held-out accuracy than global threshold scaling and slightly more than logit-only distillation, but its untouched-audit disagreement bound remains vacuous and is looser than logit-only. Accuracy recovery does not imply restored decision identity.",
+  "gate_assessment": {
+    "calibration_audit_disjoint": true,
+    "certificate_directed_beats_global_threshold_mean_recovery": true,
+    "certificate_directed_beats_logit_only_mean_recovery": true,
+    "certificate_directed_certifies_five_point_budget": false,
+    "certificate_directed_mean_recovery_at_least_70_percent": true
+  },
+  "input_report_hashes": {
+    "seed_1701_certificate_directed": "5f5a787307b7bb8a0690b701568610053fb07e3cd988b48c095db3a5d5d6a599",
+    "seed_1701_global_threshold": "33d63e760381b9e43559d8637a1b9bf8da1c4a9e1270655fe23bfb5a35288abd",
+    "seed_1701_logit_only": "b68a79e6ce904be39b7c10271d0e5ab96b876376510375516e9d6aaa00034071",
+    "seed_2718_certificate_directed": "6647ba840cf23f99a08701d0939fc8c064bf6fd33fa4e8fbb8fe982519aa845f",
+    "seed_2718_global_threshold": "e8a2eff249d3a9b0c8db1b0297f7cc5b2696f14fc3c9a459e4320028c4e24458",
+    "seed_2718_logit_only": "78dac901fc81994bc2dbb49cb6fbd3a5864664ccf2651deec1dc1b4ce61ac5b5",
+    "seed_3141_certificate_directed": "cf3d55e9d3c17c440c5527c9b4cbb27807d3f38b46a68421befa477a193756d1",
+    "seed_3141_global_threshold": "c914e1e303247f4541f0fd076dbfdbb94ebcc038ce1cf50868c8a6fdc3793537",
+    "seed_3141_logit_only": "cd4bd7416b38a1bb46922a76bba717b8342bf645fbbe1c04463457ccd098721c",
+    "seed_5772_certificate_directed": "c8884778f918c7fe60778f33419f9e4b674c358fee4a2a4e8acb54e1a9f2516e",
+    "seed_5772_global_threshold": "2aee1b623dcea933684cf2e8ce3b89d711382ef2b7da6e75c98099152f7ed6ba",
+    "seed_5772_logit_only": "b8b75e6476a16f0b34f808f82443428d5b3efb521cc892cf7611ecc5bbca58d6",
+    "seed_8119_certificate_directed": "5be5afc8a7e2f7ccd4760d64fe920f7ff7aa4248e936239f6b036e6b60202f21",
+    "seed_8119_global_threshold": "ce3134f557e54da65f3190add902389d947907785433cdcd1c619dd437d1148e",
+    "seed_8119_logit_only": "4745263999d0a6c69edc1aa5a2154081bd8771eb13d48b95072a489c3c864359"
+  },
+  "label_budget": 0,
+  "paired_comparisons": {
+    "certificate_minus_global_recovery_mean": 0.3706432829279825,
+    "certificate_minus_logit_bound_mean": 0.01847221241222883,
+    "certificate_minus_logit_recovery_mean": 0.03027123315670226
+  },
+  "per_method": [
+    {
+      "accuracy_recovery_mean": 0.7720241236518244,
+      "accuracy_recovery_std": 0.0445685052729711,
+      "after_accuracy_loss_mean": 0.02226148409893991,
+      "after_audit_disagreement_mean": 0.13031358885017422,
+      "mean_elapsed_seconds": 26.21720974002965,
+      "method": "certificate_directed",
+      "post_repair_upper_bound_max": 0.17130140644133607,
+      "post_repair_upper_bound_mean": 0.15065638310248905,
+      "post_repair_upper_bound_min": 0.12576286487179594,
+      "seeds_certified_at_five_point_budget": 0,
+      "seeds_recovering_at_least_70_percent": 5
+    },
+    {
+      "accuracy_recovery_mean": 0.741752890495122,
+      "accuracy_recovery_std": 0.03795724707587288,
+      "after_accuracy_loss_mean": 0.025530035335689028,
+      "after_audit_disagreement_mean": 0.11289198606271778,
+      "mean_elapsed_seconds": 25.846269600000234,
+      "method": "logit_only",
+      "post_repair_upper_bound_max": 0.14554067307173402,
+      "post_repair_upper_bound_mean": 0.13218417069026023,
+      "post_repair_upper_bound_min": 0.11332126014115312,
+      "seeds_certified_at_five_point_budget": 0,
+      "seeds_recovering_at_least_70_percent": 4
+    },
+    {
+      "accuracy_recovery_mean": 0.40138084072384184,
+      "accuracy_recovery_std": 0.11643061735832648,
+      "after_accuracy_loss_mean": 0.057155477031802085,
+      "after_audit_disagreement_mean": 0.15261324041811847,
+      "mean_elapsed_seconds": 3.8807257599662988,
+      "method": "global_threshold",
+      "post_repair_upper_bound_max": 0.18715460877110945,
+      "post_repair_upper_bound_mean": 0.17421691113840035,
+      "post_repair_upper_bound_min": 0.15537836020144624,
+      "seeds_certified_at_five_point_budget": 0,
+      "seeds_recovering_at_least_70_percent": 0
+    }
+  ],
+  "rows_csv_hash": "644e98d35fdfb832dcbcd5a6f661bc831eeaf5b65c3e586acb399d00372fe1a1",
+  "schema_version": "SHDRepairAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed software repair evidence; not physical evidence"
+}
