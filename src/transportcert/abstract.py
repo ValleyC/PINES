@@ -846,6 +846,27 @@ class AdaptiveDecisionMarginCertifier:
             raise ValueError("adaptive certification currently accepts one input")
         if max_leaves < 1:
             raise ValueError("max_leaves must be positive")
+        reference_predictions = VectorizedEmulator().run(
+            model, events, reference
+        ).predictions
+
+        def analyze(leaf: SemanticsBox) -> object:
+            cached_method = getattr(
+                self.member_certifier,
+                "certify_with_reference_predictions",
+                None,
+            )
+            if cached_method is not None:
+                return cached_method(
+                    model,
+                    events,
+                    reference,
+                    leaf,
+                    reference_predictions,
+                )
+            return self.member_certifier.certify(
+                model, events, reference, leaf
+            )
         root_timestep_width = box.timestep_bounds[1] - box.timestep_bounds[0]
         root_threshold_width = (
             box.threshold_scale_bounds[1] - box.threshold_scale_bounds[0]
@@ -854,7 +875,7 @@ class AdaptiveDecisionMarginCertifier:
         threshold_active = root_threshold_width > 0.0
         root_area = self._measure(box, timestep_active, threshold_active)
         if not timestep_active and not threshold_active:
-            result = self.member_certifier.certify(model, events, reference, box)
+            result = analyze(box)
             certified = bool(result.certified[0])
             return AdaptiveMarginCertificateResult(
                 certified=certified,
@@ -880,9 +901,7 @@ class AdaptiveDecisionMarginCertifier:
         while queue:
             _, depth, _, leaf = heapq.heappop(queue)
             maximum_depth = max(maximum_depth, depth)
-            result = self.member_certifier.certify(
-                model, events, reference, leaf
-            )
+            result = analyze(leaf)
             analyzed += 1
             leaf_area = self._measure(
                 leaf, timestep_active, threshold_active

@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from transportcert.abstract import AdaptiveDecisionMarginCertifier, SemanticsBox
+from transportcert.affine import AffineGuardFamilyCertifier
 from transportcert.artifacts import (
     array_hash,
     code_revision,
@@ -24,6 +25,11 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--condition", default="reset_to_value")
+    parser.add_argument(
+        "--domain",
+        choices=("decision_margin", "affine_guard"),
+        default="decision_margin",
+    )
     parser.add_argument("--radius", type=float, default=0.01)
     parser.add_argument("--sample-count", type=int, default=2)
     parser.add_argument("--selection-pool", type=int, default=128)
@@ -46,7 +52,12 @@ def main() -> None:
     seed_dir = root / args.artifact_root / f"seed_{args.seed}"
     output_dir = root / args.output_root / f"seed_{args.seed}"
     output_dir.mkdir(parents=True, exist_ok=True)
-    report_path = output_dir / f"{args.condition}_adaptive_margin.json"
+    suffix = (
+        "adaptive_margin"
+        if args.domain == "decision_margin"
+        else "adaptive_affine"
+    )
+    report_path = output_dir / f"{args.condition}_{suffix}.json"
     if report_path.exists():
         raise FileExistsError(f"adaptive-margin output exists: {report_path}")
 
@@ -113,7 +124,11 @@ def main() -> None:
         output_delays=(target.output_delay_steps,),
         name=f"{args.condition}-joint-pm-{args.radius:.6g}",
     )
-    certifier = AdaptiveDecisionMarginCertifier()
+    certifier = AdaptiveDecisionMarginCertifier(
+        AffineGuardFamilyCertifier()
+        if args.domain == "affine_guard"
+        else None
+    )
     rows = []
     for max_leaves in args.max_leaves:
         for position, (dataset_index, frame, prediction) in enumerate(
@@ -151,7 +166,7 @@ def main() -> None:
                 }
             )
             print(
-                f"adaptive margin seed={args.seed} leaves={max_leaves} "
+                f"adaptive {args.domain} seed={args.seed} leaves={max_leaves} "
                 f"input={position + 1}/{len(selected_indices)} "
                 f"certified={result.certified} "
                 f"covered={result.certified_parameter_fraction:.4f}",
@@ -159,13 +174,14 @@ def main() -> None:
             )
 
     report = {
-        "schema_version": "SHDAdaptiveMarginCertificate/v1",
+        "schema_version": "SHDAdaptiveMarginCertificate/v2",
         "status": (
             "sound single-seed method-development diagnostic selected from inputs with "
             "stable predictions on a finite grid; grid stability is not a certificate"
         ),
         "seed": args.seed,
         "condition": args.condition,
+        "domain": args.domain,
         "relative_radius": args.radius,
         "selection_pool": len(pool_indices),
         "selection_grid_resolution": args.selection_grid,
