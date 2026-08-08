@@ -122,6 +122,10 @@ class IntervalCertificateResult:
 def _linear_interval(
     lower: np.ndarray, upper: np.ndarray, weights: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
+    if not np.any(weights):
+        shape = (*lower.shape[:-1], weights.shape[1])
+        zeros = np.zeros(shape, dtype=np.result_type(lower, upper, weights))
+        return zeros, zeros.copy()
     positive = np.maximum(weights, 0.0)
     negative = np.minimum(weights, 0.0)
     return lower @ positive + upper @ negative, upper @ positive + lower @ negative
