@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 76
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 85
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -85,6 +85,12 @@
   retires no sub-box for the first two through 256 leaves and still covers 0% of
   the first input after 8,191 analyses and 4,096 leaves. Adaptive scheduling
   cannot rescue the non-relational recurrent-state domain.
+- Sound relational affine-guard advance: shared timestep/threshold generators
+  through recurrent hidden states yield the first nonzero SHD local proof
+  coverage—0.15% at 4-by-4, 3.74% at 8-by-8, and 18.46% at 16-by-16, versus zero
+  for decision intervals. Adaptive affine coverage on a grid-stable input rises
+  to 95.61% at 16,384 leaves, but unresolved guard-surface cells prevent a full
+  certificate. This method advances to symbolic guard cuts, not five seeds yet.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
@@ -137,22 +143,21 @@ uniformly tighter without adding information or assumptions. A top-venue claim
 must therefore specify and validate such an assumption rather than presenting
 raw label-free disagreement as both universal and operationally tight.
 
-The NeurIPS framing remains conditional on a materially tighter recurrence-aware
-sound abstraction and prospective physical conformance. The sampled full-family
-ceiling leaves enough room to pass the 20% gate, but interval merging, one fixed
-trace, and explicit spike-vector lists have now all failed. The remaining method
-must compress symbolic guards or retain decision-relevant correlations without
-enumerating paths. If that does not reverse the continuous-family gate, the
-project follows the declared pivot to a narrower finite-family or
-systems/risk-ranking contribution.
+The NeurIPS framing remains conditional on a full recurrence-aware certificate
+and prospective physical conformance. Relational affine guards now prove local
+SHD regions and cover 95.61% of one grid-stable input's parameter box, so the
+continuous-family route is no longer stalled at zero. It still fails the actual
+per-input gate: unresolved cells track recurrent guard surfaces. The next method
+must add symbolic half-space cuts or constrained-zonotope guards and produce full
+certificates before expansion to five seeds. If that fails, the project follows
+the declared pivot to a narrower finite-family or systems/risk-ranking
+contribution.
 
 ## Open experimental milestones
 
-- Symbolic guard compression or a decision-level correlated domain. Interval
-  merging, a single fixed branch, uniform partitioning, explicit branch lists,
-  output-only decision-margin correlation, and adaptive interval covers are now
-  empirically ruled out at plus/minus 1%. The remaining domain must retain
-  correlation through recurrent hidden states and threshold guards.
+- Symbolic guard-surface cuts or a constrained-zonotope extension to the affine
+  recurrent domain. Axis-aligned affine leaves reach 95.61% parameter coverage
+  but no full input certificate; five-seed expansion remains gated on completion.
 - Multi-step family-verified repair margins. A pointwise center-execution guard
   penalty and worst-loss objectives over sparse execution grids are now
   empirically ruled out as certificate-restoring objectives.

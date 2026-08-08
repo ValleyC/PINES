@@ -232,6 +232,29 @@ python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --sample-c
 python experiments/aggregate_shd_adaptive_margin_domain.py
 ```
 
+### Relational affine-guard advance
+
+`affine_guard_domain_summary.json` records the first sound continuous-domain
+method with nonzero local SHD coverage. It carries shared timestep and threshold
+generators through recurrent states and introduces residual intervals only for
+nonlinear products and threshold-uncertain spikes. Uniform local cell-input
+coverage grows from 0.15% at 4-by-4 to 3.74% at 8-by-8 and 18.46% at 16-by-16;
+the output-correlated interval baseline remains at zero.
+
+On the first finite-grid-stable input, adaptive affine certified parameter
+volume grows from 3.13% at 64 leaves to 30.66%, 61.47%, 85.72%, and 95.61% at
+256, 1,024, 4,096, and 16,384 leaves. This is not a full certificate: unresolved
+guard-surface cells remain, and certified volume is not a probability over
+semantics. The route advances to symbolic guard-surface cuts, not to five seeds.
+
+```powershell
+python experiments/run_shd_affine_guard_certificate.py --seed 1701 --partitions 1 2 4 8
+python experiments/run_shd_affine_guard_certificate.py --seed 1701 --partitions 16 --sample-count 32 --output-root artifacts/shd_v28_affine_guard_p16
+python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --domain affine_guard --sample-count 1 --max-leaves 64 256 1024 4096 --output-root artifacts/shd_v29_adaptive_affine
+python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --domain affine_guard --sample-count 1 --max-leaves 16384 --output-root artifacts/shd_v30_adaptive_affine_p16384
+python experiments/aggregate_shd_affine_guard_domain.py
+```
+
 ### Post-repair bounded-family headroom
 
 `repair_family_grid_summary.json` compares selected reset-target models against

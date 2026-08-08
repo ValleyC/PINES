@@ -248,6 +248,16 @@ no sub-box through 256 leaves; on the first input, it still covers 0\% after
 8,191 analyzed boxes and 4,096 final leaves. Thus the problem is not uniform
 partition scheduling: no local leaf is provable at the reached resolution.
 
+Relational affine guards change the local result. Ordinary decision intervals
+prove zero cell--inputs at every tested resolution; the affine domain proves
+3/2,048 at $4\times4$, 306/8,192 (3.74\%) at $8\times8$, and 1,512/8,192
+(18.46\%) at $16\times16$. On the same first grid-stable input, adaptive affine
+coverage rises from 3.13\% at 64 leaves to 30.66\% at 256, 61.47\% at 1,024,
+85.72\% at 4,096, and 95.61\% at 16,384. No full certificate is issued. This is
+the first sound domain with nonzero SHD local coverage, but the remaining
+guard-surface residue calls for symbolic constraint cuts rather than still finer
+axis-aligned boxes.
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/shd_branch_set_feasibility.pdf}
