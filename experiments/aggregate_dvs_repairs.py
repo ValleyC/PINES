@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from pathlib import Path
@@ -26,13 +27,19 @@ def _stats(values: list[float]) -> dict[str, float]:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--include-qat", action="store_true")
+    parser.add_argument("--suffix", default="")
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     artifact_root = root / "artifacts" / "dvs_gesture_v4_repairs"
     output_root = root / "results" / "dvs_gesture_v3"
-    summary_path = output_root / "repair_floor_summary.json"
-    rows_path = output_root / "repair_floor_rows.csv"
-    figure_pdf = root / "paper" / "figures" / "dvs_repair_floor.pdf"
-    figure_png = root / "paper" / "figures" / "dvs_repair_floor.png"
+    methods = METHODS + (("per_platform_qat",) if args.include_qat else ())
+    suffix = f"_{args.suffix}" if args.suffix else ""
+    summary_path = output_root / f"repair_floor{suffix}_summary.json"
+    rows_path = output_root / f"repair_floor{suffix}_rows.csv"
+    figure_pdf = root / "paper" / "figures" / f"dvs_repair_floor{suffix}.pdf"
+    figure_png = root / "paper" / "figures" / f"dvs_repair_floor{suffix}.png"
     if any(
         path.exists() for path in (summary_path, rows_path, figure_pdf, figure_png)
     ):
@@ -41,7 +48,7 @@ def main() -> None:
     rows: list[dict[str, object]] = []
     report_hashes: dict[str, str] = {}
     for seed in SEEDS:
-        for method in METHODS:
+        for method in methods:
             path = (
                 artifact_root
                 / f"seed_{seed}"
@@ -99,7 +106,7 @@ def main() -> None:
 
     method_rows: dict[str, list[dict[str, object]]] = {}
     per_method: list[dict[str, object]] = []
-    for method in METHODS:
+    for method in methods:
         selected = [row for row in rows if row["method"] == method]
         method_rows[method] = selected
         per_method.append(
@@ -144,19 +151,27 @@ def main() -> None:
     certificate_rows = method_rows["certificate_directed"]
     logit_rows = method_rows["logit_only"]
     global_rows = method_rows["global_threshold"]
+    qat_rows = method_rows.get("per_platform_qat")
     summary = {
-        "schema_version": "DVSGestureRepairAggregate/v1",
+        "schema_version": (
+            "DVSGestureRepairAggregate/v2"
+            if args.include_qat
+            else "DVSGestureRepairAggregate/v1"
+        ),
         "status": (
             "five-seed software development evidence; official test data helped select "
             "the reference pipeline before target semantics were frozen"
         ),
         "condition": CONDITION,
         "seeds": list(SEEDS),
-        "methods": list(METHODS),
+        "methods": list(methods),
         "protocol": {
             "calibration_samples_per_seed": 97,
             "audit_samples_per_seed": 104,
-            "label_budget": 0,
+            "label_budgets": {
+                method: int(method_rows[method][0]["label_budget"])
+                for method in methods
+            },
             "gradient_epochs": 40,
             "gradient_steps": 280,
             "simultaneous_alpha_per_report": 0.005,
@@ -187,6 +202,26 @@ def main() -> None:
                     - float(logit["after_certificate_upper_bound"])
                     for certificate, logit in zip(certificate_rows, logit_rows)
                 ]
+            ),
+            **(
+                {
+                    "certificate_minus_labeled_qat": _stats(
+                        [
+                            float(certificate["accuracy_recovery_fraction"])
+                            - float(qat["accuracy_recovery_fraction"])
+                            for certificate, qat in zip(certificate_rows, qat_rows)
+                        ]
+                    ),
+                    "certificate_minus_labeled_qat_bound": _stats(
+                        [
+                            float(certificate["after_certificate_upper_bound"])
+                            - float(qat["after_certificate_upper_bound"])
+                            for certificate, qat in zip(certificate_rows, qat_rows)
+                        ]
+                    ),
+                }
+                if qat_rows is not None
+                else {}
             ),
         },
         "gate_assessment": {
@@ -225,6 +260,14 @@ def main() -> None:
         },
         "formulation_assessment": (
             "Restricted label-free calibration generalizes its accuracy-recovery effect to "
+            "a convolutional/recurrent SNN and clears 70 percent for every seed. It beats "
+            "logit-only in only three of five paired seeds and has a substantially looser "
+            "audit bound. Labeled QAT has the strongest mean recovery when included, but "
+            "its certificate is as loose as certificate-directed repair. The repair "
+            "mechanism is supported, but neither objective superiority nor a tight "
+            "certificate is supported. This remains development rather than sequestered evidence."
+            if args.include_qat
+            else "Restricted label-free calibration generalizes its accuracy-recovery effect to "
             "a convolutional/recurrent SNN: certificate-directed repair clears 70 percent "
             "for every seed and has the best mean recovery. It beats logit-only in only "
             "three of five paired seeds and has a substantially looser audit bound. The "
@@ -237,13 +280,17 @@ def main() -> None:
     }
     write_json_immutable(summary_path, summary)
 
-    labels = ("Cert-directed", "Logit-only", "Global threshold")
-    colors = ("#7570b3", "#1b9e77", "#d95f02")
+    labels = ("Cert-directed", "Logit-only", "Global threshold") + (
+        ("QAT (97 labels)",) if args.include_qat else ()
+    )
+    colors = ("#7570b3", "#1b9e77", "#d95f02") + (
+        ("#1f78b4",) if args.include_qat else ()
+    )
     recovery = []
     recovery_error = []
     bounds = []
     bound_error = []
-    for method in METHODS:
+    for method in methods:
         selected = method_rows[method]
         recovery_values = np.asarray(
             [float(row["accuracy_recovery_fraction"]) for row in selected]
@@ -255,7 +302,7 @@ def main() -> None:
         recovery_error.append(np.std(recovery_values, ddof=1) * 100)
         bounds.append(np.mean(bound_values) * 100)
         bound_error.append(np.std(bound_values, ddof=1) * 100)
-    positions = np.arange(len(METHODS))
+    positions = np.arange(len(methods))
     fig, axes = plt.subplots(1, 2, figsize=(9.2, 3.8), constrained_layout=True)
     axes[0].bar(
         positions, recovery, yerr=recovery_error, color=colors, capsize=3
