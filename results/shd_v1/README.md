@@ -3,7 +3,13 @@
 This directory contains the compact, tracked aggregate of the frozen five-seed
 software matrix. Large checkpoints, prediction arrays, and raw/processed data
 remain under ignored `artifacts/` and `data/` directories; their hashes are
-recorded in `software_matrix_summary.json`.
+recorded in `software_matrix_summary_float32.json`.
+
+The canonical aggregate is `software_matrix_summary_float32.json`. The original
+v1 aggregate is preserved for audit but superseded for semantics metadata: its
+runner executed float32 while its unquantized semantics object retained the
+float64 default. The corrected artifact changes hashes and metadata only; all
+predictions, accuracies, and bounds are identical.
 
 ## Result
 
@@ -22,6 +28,7 @@ Regenerate with:
 
 ```powershell
 python experiments/aggregate_shd.py
+python experiments/correct_software_aggregate_float32.py --result-root results/shd_v1 --semantic-root artifacts/shd_v1_semantics_final --benchmark SHD
 ```
 
 ## Five-seed reset repair

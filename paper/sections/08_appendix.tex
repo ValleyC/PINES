@@ -6,6 +6,14 @@ count; simultaneous confidence; static certified fraction; semantic,
 conformance, and total bounds; budget verdict; and assumptions. Artifacts are
 created once with exclusive filesystem semantics.
 
+An artifact audit found that the first SHD and N-MNIST JSON summaries declared
+unquantized float64 semantics even though the vectorized runner explicitly used
+PyTorch float32. Because non-fixed quantization is an identity in that runner,
+the prediction arrays and every reported metric are unchanged. We preserve the
+original summaries and provide immutable corrected summaries with float32
+semantics hashes, source-summary hashes, and an explicit metadata-correction
+record. DVS Gesture used the corrected float32 object from its first run.
+
 The software test matrix covers scalar/vector differential execution across both
 integration and reset rules, multiple delays, and fixed-point formats; numeric
 overflow; semantic hash stability; exact confidence limits; simultaneous
@@ -38,4 +46,3 @@ assumptions.
 \item[Physical certificate.] Statistical certificate plus a valid device canary
 and immutable manifest.
 \end{description}
-

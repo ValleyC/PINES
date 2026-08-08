@@ -4,10 +4,17 @@ This directory contains the tracked aggregate from the frozen five-seed
 N-MNIST software matrix. The raw checkpoints, preprocessed events, and per-seed
 semantic traces remain under the ignored `artifacts/` and `data/` directories.
 
+The canonical aggregate is `software_matrix_summary_float32.json`. The original
+v1 aggregate is preserved for audit but superseded for semantics metadata: its
+runner executed float32 while its unquantized semantics object retained the
+float64 default. The corrected artifact changes hashes and metadata only; all
+predictions, accuracies, and bounds are identical.
+
 Reproduce the aggregate from the raw artifacts with:
 
 ```text
 python experiments/aggregate_nmnist.py
+python experiments/correct_software_aggregate_float32.py --result-root results/nmnist_v1 --semantic-root artifacts/nmnist_v1_semantics --benchmark N-MNIST
 ```
 
 Key results across 50 seed-condition cells:
