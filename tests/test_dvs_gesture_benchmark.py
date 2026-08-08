@@ -6,8 +6,10 @@ import pytest
 from transportcert.benchmarks.dvs_gesture import (
     DVSGestureTrainConfig,
     PackedDVSGesture,
+    _quantize_tensor,
     build_dvs_conv_srnn,
 )
+from transportcert.benchmarks.dvs_repair import make_restricted_dvs_repairable
 from transportcert.semantics import ExecutionSemantics, NumericFormat
 
 
@@ -54,6 +56,50 @@ def test_dvs_fixed_semantics_produces_finite_logits() -> None:
         logits = model(events, semantics)
     assert logits.shape == (1, 3)
     assert torch.all(torch.isfinite(logits))
+
+
+def test_dvs_fixed_quantization_uses_straight_through_gradient() -> None:
+    value = torch.tensor([0.12], requires_grad=True)
+    fixed = NumericFormat("fixed", 8, 4)
+    generator = torch.Generator().manual_seed(1)
+    quantized = _quantize_tensor(value, fixed, generator)
+    assert float(quantized.detach()) == 0.125
+    quantized.sum().backward()
+    torch.testing.assert_close(value.grad, torch.ones_like(value))
+
+
+def test_restricted_dvs_repair_starts_with_identical_forward() -> None:
+    torch.manual_seed(4)
+    config = DVSGestureTrainConfig(
+        conv1_channels=2,
+        conv2_channels=3,
+        hidden_size=5,
+        epochs=1,
+        batch_size=2,
+    )
+    source = build_dvs_conv_srnn(16, 16, config, output_size=4)
+    repairable = build_dvs_conv_srnn(16, 16, config, output_size=4)
+    repairable.load_state_dict(source.state_dict())
+    repairable = make_restricted_dvs_repairable(repairable)
+    events = torch.as_tensor(
+        (np.random.default_rng(3).random((2, 5, 2, 16, 16)) < 0.05).astype(
+            np.float32
+        )
+    )
+    fixed = NumericFormat("fixed", 12, 6)
+    semantics = ExecutionSemantics(state_format=fixed, weight_format=fixed)
+    source.eval()
+    repairable.eval()
+    with torch.no_grad():
+        expected = source(events, semantics)
+        actual = repairable(events, semantics)
+    torch.testing.assert_close(actual, expected, rtol=0, atol=0)
+    trainable = sum(
+        parameter.numel()
+        for parameter in repairable.parameters()
+        if parameter.requires_grad
+    )
+    assert trainable == 25
 
 
 def test_packed_dvs_selects_windows_without_changing_sample_identity(tmp_path) -> None:

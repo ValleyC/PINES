@@ -297,7 +297,10 @@ def _quantize_tensor(value: Any, numeric: NumericFormat, generator: Any) -> Any:
     else:
         modulus = 1 << numeric.total_bits
         integers = torch.remainder(integers - minimum, modulus) + minimum
-    return integers / scale
+    hard = integers / scale
+    if torch.is_grad_enabled() and value.requires_grad:
+        return value + (hard - value).detach()
+    return hard
 
 
 def build_dvs_conv_srnn(
@@ -346,8 +349,15 @@ def build_dvs_conv_srnn(
                 self.recurrent.weight.mul_(config.recurrent_scale)
             self.aggregation_temperature = config.aggregation_temperature
 
-        def forward(self, events, semantics: ExecutionSemantics | None = None):
+        def forward(
+            self,
+            events,
+            semantics: ExecutionSemantics | None = None,
+            *,
+            surrogate_gradients: bool = False,
+        ):
             training_surrogate = semantics is None
+            use_surrogate = training_surrogate or surrogate_gradients
             if semantics is None:
                 float32 = NumericFormat("float32")
                 semantics = ExecutionSemantics(
@@ -423,7 +433,7 @@ def build_dvs_conv_srnn(
                 return alpha * voltage + (1.0 - alpha) * current
 
             def emit(voltage):
-                if training_surrogate:
+                if use_surrogate:
                     return _SurrogateSpike.apply(voltage - threshold)
                 return (voltage >= threshold).to(voltage.dtype)
 
