@@ -138,6 +138,52 @@ class DisagreementBound:
     alpha: float
 
 
+@dataclass(frozen=True)
+class DisagreementTightnessWitness:
+    disagreement_rate: float
+    reference_favoring_labels: np.ndarray
+    target_favoring_labels: np.ndarray
+    reference_minus_target_accuracy: float
+    target_minus_reference_accuracy: float
+
+
+def disagreement_tightness_witness(
+    reference: np.ndarray,
+    target: np.ndarray,
+) -> DisagreementTightnessWitness:
+    """Construct labelings that attain both signs of the disagreement bound."""
+
+    reference_predictions = np.asarray(reference)
+    target_predictions = np.asarray(target)
+    if (
+        reference_predictions.ndim != 1
+        or target_predictions.shape != reference_predictions.shape
+    ):
+        raise ValueError("prediction arrays must be one-dimensional and shape-matched")
+    if reference_predictions.size == 0:
+        raise ValueError("at least one paired prediction is required")
+    reference_labels = np.array(reference_predictions, copy=True)
+    target_labels = np.array(target_predictions, copy=True)
+    disagreement = float(np.mean(reference_predictions != target_predictions))
+    reference_change = float(
+        np.mean(reference_predictions == reference_labels)
+        - np.mean(target_predictions == reference_labels)
+    )
+    target_change = float(
+        np.mean(target_predictions == target_labels)
+        - np.mean(reference_predictions == target_labels)
+    )
+    reference_labels.setflags(write=False)
+    target_labels.setflags(write=False)
+    return DisagreementTightnessWitness(
+        disagreement_rate=disagreement,
+        reference_favoring_labels=reference_labels,
+        target_favoring_labels=target_labels,
+        reference_minus_target_accuracy=reference_change,
+        target_minus_reference_accuracy=target_change,
+    )
+
+
 def disagreement_bound(
     first: np.ndarray,
     second: np.ndarray,
