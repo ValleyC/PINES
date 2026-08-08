@@ -137,6 +137,16 @@ def main() -> None:
         label="Sound continuous-box certificate",
         color="#7570b3",
     )
+    for position, value in zip(positions + width / 2, static_values, strict=True):
+        axis.text(
+            position,
+            max(value, 0.8),
+            f"{value:.0f}%",
+            ha="center",
+            va="bottom",
+            color="#514a91",
+            fontsize=8,
+        )
     axis.axhline(20, color="black", linestyle="--", linewidth=1, label="20% gate")
     axis.set_xticks(
         positions,
