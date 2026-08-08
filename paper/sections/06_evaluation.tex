@@ -230,6 +230,16 @@ members. Figure~\ref{fig:branch-set-feasibility} therefore rejects explicit
 branch lists as the missing full-model method. Symbolic guard compression or a
 decision-level correlated relaxation is required.
 
+The direct decision-level relaxation is also insufficient. On a constructed
+witness it soundly certifies a shared-spike margin that separate logit intervals
+cannot, and randomized sampled executions remain enclosed. Yet on staged seed-
+1701 reset-family audits it certifies zero inputs at every partition count from
+$1\times1$ through $32\times32$, exactly matching ordinary intervals (128
+inputs through $4\times4$, 32 through $16\times16$, and 16 at $32\times32$).
+Thus independent output bounds are not the dominant loss; useful compression
+must preserve correlations through recurrent hidden states and threshold guards.
+Zero coverage remains an inconclusive abstraction result, not a model failure.
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/shd_branch_set_feasibility.pdf}

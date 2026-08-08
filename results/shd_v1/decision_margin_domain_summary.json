@@ -1,0 +1,78 @@
+{
+  "code_revision": "741406e05eb40ef7955a96b58b6eb936db18ccfd",
+  "condition": "reset_to_value",
+  "family_radius": 0.01,
+  "input_report_hashes": {
+    "artifacts/shd_v22_decision_margin/seed_1701/reset_to_value_decision_margin.json": "dfe8c043305007edb0539ddee4b2d8076003c288ab3322f3886617f1d63a03d0",
+    "artifacts/shd_v23_decision_margin_fine/seed_1701/reset_to_value_decision_margin.json": "ae86371825842e51dc147ee4f60e3c42f4491d4139300595e3ab27ac4b393161",
+    "artifacts/shd_v24_decision_margin_p32/seed_1701/reset_to_value_decision_margin.json": "4a63910feb99f7695fc7af05d66d0a0a5ef4b152df71c3f88ae89e33f7d76c0c"
+  },
+  "interpretation": "Direct pairwise output-margin propagation is strictly tighter than separate logit intervals on a constructed witness, but certifies no staged SHD input through 32-by-32 partitioning. Output correlation is therefore not the dominant loss; the next domain must retain correlations through recurrent hidden states and threshold guards. Zero coverage is an abstraction failure, not evidence of true prediction instability.",
+  "route_assessment": {
+    "advance_to_five_seed": false,
+    "any_decision_margin_certificate": false,
+    "any_interval_certificate": false,
+    "maximum_partitions_per_axis": 32,
+    "sampled_soundness_checks_in_unit_tests": true,
+    "synthetic_strict_improvement_witness_in_unit_tests": true
+  },
+  "rows": [
+    {
+      "decision_margin_certified_inputs": 0,
+      "decision_margin_seconds": 0.5561657999642193,
+      "interval_certified_inputs": 0,
+      "interval_seconds": 0.20601189997978508,
+      "partitions_per_axis": 1,
+      "sample_count": 128,
+      "subbox_count": 1
+    },
+    {
+      "decision_margin_certified_inputs": 0,
+      "decision_margin_seconds": 1.5687901000492275,
+      "interval_certified_inputs": 0,
+      "interval_seconds": 0.4066604000981897,
+      "partitions_per_axis": 2,
+      "sample_count": 128,
+      "subbox_count": 4
+    },
+    {
+      "decision_margin_certified_inputs": 0,
+      "decision_margin_seconds": 5.67844200017862,
+      "interval_certified_inputs": 0,
+      "interval_seconds": 1.1492300000973046,
+      "partitions_per_axis": 4,
+      "sample_count": 128,
+      "subbox_count": 16
+    },
+    {
+      "decision_margin_certified_inputs": 0,
+      "decision_margin_seconds": 2.8588966000825167,
+      "interval_certified_inputs": 0,
+      "interval_seconds": 1.2535474998876452,
+      "partitions_per_axis": 8,
+      "sample_count": 32,
+      "subbox_count": 64
+    },
+    {
+      "decision_margin_certified_inputs": 0,
+      "decision_margin_seconds": 10.953357999911532,
+      "interval_certified_inputs": 0,
+      "interval_seconds": 4.8161859000101686,
+      "partitions_per_axis": 16,
+      "sample_count": 32,
+      "subbox_count": 256
+    },
+    {
+      "decision_margin_certified_inputs": 0,
+      "decision_margin_seconds": 25.569151800125837,
+      "interval_certified_inputs": 0,
+      "interval_seconds": 15.343286899849772,
+      "partitions_per_axis": 32,
+      "sample_count": 16,
+      "subbox_count": 1024
+    }
+  ],
+  "schema_version": "SHDDecisionMarginDomainSummary/v1",
+  "seed": 1701,
+  "status": "sound single-seed staged domain-development kill test; sample count is reduced as partition cost increases and the result is not five-seed evidence"
+}

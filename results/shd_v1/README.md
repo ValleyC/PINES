@@ -198,6 +198,24 @@ python experiments/run_shd_branch_set_cell_sweep.py --seed 1701 --partitions 32 
 python experiments/aggregate_shd_branch_set_feasibility.py
 ```
 
+### Decision-margin interval kill diagnostic
+
+`decision_margin_domain_summary.json` records a sound output-correlated domain.
+It propagates every reference-versus-competitor margin directly, preventing one
+uncertain spike from independently worsening both sides of a comparison. A unit
+test proves strict improvement over separate logit intervals on a constructed
+witness, and sampled executions are enclosed. Nevertheless, staged SHD reset-
+family audits certify zero inputs through 32-by-32 partitioning, exactly matching
+ordinary intervals. The unresolved loss is in recurrent state and guard
+correlation, not at the output comparison.
+
+```powershell
+python experiments/run_shd_decision_margin_certificate.py --seed 1701 --partitions 1 2 4 --sample-count 128
+python experiments/run_shd_decision_margin_certificate.py --seed 1701 --partitions 8 16 --sample-count 32 --output-root artifacts/shd_v23_decision_margin_fine
+python experiments/run_shd_decision_margin_certificate.py --seed 1701 --partitions 32 --sample-count 16 --output-root artifacts/shd_v24_decision_margin_p32
+python experiments/aggregate_shd_decision_margin_domain.py
+```
+
 ### Post-repair bounded-family headroom
 
 `repair_family_grid_summary.json` compares selected reset-target models against

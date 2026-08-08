@@ -75,6 +75,11 @@
   fails to complete representative 50-step cells even with a 65,536-state cap
   and 128-by-128 parameter partitioning. Merging equivalent spike/logit states
   and retaining all states fail at essentially the same timestep.
+- Sound decision-margin domain kill test: directly propagating pairwise output
+  margins is strictly tighter on a constructed shared-spike witness, but matches
+  ordinary interval coverage at zero on staged SHD reset-family audits through
+  32-by-32 partitioning. Hidden recurrent state/guard correlation, rather than
+  independent output bounds, is the dominant unresolved loss.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
@@ -139,8 +144,10 @@ systems/risk-ranking contribution.
 ## Open experimental milestones
 
 - Symbolic guard compression or a decision-level correlated domain. Interval
-  merging, a single fixed branch, uniform partitioning, and explicit branch
-  lists are now empirically ruled out at plus/minus 1%.
+  merging, a single fixed branch, uniform partitioning, explicit branch lists,
+  and output-only decision-margin correlation are now empirically ruled out at
+  plus/minus 1%. The remaining domain must retain correlation through recurrent
+  hidden states and threshold guards.
 - Multi-step family-verified repair margins. A pointwise center-execution guard
   penalty and worst-loss objectives over sparse execution grids are now
   empirically ruled out as certificate-restoring objectives.
