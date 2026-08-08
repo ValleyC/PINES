@@ -106,17 +106,26 @@ radius for every seed. On fixed 64-input validation subsets, all tested box
 corners preserve the reference prediction on 36.9\%, 32.5\%, and 24.7\% of
 inputs, respectively, with no counterexample to a static certificate. Corner
 agreement is diagnostic rather than a proof over the interior, but its separation
-from zero sound coverage quantifies the abstraction failure. Figure~\ref{fig:shd-continuous}
-shows that the declared stop rule still triggers for the manuscript's promised
-continuous bounded-family claim, not for finite enumeration.
+from zero sound coverage quantifies the abstraction failure.
+
+A five-seed full-audit radius sweep localizes the failure even further. For the
+reference discrete semantics alone, joint timestep/threshold coverage averages
+89.64\% at relative radius $10^{-6}$, 50.57\% at $10^{-5}$, and zero at
+$10^{-4}$. Timestep and threshold varied separately exhibit the same cliff.
+Uniform partitions do not provide a practical escape: an $8\times8$ grid at
+$\pm1\%$ certifies zero of 128 inputs, and a $16\times16$ grid certifies zero of
+64 after 89 seconds. Covering $\pm1\%$ with sub-box radius $10^{-5}$ requires
+roughly $10^6$ continuous cells, or $16$ million abstract members after the
+discrete family is included. Figure~\ref{fig:shd-continuous} shows that the
+declared stop rule still triggers for the promised continuous bounded-family
+claim, not for finite enumeration.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/shd_continuous_family.pdf}
-  \caption{Five-seed SHD bounded-family experiment. Even $\pm1\%$ joint timestep
-  and threshold uncertainty makes the current sound interval abstraction fully
-  vacuous. Endpoint-grid agreement remains substantial but is diagnostic only;
-  error bars are one sample standard deviation across seeds.}
+  \includegraphics[width=\linewidth]{figures/shd_continuous_radius_sweep.pdf}
+  \caption{Five-seed, full-audit reference-member radius sweep. Coverage collapses
+  between $10^{-5}$ and $10^{-4}$ uncertainty even before the other 15 discrete
+  semantics are included. Shading is one sample standard deviation across seeds.}
   \label{fig:shd-continuous}
 \end{figure}
 

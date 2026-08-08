@@ -1,0 +1,190 @@
+{
+  "audit_samples_per_seed": 861,
+  "code_revision": "c3912fa641a3e6a63a68a9d4ab7cfef3b1496f37",
+  "formulation_assessment": "The current interval domain has a five-seed coverage cliff between relative radii 1e-5 and 1e-4 even for the reference discrete semantics. Uniform partitioning cannot scale from this tolerance to a meaningful plus/minus one-percent family; a dependency-preserving abstraction is required.",
+  "gate_assessment": {
+    "joint_reference_coverage_at_1e4_below_20_percent": true,
+    "uniform_partition_kill_checks_recover_any_input": false
+  },
+  "input_report_hashes": {
+    "seed_1701": "6cfdce3ee7eeec2f21e91f7a8fc7a102977bff396737c4240061e0cc38dd080c",
+    "seed_2718": "0ba5b59751e1f8ce561ee34583ffaf001d7a93e071d0b2a48d638d79957ec89c",
+    "seed_3141": "ee51e5440526387c42b65f7d3d840dece686447fea631a17571a5a25b19adf07",
+    "seed_5772": "19e8dc6e8ad952d6d7122f3667e4ddd6eebfa196012a9166e9a82e2c92f78845",
+    "seed_8119": "6f683baaafa57e22060f9db37daa3b979a6029eb8da13a1646fc84db87496b85"
+  },
+  "partition_kill_checks": {
+    "joint_128_up_to_8": {
+      "finest_certified_fraction": 0.0,
+      "finest_partitions_per_varied_axis": 8,
+      "finest_seconds": 39.63772859983146,
+      "finest_subbox_count": 64,
+      "relative_radius": 0.01,
+      "samples": 128,
+      "varied_axes": "joint"
+    },
+    "joint_64_at_16": {
+      "finest_certified_fraction": 0.0,
+      "finest_partitions_per_varied_axis": 16,
+      "finest_seconds": 89.24552359990776,
+      "finest_subbox_count": 256,
+      "relative_radius": 0.01,
+      "samples": 64,
+      "varied_axes": "joint"
+    },
+    "threshold_128_up_to_8": {
+      "finest_certified_fraction": 0.0,
+      "finest_partitions_per_varied_axis": 8,
+      "finest_seconds": 4.938213800080121,
+      "finest_subbox_count": 8,
+      "relative_radius": 0.01,
+      "samples": 128,
+      "varied_axes": "threshold"
+    },
+    "timestep_128_up_to_8": {
+      "finest_certified_fraction": 0.0,
+      "finest_partitions_per_varied_axis": 8,
+      "finest_seconds": 5.864110599970445,
+      "finest_subbox_count": 8,
+      "relative_radius": 0.01,
+      "samples": 128,
+      "varied_axes": "timestep"
+    }
+  },
+  "partition_report_hashes": {
+    "joint_128_up_to_8": "78af8ff1f4aab91f967186c6b81ef81602b9c8167048b4cc6e065e47eefbac48",
+    "joint_64_at_16": "40d8ee5507bb2fcaed5d203074c07c804df0a3f3d731a4e00e019730c915a5ae",
+    "threshold_128_up_to_8": "6e38f119ec22f491b658c4a3911c5484484d1b514513200711fef571e78cfe88",
+    "timestep_128_up_to_8": "33d20a96b29580e36925fade39c364ed0bf68f62296550eaae0319f54d2aaee8"
+  },
+  "rows_csv_hash": "f1b9063dcd811479d9a088d4a2079a3151b74b4e8afec99b7afaf5f0f7050e8a",
+  "schema_version": "SHDContinuousRadiusSweepAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed full-audit sound reference-member diagnostic plus a single-seed uniform-partition scalability kill check",
+  "trajectories": {
+    "joint": [
+      {
+        "certified_mean": 0.8963995354239257,
+        "certified_std": 0.018131119201315347,
+        "maximum_seed_coverage": 0.9105691056910569,
+        "minimum_seed_coverage": 0.8664343786295006,
+        "relative_radius": 1e-06
+      },
+      {
+        "certified_mean": 0.5056910569105691,
+        "certified_std": 0.021737866496811878,
+        "maximum_seed_coverage": 0.5331010452961672,
+        "minimum_seed_coverage": 0.4808362369337979,
+        "relative_radius": 1e-05
+      },
+      {
+        "certified_mean": 0.0,
+        "certified_std": 0.0,
+        "maximum_seed_coverage": 0.0,
+        "minimum_seed_coverage": 0.0,
+        "relative_radius": 0.0001
+      },
+      {
+        "certified_mean": 0.0,
+        "certified_std": 0.0,
+        "maximum_seed_coverage": 0.0,
+        "minimum_seed_coverage": 0.0,
+        "relative_radius": 0.001
+      },
+      {
+        "certified_mean": 0.0,
+        "certified_std": 0.0,
+        "maximum_seed_coverage": 0.0,
+        "minimum_seed_coverage": 0.0,
+        "relative_radius": 0.01
+      }
+    ],
+    "threshold": [
+      {
+        "certified_mean": 0.9563298490127758,
+        "certified_std": 0.006949256818421205,
+        "maximum_seed_coverage": 0.9686411149825784,
+        "minimum_seed_coverage": 0.9523809523809523,
+        "relative_radius": 1e-06
+      },
+      {
+        "certified_mean": 0.7154471544715447,
+        "certified_std": 0.014529612082690836,
+        "maximum_seed_coverage": 0.7328687572590011,
+        "minimum_seed_coverage": 0.6945412311265969,
+        "relative_radius": 1e-05
+      },
+      {
+        "certified_mean": 0.016260162601626015,
+        "certified_std": 0.005978879292094657,
+        "maximum_seed_coverage": 0.026713124274099883,
+        "minimum_seed_coverage": 0.011614401858304297,
+        "relative_radius": 0.0001
+      },
+      {
+        "certified_mean": 0.0,
+        "certified_std": 0.0,
+        "maximum_seed_coverage": 0.0,
+        "minimum_seed_coverage": 0.0,
+        "relative_radius": 0.001
+      },
+      {
+        "certified_mean": 0.0,
+        "certified_std": 0.0,
+        "maximum_seed_coverage": 0.0,
+        "minimum_seed_coverage": 0.0,
+        "relative_radius": 0.01
+      }
+    ],
+    "timestep": [
+      {
+        "certified_mean": 0.9335656213704994,
+        "certified_std": 0.012733537815252709,
+        "maximum_seed_coverage": 0.9465737514518002,
+        "minimum_seed_coverage": 0.9152148664343787,
+        "relative_radius": 1e-06
+      },
+      {
+        "certified_mean": 0.6209059233449478,
+        "certified_std": 0.020947822254393678,
+        "maximum_seed_coverage": 0.6469221835075494,
+        "minimum_seed_coverage": 0.6004645760743321,
+        "relative_radius": 1e-05
+      },
+      {
+        "certified_mean": 0.00023228803716608595,
+        "certified_std": 0.0005194118414633658,
+        "maximum_seed_coverage": 0.0011614401858304297,
+        "minimum_seed_coverage": 0.0,
+        "relative_radius": 0.0001
+      },
+      {
+        "certified_mean": 0.0,
+        "certified_std": 0.0,
+        "maximum_seed_coverage": 0.0,
+        "minimum_seed_coverage": 0.0,
+        "relative_radius": 0.001
+      },
+      {
+        "certified_mean": 0.0,
+        "certified_std": 0.0,
+        "maximum_seed_coverage": 0.0,
+        "minimum_seed_coverage": 0.0,
+        "relative_radius": 0.01
+      }
+    ]
+  },
+  "uniform_partition_scaling": {
+    "abstract_members_with_16_discrete_semantics": 16000000,
+    "continuous_subboxes_for_joint_two_axis_grid": 1000000,
+    "interpretation": "The radius sweep first gives useful joint reference-member coverage near 1e-5. Uniformly covering plus/minus one percent at that radius requires one million continuous boxes before the 16 discrete members.",
+    "partitions_per_axis_to_cover_plus_minus_one_percent": 1000,
+    "target_subbox_relative_radius": 1e-05
+  }
+}

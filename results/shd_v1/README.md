@@ -78,9 +78,19 @@ a static certificate. Endpoint agreement is diagnostic, not a proof over the
 continuous interior. This continuous result—not finite enumeration—triggers the
 declared pivot gate.
 
+A five-seed reference-member radius sweep explains why uniform refinement is not
+a practical repair. Joint coverage averages 89.64% at relative radius 1e-6,
+50.57% at 1e-5, and zero at 1e-4. Timestep-only and threshold-only sweeps show the
+same cliff. At plus/minus 1%, an 8-by-8 grid still covers zero of 128 inputs, and
+a 16-by-16 grid covers zero of 64 after 89 seconds. Reaching sub-box radius 1e-5
+would require about 1,000 partitions per axis, or one million continuous boxes
+before multiplying by 16 discrete semantics.
+
 ```powershell
 python experiments/run_shd_continuous_family.py --seed 1701 --validation-samples 64
 python experiments/aggregate_shd_continuous_family.py
+python experiments/run_shd_continuous_radius_sweep.py --seed 1701
+python experiments/aggregate_shd_continuous_radius_sweep.py
 ```
 
 ### Recurrence intervention

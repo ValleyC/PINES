@@ -41,6 +41,11 @@
 - Full-audit continuous-family analysis: joint timestep and threshold uncertainty
   of only plus/minus 1% yields zero soundly certified inputs for every SHD seed.
   Endpoint-grid agreement remains 36.9%, demonstrating severe abstraction slack.
+- Five-seed reference-member radius sweep: joint coverage falls from 89.64% at
+  relative radius 1e-6 to 50.57% at 1e-5 and zero at 1e-4. An 8-by-8 uniform
+  partition at plus/minus 1% still covers zero of 128 inputs; a 16-by-16 grid
+  covers zero of 64 after 89 seconds. Useful uniform cells would imply about one
+  million continuous boxes before the 16 discrete semantics are included.
 - Sample-complexity analysis: under ten-way simultaneous 95% confidence, zero
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the
