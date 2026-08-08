@@ -405,3 +405,86 @@ def test_polygon_branch_predictions_cover_sampled_recurrent_execution(
             ).predictions[0]
             sampled_predictions.add(int(prediction))
     assert sampled_predictions.issubset(result.possible_predictions)
+
+
+def test_polygon_branch_randomized_differential_soundness() -> None:
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    for seed in range(12):
+        rng = np.random.default_rng(seed)
+        model = DenseRecurrentSNN(
+            input_weights=rng.normal(0.8, 0.3, size=(2, 2)),
+            recurrent_weights=rng.normal(0.0, 0.25, size=(2, 2)),
+            output_weights=rng.normal(0.0, 1.0, size=(2, 3)),
+            bias=rng.normal(0.0, 0.05, size=2),
+            threshold=rng.uniform(0.65, 1.05, size=2),
+            tau_mem=rng.uniform(1.5, 3.0, size=2),
+            reset_value=np.zeros(2),
+        )
+        inputs = (rng.random((1, 4, 2)) < 0.4).astype(np.float64)
+        reference = ExecutionSemantics()
+        target = replace(reference, reset_rule=ResetRule.TO_VALUE)
+        box = SemanticsBox(
+            base=target,
+            timestep_bounds=(0.95, 1.05),
+            threshold_scale_bounds=(0.95, 1.05),
+            integration_rules=(target.integration_rule,),
+            threshold_timings=(target.threshold_timing,),
+            reset_rules=(target.reset_rule,),
+            synaptic_delays=(0,),
+            output_delays=(0,),
+        )
+        result = PolygonBranchCertifier().certify(
+            model,
+            inputs,
+            reference,
+            box,
+            square,
+            max_branches=65536,
+        )
+        assert result.complete
+        sampled_predictions = set()
+        for timestep in np.linspace(0.95, 1.05, 7):
+            semantics = replace(target, timestep=float(timestep))
+            for threshold_scale in np.linspace(0.95, 1.05, 7):
+                candidate = model.with_parameters(
+                    threshold=model.threshold * threshold_scale
+                )
+                sampled_predictions.add(
+                    int(
+                        VectorizedEmulator()
+                        .run(candidate, inputs, semantics)
+                        .predictions[0]
+                    )
+                )
+        assert sampled_predictions.issubset(result.possible_predictions)
+
+
+def test_polygon_branch_cap_is_inconclusive(small_model, event_batch) -> None:
+    reference = ExecutionSemantics()
+    target = replace(reference, reset_rule=ResetRule.TO_VALUE)
+    box = SemanticsBox(
+        base=target,
+        timestep_bounds=(0.9, 1.1),
+        threshold_scale_bounds=(0.9, 1.1),
+        integration_rules=(target.integration_rule,),
+        threshold_timings=(target.threshold_timing,),
+        reset_rules=(target.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    result = PolygonBranchCertifier().certify(
+        small_model,
+        event_batch[:1],
+        reference,
+        box,
+        square,
+        max_branches=1,
+    )
+    assert not result.complete
+    assert not result.certified
+    assert result.first_cap_timestep is not None
