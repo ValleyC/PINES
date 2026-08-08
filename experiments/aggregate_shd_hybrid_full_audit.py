@@ -26,6 +26,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--audit-report", required=True)
     parser.add_argument("--grid-report", required=True)
+    parser.add_argument("--sobol-report", required=True)
     parser.add_argument(
         "--screen-summary",
         default="results/shd_v1/hybrid_family_audit_summary.json",
@@ -41,6 +42,7 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     audit_path = root / args.audit_report
     grid_path = root / args.grid_report
+    sobol_path = root / args.sobol_report
     screen_path = root / args.screen_summary
     output_path = root / args.output
     figure_path = root / args.figure
@@ -48,14 +50,32 @@ def main() -> None:
         audit = json.load(handle)
     with grid_path.open("r", encoding="utf-8") as handle:
         grid = json.load(handle)
+    with sobol_path.open("r", encoding="utf-8") as handle:
+        sobol = json.load(handle)
     with screen_path.open("r", encoding="utf-8") as handle:
         screen = json.load(handle)
     if audit.get("schema_version") != "SHDHybridFamilyFullAuditResult/v1":
         raise ValueError("unsupported full hybrid audit report")
     if grid.get("schema_version") != "SHDHybridAuditGridValidation/v1":
         raise ValueError("unsupported hybrid grid validation report")
+    if sobol.get("schema_version") != "SHDHybridAuditSobolValidation/v1":
+        raise ValueError("unsupported hybrid Sobol validation report")
     if grid["audit_report_hash"] != sha256_file(audit_path):
         raise ValueError("grid validation does not reference the supplied audit")
+    if sobol["audit_report_hash"] != sha256_file(audit_path):
+        raise ValueError("Sobol validation does not reference the supplied audit")
+    shard_revisions = set()
+    for shard_record in audit["shards"]:
+        shard_path = root / shard_record["path"]
+        if sha256_file(shard_path) != shard_record["hash"]:
+            raise ValueError(f"audit shard hash mismatch: {shard_path}")
+        with shard_path.open("r", encoding="utf-8") as handle:
+            shard = json.load(handle)
+        if shard.get("config_hash") != audit["config_hash"]:
+            raise ValueError(f"audit shard config mismatch: {shard_path}")
+        shard_revisions.add(shard.get("code_revision"))
+    if shard_revisions != {audit["code_revision"]}:
+        raise ValueError("audit shards do not share the report code revision")
 
     audit_rows = {
         (row["seed"], row["audit_position"], row["dataset_index"]): row
@@ -65,8 +85,23 @@ def main() -> None:
         (row["seed"], row["audit_position"], row["dataset_index"]): row
         for row in grid["rows"]
     }
-    if audit_rows.keys() != grid_rows.keys():
-        raise ValueError("audit and grid rows do not identify the same inputs")
+    sobol_rows = {
+        (row["seed"], row["audit_position"], row["dataset_index"]): row
+        for row in sobol["rows"]
+    }
+    if len(audit_rows) != len(audit["rows"]):
+        raise ValueError("duplicate input identities in audit report")
+    if len(audit_rows) != int(audit["sample_count"]):
+        raise ValueError("audit sample count does not match unique rows")
+    if len(grid_rows) != len(grid["rows"]):
+        raise ValueError("duplicate input identities in grid report")
+    if len(sobol_rows) != len(sobol["rows"]):
+        raise ValueError("duplicate input identities in Sobol report")
+    if audit_rows.keys() != grid_rows.keys() or audit_rows.keys() != sobol_rows.keys():
+        raise ValueError("audit and falsification rows do not identify the same inputs")
+    audit_seeds = [int(seed) for seed in audit["config"]["seeds"]]
+    if screen["sample_count"] % len(audit_seeds) != 0:
+        raise ValueError("screen count is not balanced across audit seeds")
 
     samples = len(audit_rows)
     certified = sum(row["certified"] for row in audit_rows.values())
@@ -84,6 +119,39 @@ def main() -> None:
         for key in audit_rows
     )
     confidence = 0.95
+    screen_inputs_per_seed = int(
+        screen["sample_count"] // len(audit["config"]["seeds"])
+    )
+    confirmation_keys = [
+        key for key, row in audit_rows.items()
+        if int(row["audit_position"]) >= screen_inputs_per_seed
+    ]
+    confirmation_samples = len(confirmation_keys)
+    confirmation_certified = sum(
+        audit_rows[key]["certified"] for key in confirmation_keys
+    )
+    confirmation_stable = sum(
+        grid_rows[key]["grid_identity"] for key in confirmation_keys
+    )
+    confirmation_violations = sum(
+        audit_rows[key]["certified"] and not grid_rows[key]["grid_identity"]
+        for key in confirmation_keys
+    )
+    confirmation_sobol_violations = sum(
+        audit_rows[key]["certified"] and not sobol_rows[key]["sobol_identity"]
+        for key in confirmation_keys
+    )
+    confirmation_joint_identity = sum(
+        grid_rows[key]["grid_identity"] and sobol_rows[key]["sobol_identity"]
+        for key in confirmation_keys
+    )
+    confirmation_joint_violations = sum(
+        audit_rows[key]["certified"]
+        and not (
+            grid_rows[key]["grid_identity"] and sobol_rows[key]["sobol_identity"]
+        )
+        for key in confirmation_keys
+    )
     coverage = np.asarray(
         [row["certified_parameter_fraction"] for row in audit_rows.values()],
         dtype=np.float64,
@@ -105,8 +173,27 @@ def main() -> None:
         seed_certified = sum(audit_rows[key]["certified"] for key in keys)
         seed_stable = sum(grid_rows[key]["grid_identity"] for key in keys)
         labels.append(str(seed))
-        certified_values.append(seed_certified / seed_samples)
-        grid_values.append(seed_stable / seed_samples)
+        seed_confirmation_keys = [
+            key
+            for key in keys
+            if int(audit_rows[key]["audit_position"]) >= screen_inputs_per_seed
+        ]
+        seed_confirmation_certified = sum(
+            audit_rows[key]["certified"] for key in seed_confirmation_keys
+        )
+        seed_confirmation_stable = sum(
+            grid_rows[key]["grid_identity"] for key in seed_confirmation_keys
+        )
+        seed_confirmation_joint_identity = sum(
+            grid_rows[key]["grid_identity"] and sobol_rows[key]["sobol_identity"]
+            for key in seed_confirmation_keys
+        )
+        certified_values.append(
+            seed_confirmation_certified / len(seed_confirmation_keys)
+        )
+        grid_values.append(
+            seed_confirmation_joint_identity / len(seed_confirmation_keys)
+        )
         per_seed.append(
             {
                 **row,
@@ -128,6 +215,31 @@ def main() -> None:
                 "counterexample_uncertified_count": sum(
                     not grid_rows[key]["grid_identity"] for key in keys
                 ),
+                "confirmation_excluding_screen": {
+                    "sample_count": len(seed_confirmation_keys),
+                    "certified_input_count": seed_confirmation_certified,
+                    "certified_input_fraction": (
+                        seed_confirmation_certified / len(seed_confirmation_keys)
+                    ),
+                    "certified_input_fraction_exact_95_percent_interval": (
+                        _exact_interval(
+                            seed_confirmation_certified,
+                            len(seed_confirmation_keys),
+                            confidence,
+                        )
+                    ),
+                    "grid_identity_count": seed_confirmation_stable,
+                    "grid_identity_fraction": (
+                        seed_confirmation_stable / len(seed_confirmation_keys)
+                    ),
+                    "joint_grid_sobol_identity_count": (
+                        seed_confirmation_joint_identity
+                    ),
+                    "joint_grid_sobol_identity_fraction": (
+                        seed_confirmation_joint_identity
+                        / len(seed_confirmation_keys)
+                    ),
+                },
             }
         )
 
@@ -165,8 +277,8 @@ def main() -> None:
     summary = {
         "schema_version": "SHDHybridFamilyFullAuditSummary/v1",
         "status": (
-            "frozen five-seed all-input audit plus independent finite-grid "
-            "falsification diagnostic"
+            "frozen five-seed all-input audit plus independent grid and Sobol "
+            "falsification diagnostics"
         ),
         "scope": {
             "task": "SHD recurrent SNN",
@@ -183,6 +295,37 @@ def main() -> None:
         "certified_input_fraction_exact_95_percent_interval": _exact_interval(
             certified, samples, confidence
         ),
+        "primary_confirmation_excluding_screen": {
+            "exclusion_rule": (
+                f"audit positions 0 through {screen_inputs_per_seed - 1} "
+                "per seed were used by the advancement screen"
+            ),
+            "sample_count": confirmation_samples,
+            "certified_input_count": confirmation_certified,
+            "certified_input_fraction": (
+                confirmation_certified / confirmation_samples
+            ),
+            "certified_input_fraction_exact_95_percent_interval": (
+                _exact_interval(
+                    confirmation_certified, confirmation_samples, confidence
+                )
+            ),
+            "grid_identity_count": confirmation_stable,
+            "grid_identity_fraction": confirmation_stable / confirmation_samples,
+            "certified_grid_violation_count": confirmation_violations,
+            "certified_sobol_violation_count": confirmation_sobol_violations,
+            "joint_grid_sobol_identity_count": confirmation_joint_identity,
+            "joint_grid_sobol_identity_fraction": (
+                confirmation_joint_identity / confirmation_samples
+            ),
+            "certified_joint_falsification_violation_count": (
+                confirmation_joint_violations
+            ),
+            "passes_20_percent_gate": (
+                confirmation_certified / confirmation_samples >= 0.2
+                and confirmation_joint_violations == 0
+            ),
+        },
         "mean_certified_parameter_fraction": float(np.mean(coverage)),
         "median_certified_parameter_fraction": float(np.median(coverage)),
         "certified_parameter_fraction_quantiles": {
@@ -211,6 +354,18 @@ def main() -> None:
                 "p_value": float(coverage_margin.pvalue),
             },
         },
+        "sobol_falsification": {
+            "points_per_input": int(sobol["points_per_input"]),
+            "sobol_seed": int(sobol["sobol_seed"]),
+            "sobol_identity_count": int(sobol["sobol_identity_count"]),
+            "sobol_identity_fraction": float(sobol["sobol_identity_fraction"]),
+            "certified_sobol_violation_count": int(
+                sobol["certified_sobol_violation_count"]
+            ),
+            "confirmation_certified_sobol_violation_count": (
+                confirmation_sobol_violations
+            ),
+        },
         "screen_comparison": {
             "screen_sample_count": int(screen["sample_count"]),
             "screen_certified_input_fraction": float(
@@ -229,6 +384,7 @@ def main() -> None:
                 np.median([row["seconds"] for row in audit_rows.values()])
             ),
             "grid_seconds": float(grid["seconds"]),
+            "sobol_seconds": float(sobol["seconds"]),
         },
         "source_report_hashes": {
             str(audit_path.relative_to(root)).replace("\\", "/"): sha256_file(
@@ -237,18 +393,24 @@ def main() -> None:
             str(grid_path.relative_to(root)).replace("\\", "/"): sha256_file(
                 grid_path
             ),
+            str(sobol_path.relative_to(root)).replace("\\", "/"): sha256_file(
+                sobol_path
+            ),
             str(screen_path.relative_to(root)).replace("\\", "/"): sha256_file(
                 screen_path
             ),
         },
         "source_code_revisions": {
             "certificate_audit": audit["code_revision"],
+            "certificate_shards": sorted(shard_revisions),
             "grid_validation": grid["code_revision"],
+            "sobol_validation": sobol["code_revision"],
         },
         "code_revision": code_revision(root),
         "route_assessment": {
             "claim_shd_population_certificate_fraction": (
-                bool(audit["full_audit_gate_passed"]) and violations == 0
+                confirmation_certified / confirmation_samples >= 0.2
+                and confirmation_joint_violations == 0
             ),
             "claim_all_execution_semantics_axes": False,
             "claim_second_event_task": False,
@@ -256,16 +418,17 @@ def main() -> None:
         },
         "interpretation": (
             "Every certified input is proved invariant across the full joint "
-            "continuous box. The grid can falsify but cannot strengthen that proof. "
-            "Stable-but-uncertified inputs measure analyzer or fixed-budget slack; "
-            "grid counterexamples measure genuine sampled semantic instability."
+            "continuous box. The grid and Sobol designs can falsify but cannot "
+            "strengthen that proof. Stable-but-uncertified inputs measure analyzer "
+            "or fixed-budget slack; sampled counterexamples measure genuine observed "
+            "semantic instability."
         ),
     }
     write_json_immutable(output_path, summary)
 
     labels.append("all")
-    certified_values.append(certified / samples)
-    grid_values.append(stable / samples)
+    certified_values.append(confirmation_certified / confirmation_samples)
+    grid_values.append(confirmation_joint_identity / confirmation_samples)
     x = np.arange(len(labels))
     width = 0.36
     plt.style.use("seaborn-v0_8-whitegrid")
@@ -281,7 +444,7 @@ def main() -> None:
         x + width / 2,
         np.asarray(grid_values) * 100.0,
         width,
-        label="9x9 sampled identity ceiling",
+        label="Grid+Sobol sampled identity ceiling",
         color="#8e7dbe",
     )
     axis.axhline(20.0, color="#b23a48", linestyle="--", linewidth=1.2)
@@ -290,7 +453,7 @@ def main() -> None:
     axis.set_ylabel("Audit inputs (%)")
     axis.set_ylim(0.0, 100.0)
     axis.legend(frameon=False, ncol=2, loc="upper center")
-    axis.set_title("Frozen SHD joint timestep/threshold family audit")
+    axis.set_title("Confirmatory SHD joint timestep/threshold family audit")
     fig.tight_layout()
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(figure_path, bbox_inches="tight")

@@ -35,13 +35,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--config",
-        default="configs/experiments/shd_hybrid_cartesian_development_v1.json",
+        default="configs/experiments/shd_hybrid_cartesian_development_v2.json",
     )
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1_final")
     parser.add_argument(
         "--output-root",
-        default="artifacts/shd_v61_hybrid_cartesian_development_v1",
+        default="artifacts/shd_v64_hybrid_cartesian_development_v2",
     )
     args = parser.parse_args()
 
@@ -49,7 +49,10 @@ def main() -> None:
     config_path = root / args.config
     with config_path.open("r", encoding="utf-8") as handle:
         config = json.load(handle)
-    if config.get("schema_version") != "SHDHybridCartesianDevelopment/v1":
+    if config.get("schema_version") not in {
+        "SHDHybridCartesianDevelopment/v1",
+        "SHDHybridCartesianDevelopment/v2",
+    }:
         raise ValueError("unsupported Cartesian development configuration")
     output_dir = root / args.output_root
     output_path = output_dir / "hybrid_cartesian_development.json"
@@ -57,8 +60,30 @@ def main() -> None:
         raise FileExistsError(f"Cartesian development output exists: {output_path}")
 
     selection = config["selection"]
-    seed = int(selection["seed"])
-    dataset_index = int(selection["dataset_index"])
+    selection_report_path = None
+    selection_report_hash = None
+    if config["schema_version"] == "SHDHybridCartesianDevelopment/v2":
+        if selection.get("uses_labels"):
+            raise ValueError("Cartesian development selection must be label-free")
+        selection_report_path = root / selection["report"]
+        with selection_report_path.open("r", encoding="utf-8") as handle:
+            selection_report = json.load(handle)
+        if (
+            selection_report.get("schema_version")
+            != "SHDCartesianDevelopmentSelectionResult/v1"
+        ):
+            raise ValueError("unsupported Cartesian selection report")
+        if selection_report["split"] != selection["split"]:
+            raise ValueError("selection report split does not match configuration")
+        selected = selection_report[selection["field"]]
+        if selected is None:
+            raise ValueError("selection report has no full-family-stable input")
+        seed = int(selection_report["seed"])
+        dataset_index = int(selected["dataset_index"])
+        selection_report_hash = sha256_file(selection_report_path)
+    else:
+        seed = int(selection["seed"])
+        dataset_index = int(selection["dataset_index"])
     seed_dir = root / args.artifact_root / f"seed_{seed}"
     model_path = seed_dir / "model.npz"
     split_path = seed_dir / "split_indices.npz"
@@ -139,6 +164,8 @@ def main() -> None:
             f"covered={result.certified_parameter_fraction:.6f}",
             flush=True,
         )
+        if result.certified and budgets.get("stop_after_first_certificate", False):
+            break
 
     resolution = int(config["falsification_grid_resolution_per_axis"])
     factors = np.linspace(-1.0, 1.0, resolution, dtype=np.float64)
@@ -216,6 +243,12 @@ def main() -> None:
         ),
         "config": config,
         "config_hash": sha256_file(config_path),
+        "selection_report": (
+            None
+            if selection_report_path is None
+            else str(selection_report_path.relative_to(root)).replace("\\", "/")
+        ),
+        "selection_report_hash": selection_report_hash,
         "seed": seed,
         "dataset_index": dataset_index,
         "box_hash": box.box_hash,

@@ -1,0 +1,21 @@
+{
+  "schema_version": "SHDCartesianDevelopmentSelection/v1",
+  "seed": 1701,
+  "split": "repair_calibration",
+  "selection": {
+    "use_all_available": true,
+    "uses_labels": false,
+    "grid_resolution_per_axis": 5,
+    "rule": "Among inputs preserving the reference prediction at every sampled point of every discrete member, maximize the minimum reference-class margin; break ties by dataset index."
+  },
+  "family": {
+    "relative_timestep_radius": 0.01,
+    "relative_threshold_radius": 0.01,
+    "integration_rules": ["forward_euler", "exponential_euler"],
+    "threshold_timings": ["post_integration", "pre_integration"],
+    "reset_rules": ["subtractive", "to_value"],
+    "synaptic_delays": [0, 1],
+    "output_delays": [0]
+  },
+  "interpretation": "This open calibration-split search chooses only a method-development input. It cannot estimate population coverage or validate a certificate."
+}

@@ -6,8 +6,14 @@ import time
 from pathlib import Path
 
 import numpy as np
+from scipy.stats import qmc
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
+from transportcert.artifacts import (
+    array_hash,
+    code_revision,
+    sha256_file,
+    write_json_immutable,
+)
 from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
 from transportcert.benchmarks.shd import PackedSHD
 from transportcert.models import DenseRecurrentSNN
@@ -17,25 +23,21 @@ from transportcert.torch_emulator import TorchEmulator
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--audit-report",
-        default="artifacts/shd_v57_hybrid_audit_v1/hybrid_family_audit.json",
-    )
-    parser.add_argument("--grid-resolution", type=int, default=9)
+    parser.add_argument("--audit-report", required=True)
+    parser.add_argument("--sobol-power", type=int, default=10)
+    parser.add_argument("--sobol-seed", type=int, default=7319)
     parser.add_argument("--batch-size", type=int, default=1024)
-    parser.add_argument("--input-batch-size", type=int, default=64)
+    parser.add_argument("--input-batch-size", type=int, default=32)
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1_final")
-    parser.add_argument(
-        "--output-root", default="artifacts/shd_v58_hybrid_audit_grid_v1"
-    )
+    parser.add_argument("--output-root", required=True)
     args = parser.parse_args()
     if (
-        args.grid_resolution < 2
+        not 1 <= args.sobol_power <= 20
         or args.batch_size < 1
         or args.input_batch_size < 1
     ):
-        raise ValueError("grid resolution and batch size must be positive")
+        raise ValueError("invalid Sobol or batch budget")
 
     root = Path(__file__).resolve().parents[1]
     audit_path = root / args.audit_report
@@ -48,30 +50,27 @@ def main() -> None:
         raise ValueError("unsupported hybrid audit report")
 
     output_dir = root / args.output_root
-    output_path = output_dir / "hybrid_audit_grid_validation.json"
+    output_path = output_dir / "hybrid_audit_sobol_validation.json"
     if output_path.exists():
-        raise FileExistsError(f"grid validation output exists: {output_path}")
+        raise FileExistsError(f"Sobol validation output exists: {output_path}")
 
-    condition = audit["condition"]
+    normalized_points = (
+        2.0
+        * qmc.Sobol(d=2, scramble=True, seed=args.sobol_seed).random_base2(
+            m=args.sobol_power
+        )
+        - 1.0
+    )
     config = audit["config"]
     timestep_radius = float(config["relative_timestep_radius"])
     threshold_radius = float(config["relative_threshold_radius"])
-    factors = np.linspace(
-        -1.0, 1.0, args.grid_resolution, dtype=np.float64
-    )
-    normalized_timestep, normalized_threshold = np.meshgrid(
-        factors, factors, indexing="ij"
-    )
-    normalized_timestep = normalized_timestep.ravel()
-    normalized_threshold = normalized_threshold.ravel()
-
     semantics = primary_semantic_conditions()
     reference = semantics["reference"]
-    target = semantics[condition]
+    target = semantics[audit["condition"]]
     timesteps = reference.timestep * (
-        1.0 + timestep_radius * normalized_timestep
+        1.0 + timestep_radius * normalized_points[:, 0]
     )
-    threshold_scales = 1.0 + threshold_radius * normalized_threshold
+    threshold_scales = 1.0 + threshold_radius * normalized_points[:, 1]
     store = PackedSHD(root / args.data_root / "train.npz")
 
     import torch
@@ -82,12 +81,11 @@ def main() -> None:
     family_engine = TorchParameterBatchEmulator(device=device, dtype=dtype)
     output_rows = []
     started = time.perf_counter()
-
     for seed in config["seeds"]:
         seed_rows = [row for row in audit["rows"] if row["seed"] == seed]
-        seed_dir = root / args.artifact_root / f"seed_{seed}"
-        model_path = seed_dir / "model.npz"
-        model = DenseRecurrentSNN.load(model_path)
+        model = DenseRecurrentSNN.load(
+            root / args.artifact_root / f"seed_{seed}" / "model.npz"
+        )
         indices = np.asarray(
             [row["dataset_index"] for row in seed_rows], dtype=np.int64
         )
@@ -96,7 +94,6 @@ def main() -> None:
             reference_engine.run(model, frames, reference).numpy().predictions,
             dtype=np.int16,
         )
-
         execution = family_engine.run_cartesian(
             model,
             frames,
@@ -108,8 +105,8 @@ def main() -> None:
         )
         row_indices = np.arange(len(seed_rows))[:, None]
         point_indices = np.arange(len(timesteps))[None, :]
-        competing_logits = execution.final_logits.copy()
-        competing_logits[
+        competing = execution.final_logits.copy()
+        competing[
             row_indices,
             point_indices,
             reference_predictions[:, None],
@@ -119,7 +116,7 @@ def main() -> None:
             point_indices,
             reference_predictions[:, None],
         ]
-        margins = reference_logits - np.max(competing_logits, axis=2)
+        margins = reference_logits - np.max(competing, axis=2)
         mismatches = execution.predictions != reference_predictions[:, None]
         for position, audit_row in enumerate(seed_rows):
             output_rows.append(
@@ -128,53 +125,47 @@ def main() -> None:
                     "audit_position": int(audit_row["audit_position"]),
                     "dataset_index": int(audit_row["dataset_index"]),
                     "certificate_result": bool(audit_row["certified"]),
-                    "certified_parameter_fraction": float(
-                        audit_row["certified_parameter_fraction"]
-                    ),
-                    "reference_prediction": int(reference_predictions[position]),
-                    "grid_identity": not bool(np.any(mismatches[position])),
+                    "sobol_identity": not bool(np.any(mismatches[position])),
                     "counterexample_point_count": int(
                         np.count_nonzero(mismatches[position])
                     ),
-                    "observed_predictions": [
-                        int(value)
-                        for value in np.unique(execution.predictions[position])
-                    ],
                     "minimum_reference_margin": float(
                         np.min(margins[position])
                     ),
                 }
             )
-        print(f"grid validation seed={seed} complete", flush=True)
+        print(f"Sobol validation seed={seed} complete", flush=True)
 
     certified_rows = [row for row in output_rows if row["certificate_result"]]
-    uncertified_rows = [row for row in output_rows if not row["certificate_result"]]
-    violations = [row for row in certified_rows if not row["grid_identity"]]
-    grid_identity_count = sum(row["grid_identity"] for row in output_rows)
+    violations = [row for row in certified_rows if not row["sobol_identity"]]
     report = {
-        "schema_version": "SHDHybridAuditGridValidation/v1",
+        "schema_version": "SHDHybridAuditSobolValidation/v1",
         "status": (
-            "independent finite-grid falsification diagnostic; passing the grid is "
+            "scrambled Sobol falsification diagnostic; passing sampled points is "
             "not a proof, while any certified-row mismatch is a soundness violation"
         ),
         "audit_report": str(audit_path.relative_to(root)).replace("\\", "/"),
         "audit_report_hash": sha256_file(audit_path),
         "audit_code_revision": audit["code_revision"],
-        "condition": condition,
-        "grid_resolution_per_axis": args.grid_resolution,
-        "grid_point_count": len(timesteps),
-        "normalized_axis_values": factors,
+        "condition": audit["condition"],
+        "sobol_power": args.sobol_power,
+        "sobol_seed": args.sobol_seed,
+        "points_per_input": len(normalized_points),
+        "normalized_points_hash": array_hash(normalized_points),
         "sample_count": len(output_rows),
         "certificate_count": len(certified_rows),
-        "certificate_fraction": len(certified_rows) / len(output_rows),
-        "grid_identity_count": grid_identity_count,
-        "grid_identity_fraction": grid_identity_count / len(output_rows),
-        "certified_grid_violation_count": len(violations),
-        "uncertified_grid_identity_count": sum(
-            row["grid_identity"] for row in uncertified_rows
+        "certified_sobol_violation_count": len(violations),
+        "sobol_identity_count": sum(row["sobol_identity"] for row in output_rows),
+        "sobol_identity_fraction": float(
+            np.mean([row["sobol_identity"] for row in output_rows])
         ),
-        "uncertified_grid_counterexample_count": sum(
-            not row["grid_identity"] for row in uncertified_rows
+        "uncertified_sobol_identity_count": sum(
+            not row["certificate_result"] and row["sobol_identity"]
+            for row in output_rows
+        ),
+        "uncertified_sobol_counterexample_count": sum(
+            not row["certificate_result"] and not row["sobol_identity"]
+            for row in output_rows
         ),
         "rows": output_rows,
         "seconds": time.perf_counter() - started,
@@ -185,10 +176,9 @@ def main() -> None:
         "target_semantics_hash": target.semantics_hash,
         "code_revision": code_revision(root),
         "interpretation": (
-            "The grid checks the same joint timestep/threshold box as the sound "
-            "certificate. Its identity fraction is an empirical ceiling at this "
-            "resolution. A gap between grid identity and certification measures "
-            "proof or resource-budget conservatism, not observed semantic failure."
+            "This diagnostic complements the structured grid with a deterministic "
+            "low-discrepancy interior design. It can reveal a false certificate or "
+            "additional model counterexamples but cannot certify unsampled points."
         ),
     }
     output_dir.mkdir(parents=True, exist_ok=True)
