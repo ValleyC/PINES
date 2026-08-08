@@ -7,6 +7,7 @@ from transportcert.branch_analysis import (
     nested_grid_flat_indices,
     packed_trace_hashes,
     summarize_branch_grid,
+    summarize_family_prediction_grid,
 )
 
 
@@ -51,3 +52,27 @@ def test_branch_summary_separates_trace_and_prediction_stability() -> None:
     assert summary["mean_unique_predictions"] == 1.5
     assert summary["single_prediction_fraction"] == 0.5
     assert summary["all_grid_predictions_match_center_fraction"] == 0.5
+
+
+def test_family_grid_summary_requires_every_member_and_point() -> None:
+    predictions = np.zeros((2, 25, 3), dtype=np.int16)
+    reference = np.zeros(3, dtype=np.int16)
+    predictions[0, 0, 1] = 1
+    predictions[1, 24, 2] = 2
+    summary = summarize_family_prediction_grid(
+        predictions,
+        reference,
+        max_resolution=5,
+        resolution=5,
+    )
+    assert summary["total_sampled_semantics"] == 50
+    assert summary["full_family_prediction_identity_fraction"] == 1 / 3
+    assert summary["full_family_prediction_identity_inputs"] == 1
+    assert summary["max_unique_predictions"] == 2
+    coarse = summarize_family_prediction_grid(
+        predictions,
+        reference,
+        max_resolution=5,
+        resolution=3,
+    )
+    assert coarse["full_family_prediction_identity_fraction"] == 1 / 3

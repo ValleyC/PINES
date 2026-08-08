@@ -93,3 +93,49 @@ def summarize_branch_grid(
             1.0 - np.mean(prediction_matches_center)
         ),
     }
+
+
+def summarize_family_prediction_grid(
+    predictions: np.ndarray,
+    reference_predictions: np.ndarray,
+    *,
+    max_resolution: int,
+    resolution: int,
+) -> dict[str, float | int | list[float]]:
+    """Summarize sampled prediction invariance over members and a nested grid."""
+
+    values = np.asarray(predictions)
+    reference = np.asarray(reference_predictions)
+    expected_points = max_resolution * max_resolution
+    if values.ndim != 3:
+        raise ValueError("predictions must have shape [member, grid point, input]")
+    if values.shape[1] != expected_points or values.shape[2:] != reference.shape:
+        raise ValueError("prediction and reference shapes are inconsistent")
+    selected = nested_grid_flat_indices(max_resolution, resolution)
+    selected_values = values[:, selected, :]
+    matches = selected_values == reference[None, None, :]
+    per_member_stable = np.all(matches, axis=1)
+    family_stable = np.all(per_member_stable, axis=0)
+    flattened = selected_values.reshape(-1, values.shape[2])
+    unique_predictions = np.asarray(
+        [len(np.unique(flattened[:, index])) for index in range(values.shape[2])],
+        dtype=np.int64,
+    )
+    member_fractions = np.mean(per_member_stable, axis=1)
+    return {
+        "resolution": resolution,
+        "grid_points_per_member": resolution * resolution,
+        "member_count": values.shape[0],
+        "total_sampled_semantics": values.shape[0] * resolution * resolution,
+        "inputs": values.shape[2],
+        "full_family_prediction_identity_fraction": float(np.mean(family_stable)),
+        "full_family_prediction_identity_inputs": int(np.count_nonzero(family_stable)),
+        "mean_unique_predictions": float(np.mean(unique_predictions)),
+        "p90_unique_predictions": float(np.quantile(unique_predictions, 0.9)),
+        "max_unique_predictions": int(np.max(unique_predictions)),
+        "sample_input_pair_disagreement_fraction": float(1.0 - np.mean(matches)),
+        "per_member_prediction_identity_fractions": member_fractions.tolist(),
+        "mean_member_prediction_identity_fraction": float(np.mean(member_fractions)),
+        "minimum_member_prediction_identity_fraction": float(np.min(member_fractions)),
+        "maximum_member_prediction_identity_fraction": float(np.max(member_fractions)),
+    }

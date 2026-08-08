@@ -1,0 +1,346 @@
+{
+  "aggregate_rows": [
+    {
+      "all_grid_predictions_match_center_fraction": {
+        "max": 0.890625,
+        "mean": 0.8515625,
+        "min": 0.796875,
+        "std": 0.03787249888606507
+      },
+      "all_points_unique_trace_fraction": {
+        "max": 0.875,
+        "mean": 0.8203125,
+        "min": 0.78125,
+        "std": 0.046875
+      },
+      "grid_points": 9,
+      "max_unique_predictions": {
+        "max": 3.0,
+        "mean": 2.8,
+        "min": 2.0,
+        "std": 0.4472135954999579
+      },
+      "max_unique_spike_traces": {
+        "max": 9.0,
+        "mean": 9.0,
+        "min": 9.0,
+        "std": 0.0
+      },
+      "mean_unique_predictions": {
+        "max": 1.21875,
+        "mean": 1.1609375,
+        "min": 1.109375,
+        "std": 0.04044430970482745
+      },
+      "mean_unique_spike_traces": {
+        "max": 8.8671875,
+        "mean": 8.7828125,
+        "min": 8.734375,
+        "std": 0.05830658799076653
+      },
+      "median_unique_spike_traces": {
+        "max": 9.0,
+        "mean": 9.0,
+        "min": 9.0,
+        "std": 0.0
+      },
+      "p90_unique_spike_traces": {
+        "max": 9.0,
+        "mean": 9.0,
+        "min": 9.0,
+        "std": 0.0
+      },
+      "prediction_grid_pair_disagreement_fraction": {
+        "max": 0.05555555555555558,
+        "mean": 0.04427083333333335,
+        "min": 0.03298611111111116,
+        "std": 0.008809801705809207
+      },
+      "resolution": 3,
+      "single_prediction_fraction": {
+        "max": 0.890625,
+        "mean": 0.8515625,
+        "min": 0.796875,
+        "std": 0.03787249888606507
+      },
+      "single_spike_trace_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "trace_grid_pair_disagreement_fraction": {
+        "max": 0.8802083333333334,
+        "mean": 0.8769097222222222,
+        "min": 0.8715277777777778,
+        "std": 0.0033843035919475565
+      }
+    },
+    {
+      "all_grid_predictions_match_center_fraction": {
+        "max": 0.8828125,
+        "mean": 0.8375,
+        "min": 0.796875,
+        "std": 0.03467553284558148
+      },
+      "all_points_unique_trace_fraction": {
+        "max": 0.109375,
+        "mean": 0.090625,
+        "min": 0.0703125,
+        "std": 0.01798572567690834
+      },
+      "grid_points": 25,
+      "max_unique_predictions": {
+        "max": 4.0,
+        "mean": 3.4,
+        "min": 3.0,
+        "std": 0.5477225575051661
+      },
+      "max_unique_spike_traces": {
+        "max": 25.0,
+        "mean": 25.0,
+        "min": 25.0,
+        "std": 0.0
+      },
+      "mean_unique_predictions": {
+        "max": 1.21875,
+        "mean": 1.1828125,
+        "min": 1.1328125,
+        "std": 0.03296097360895154
+      },
+      "mean_unique_spike_traces": {
+        "max": 21.8828125,
+        "mean": 21.4703125,
+        "min": 21.078125,
+        "std": 0.33803848823950505
+      },
+      "median_unique_spike_traces": {
+        "max": 22.0,
+        "mean": 21.9,
+        "min": 21.5,
+        "std": 0.22360679774997896
+      },
+      "p90_unique_spike_traces": {
+        "max": 25.0,
+        "mean": 24.4,
+        "min": 24.0,
+        "std": 0.5477225575051661
+      },
+      "prediction_grid_pair_disagreement_fraction": {
+        "max": 0.05437499999999995,
+        "mean": 0.045062500000000005,
+        "min": 0.03125,
+        "std": 0.008579249129440166
+      },
+      "resolution": 5,
+      "single_prediction_fraction": {
+        "max": 0.8828125,
+        "mean": 0.8375,
+        "min": 0.796875,
+        "std": 0.03467553284558148
+      },
+      "single_spike_trace_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "trace_grid_pair_disagreement_fraction": {
+        "max": 0.9415625,
+        "mean": 0.9371875,
+        "min": 0.9321875,
+        "std": 0.0035561895864815803
+      }
+    },
+    {
+      "all_grid_predictions_match_center_fraction": {
+        "max": 0.859375,
+        "mean": 0.821875,
+        "min": 0.796875,
+        "std": 0.027841452626883534
+      },
+      "all_points_unique_trace_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "grid_points": 81,
+      "max_unique_predictions": {
+        "max": 4.0,
+        "mean": 3.6,
+        "min": 3.0,
+        "std": 0.5477225575051661
+      },
+      "max_unique_spike_traces": {
+        "max": 73.0,
+        "mean": 71.0,
+        "min": 68.0,
+        "std": 2.345207879911715
+      },
+      "mean_unique_predictions": {
+        "max": 1.21875,
+        "mean": 1.2078125,
+        "min": 1.1875,
+        "std": 0.01307281291459493
+      },
+      "mean_unique_spike_traces": {
+        "max": 50.2109375,
+        "mean": 47.546875,
+        "min": 45.71875,
+        "std": 1.983121220548715
+      },
+      "median_unique_spike_traces": {
+        "max": 52.0,
+        "mean": 48.5,
+        "min": 45.0,
+        "std": 2.7838821814150108
+      },
+      "p90_unique_spike_traces": {
+        "max": 65.0,
+        "mean": 61.92,
+        "min": 60.0,
+        "std": 1.867351065011612
+      },
+      "prediction_grid_pair_disagreement_fraction": {
+        "max": 0.05237268518518523,
+        "mean": 0.04477237654320987,
+        "min": 0.03356481481481477,
+        "std": 0.007048620085711305
+      },
+      "resolution": 9,
+      "single_prediction_fraction": {
+        "max": 0.859375,
+        "mean": 0.821875,
+        "min": 0.796875,
+        "std": 0.027841452626883534
+      },
+      "single_spike_trace_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "trace_grid_pair_disagreement_fraction": {
+        "max": 0.9578510802469136,
+        "mean": 0.9527006172839506,
+        "min": 0.9476273148148148,
+        "std": 0.004087276281756169
+      }
+    },
+    {
+      "all_grid_predictions_match_center_fraction": {
+        "max": 0.8515625,
+        "mean": 0.809375,
+        "min": 0.7890625,
+        "std": 0.026836818808308856
+      },
+      "all_points_unique_trace_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "grid_points": 289,
+      "max_unique_predictions": {
+        "max": 5.0,
+        "mean": 3.8,
+        "min": 3.0,
+        "std": 0.8366600265340756
+      },
+      "max_unique_spike_traces": {
+        "max": 164.0,
+        "mean": 153.6,
+        "min": 144.0,
+        "std": 9.09945053286186
+      },
+      "mean_unique_predictions": {
+        "max": 1.2421875,
+        "mean": 1.225,
+        "min": 1.1953125,
+        "std": 0.017815241017174032
+      },
+      "mean_unique_spike_traces": {
+        "max": 87.546875,
+        "mean": 81.6703125,
+        "min": 75.4453125,
+        "std": 5.440230883018374
+      },
+      "median_unique_spike_traces": {
+        "max": 91.5,
+        "mean": 80.6,
+        "min": 70.0,
+        "std": 8.45133125608031
+      },
+      "p90_unique_spike_traces": {
+        "max": 129.89999999999998,
+        "mean": 120.55999999999999,
+        "min": 114.3,
+        "std": 6.035147057031825
+      },
+      "prediction_grid_pair_disagreement_fraction": {
+        "max": 0.05044333910034604,
+        "mean": 0.043517517301038075,
+        "min": 0.032006920415224904,
+        "std": 0.007184704744711582
+      },
+      "resolution": 17,
+      "single_prediction_fraction": {
+        "max": 0.8515625,
+        "mean": 0.809375,
+        "min": 0.7890625,
+        "std": 0.026836818808308856
+      },
+      "single_spike_trace_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "trace_grid_pair_disagreement_fraction": {
+        "max": 0.9569636678200693,
+        "mean": 0.9521355968858133,
+        "min": 0.9476913927335641,
+        "std": 0.004148317299225788
+      }
+    }
+  ],
+  "code_revision": "39df97a970001ae94979be645a9933b30c68abbc",
+  "input_report_hashes": {
+    "seed_1701": "2b6d6536148651ecc9000b063a3546f21657872c7315758991619d4806d1526d",
+    "seed_2718": "1e157ba457a69c3b8feecde7dff962ff8488320acc5e797d3976979a6198863b",
+    "seed_3141": "50c6ff84b66c4b39c2dbd3b0f975435223aa5c8eee7c6d6c3c86104e3452844e",
+    "seed_5772": "c0cfd02b6ad0a51e52929a40fe44625664a18f803d63238ca9699701e9ec4fd5",
+    "seed_8119": "a0b2cfa877a31617fc3c57adc603e707effd4ac8fa32c2b138880db9f73b2ffe"
+  },
+  "interpretation": "Every sampled input changes spike trace within the one-percent joint box, so a single-branch proof has no sampled coverage. Trace multiplicity grows sublinearly with grid density and remains tens rather than hundreds on average, while most inputs retain one prediction. This does not prove that complete continuous branch enumeration is tractable: sampled trace counts are lower bounds and must still be multiplied across discrete semantics.",
+  "relative_radius": 0.01,
+  "resolutions": [
+    3,
+    5,
+    9,
+    17
+  ],
+  "route_assessment": {
+    "finest_grid_points": 289,
+    "mean_sampled_traces_below_128": true,
+    "mean_seed_p90_unique_spike_traces": 120.55999999999999,
+    "mean_unique_predictions": 1.225,
+    "mean_unique_spike_traces": 81.6703125,
+    "prediction_grid_pair_disagreement_fraction": 0.043517517301038075,
+    "sampled_branch_growth_exponent": 0.6414327674557928,
+    "single_prediction_fraction": 0.809375,
+    "single_spike_trace_fraction": 0.0
+  },
+  "rows_csv_hash": "c998205e2e67e344364ef940a11b5029babf8f4004038f9e729de67d4d4391cd",
+  "sample_count_per_seed": 128,
+  "schema_version": "SHDBranchComplexityAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed finite-grid diagnostic; not a continuous-family proof"
+}
