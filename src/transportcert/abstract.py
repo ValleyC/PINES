@@ -238,7 +238,12 @@ def _threshold_and_reset_interval(
 
 
 class IntervalFamilyCertifier:
-    """Sound interval propagation with reset branch splitting and merging."""
+    """Sound interval propagation with discrete-member separation.
+
+    Continuous uncertainty is merged within each discrete semantics member.  The
+    argmax condition is checked before taking the conjunction across members, so
+    logits from mutually exclusive execution rules are never mixed.
+    """
 
     def certify(
         self,
@@ -274,14 +279,19 @@ class IntervalFamilyCertifier:
                 box.output_delays,
             )
         ]
-        lower = np.min(np.stack([item[0] for item in member_bounds]), axis=0)
-        upper = np.max(np.stack([item[1] for item in member_bounds]), axis=0)
         prediction = reference_trace.predictions
         rows = np.arange(events.shape[0])
-        chosen_lower = lower[rows, prediction]
-        competing_upper = upper.copy()
-        competing_upper[rows, prediction] = -np.inf
-        certified = chosen_lower > np.max(competing_upper, axis=1)
+        member_certificates = []
+        for member_lower, member_upper in member_bounds:
+            chosen_lower = member_lower[rows, prediction]
+            competing_upper = member_upper.copy()
+            competing_upper[rows, prediction] = -np.inf
+            member_certificates.append(
+                chosen_lower > np.max(competing_upper, axis=1)
+            )
+        certified = np.logical_and.reduce(member_certificates)
+        lower = np.min(np.stack([item[0] for item in member_bounds]), axis=0)
+        upper = np.max(np.stack([item[1] for item in member_bounds]), axis=0)
         return IntervalCertificateResult(
             certified=certified,
             certified_fraction=float(np.mean(certified)),

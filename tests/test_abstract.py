@@ -6,7 +6,13 @@ import numpy as np
 
 from transportcert.abstract import IntervalFamilyCertifier, SemanticsBox, _linear_interval
 from transportcert.emulator import VectorizedEmulator
-from transportcert.semantics import ExecutionSemantics, IntegrationRule, ResetRule
+from transportcert.models import DenseRecurrentSNN
+from transportcert.semantics import (
+    ExecutionSemantics,
+    IntegrationRule,
+    ResetRule,
+    ThresholdTiming,
+)
 
 
 def test_interval_box_contains_sampled_execution(small_model, event_batch) -> None:
@@ -71,3 +77,35 @@ def test_linear_interval_zero_weights_preserves_batch_shape() -> None:
     assert result_upper.shape == (3, 5)
     np.testing.assert_array_equal(result_lower, 0.0)
     np.testing.assert_array_equal(result_upper, 0.0)
+
+
+def test_discrete_members_are_certified_before_family_logit_merge() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[1.0]]),
+        recurrent_weights=np.asarray([[0.0]]),
+        output_weights=np.asarray([[1.0, 0.9]]),
+        bias=np.asarray([0.0]),
+        threshold=np.asarray([1.0]),
+        tau_mem=np.asarray([2.0]),
+        reset_value=np.asarray([0.0]),
+    )
+    inputs = np.full((1, 2, 1), 3.0)
+    reference = ExecutionSemantics()
+    box = SemanticsBox(
+        base=reference,
+        timestep_bounds=(1.0, 1.0),
+        integration_rules=(IntegrationRule.FORWARD_EULER,),
+        threshold_timings=(
+            ThresholdTiming.POST_INTEGRATION,
+            ThresholdTiming.PRE_INTEGRATION,
+        ),
+        reset_rules=(ResetRule.SUBTRACTIVE,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+
+    result = IntervalFamilyCertifier().certify(model, inputs, reference, box)
+
+    assert result.certified.tolist() == [True]
+    assert result.target_logit_lower[0, 0] == 1.0
+    assert result.target_logit_upper[0, 1] == 1.8
