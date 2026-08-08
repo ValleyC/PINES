@@ -5,6 +5,7 @@ from .certificates import CertificateEngine, SemanticsFamily
 from .emulator import ExecutionTrace, ScalarInterpreter, VectorizedEmulator
 from .exact_boundary import ExactThresholdBoundaryOracle
 from .models import DenseRecurrentSNN
+from .parameter_batch import TorchParameterBatchEmulator
 from .reports import CertificateReport, RepairReport
 from .semantics import ExecutionSemantics, NumericFormat
 
@@ -21,6 +22,7 @@ __all__ = [
     "ScalarInterpreter",
     "SemanticsFamily",
     "SemanticsBox",
+    "TorchParameterBatchEmulator",
     "VectorizedEmulator",
 ]
 
