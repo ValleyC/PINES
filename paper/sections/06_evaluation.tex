@@ -72,6 +72,28 @@ disagreement itself substantially exceeds net accuracy change.
   \label{fig:shd-software-pilot}
 \end{figure}
 
+The feedforward N-MNIST negative control distinguishes a generic statistical
+failure from a recurrence-dependent one. Five independently trained models
+reach $97.42\pm0.11\%$ reference test accuracy. Reset-to-value loses only 0.29
+points on average, one-step delay has effectively zero effect, and the largest
+mean loss---floor-rounded fixed point---is 4.27 points. Across its 50 cells the
+same simultaneous procedure again has no observed violation, but now its median
+slack is 1.15 points and its 90th-percentile slack is 3.03 points, passing both
+software tightness gates. Figure~\ref{fig:recurrent-vs-feedforward} summarizes
+the contrast. The result supports recurrent amplification as a central part of
+the transport problem, but it also falsifies any claim that raw disagreement is
+uniformly tight across architectures and semantic regimes.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/recurrent_vs_feedforward.pdf}
+  \caption{The same ten semantic targets on five-seed recurrent SHD and
+  feedforward N-MNIST models. Recurrence amplifies semantic accuracy loss and
+  creates large certificate slack. The high-accuracy feedforward control is
+  comparatively robust and passes the preregistered software tightness gates.}
+  \label{fig:recurrent-vs-feedforward}
+\end{figure}
+
 A label-free repair pilot on one reset-to-value seed recovers 83.5\% of the lost
 accuracy, exceeding the 70\% recovery target and global threshold scaling.
 However, its post-repair disagreement bound is still 17.1\%, rejecting every
