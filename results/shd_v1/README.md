@@ -287,6 +287,28 @@ python experiments/run_shd_guard_cut_certificate.py --seed 1701 --max-leaves 163
 python experiments/aggregate_shd_polygonal_guard_cuts.py
 ```
 
+### Exact threshold-boundary slices
+
+`exact_threshold_slices_summary.json` records an exact reset-to-value subproblem.
+At a fixed timestep, threshold affects spike choices but not the conditional
+state update, so the oracle partitions the requested interval into contiguous
+spike-trace cells. It covers every representable binary64 threshold scale using
+the emulator's actual multiplication and comparison, rather than sampled points
+or relaxed guards.
+
+For the same finite-grid-stable SHD input, all 257 fixed timestep slices across
+plus/minus 1% preserve the reference class. The run exhausts 2,716 exact cells
+in 12.1 seconds; individual slices need 6--17 cells. This rules out
+threshold-only boundary relaxation at those slices. It is not a joint
+continuous certificate because the open timestep regions between slices remain
+unproved. More timestep-grid densification is stopped in favor of a joint
+timestep--threshold oracle.
+
+```powershell
+python experiments/run_shd_exact_threshold_slices.py --seed 1701 --output-root artifacts/shd_v45_exact_threshold_slices
+python experiments/aggregate_shd_exact_threshold_slices.py
+```
+
 ### Post-repair bounded-family headroom
 
 `repair_family_grid_summary.json` compares selected reset-target models against

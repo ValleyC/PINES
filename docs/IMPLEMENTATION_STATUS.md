@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 90
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 94
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -101,7 +101,13 @@
   0.0523% is about 84 times smaller than with matched axis-aligned affine
   refinement, but 6,625 tiny polygons remain unresolved. No full certificate is
   issued, further leaf escalation is stopped, and five-seed expansion remains
-  gated on an exact guard-boundary oracle.
+  gated on a joint guard-boundary oracle.
+- Exact threshold-boundary slice oracle: for reset-to-value at fixed timestep,
+  it exhausts every representable binary64 threshold scale using contiguous
+  spike-trace cells and the emulator's actual comparisons. All 257 timestep
+  slices for the same SHD development input preserve the reference class; 2,716
+  cells are sufficient in 12.1 seconds, with at most 17 in one slice. This is
+  not a proof between timestep slices, so the joint certificate remains open.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
@@ -158,7 +164,9 @@ The NeurIPS framing remains conditional on a full recurrence-aware certificate
 and prospective physical conformance. Polygonal recurrent guard cuts now cover
 99.9477% of one grid-stable SHD input's parameter box, leaving only 0.0523%
 unresolved, but they still fail the actual per-input gate because every region
-must be proved. Further leaf escalation is rejected; the next method is an exact
+must be proved. Exact threshold enumeration closes every binary64 threshold
+scale at 257 fixed timestep slices, but not the regions between slices. Further
+grid escalation is rejected; the next method is a joint timestep--threshold
 guard-boundary oracle for the residual polygons. Five-seed expansion remains
 gated on at least one complete continuous-family certificate. If that fails, the
 project follows the declared pivot to a narrower finite-family or
@@ -166,9 +174,11 @@ systems/risk-ranking contribution.
 
 ## Open experimental milestones
 
-- Exact guard-boundary oracle for the residual polygon cover. Polygonal cuts
-  reduce unresolved area to 0.0523% but do not complete a full certificate;
-  further leaf escalation is stopped and five-seed expansion remains gated.
+- Joint timestep--threshold guard-boundary oracle for the residual polygon
+  cover. Polygonal cuts reduce unresolved area to 0.0523%, and the exact
+  threshold oracle closes 257 fixed-timestep slices, but neither proves the open
+  regions between slices. Further leaf/grid escalation is stopped and five-seed
+  expansion remains gated.
 - Multi-step family-verified repair margins. A pointwise center-execution guard
   penalty and worst-loss objectives over sparse execution grids are now
   empirically ruled out as certificate-restoring objectives.

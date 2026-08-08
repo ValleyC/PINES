@@ -57,6 +57,16 @@ uses width-scaled axis refinement after a declared guard-cut budget. Polygon
 areas are checked to cover the parent exactly, and only zero unresolved area
 produces a certificate.
 
+For reset-to-value execution at a fixed timestep, threshold does not enter the
+state update conditional on a spike trace. We exploit this to exhaust every
+binary64 shared-threshold scale in a closed interval. The exact emulator trace
+defines a contiguous validity cell: quiet guards impose a lower scale and
+spiking guards an upper scale. Monotone search uses the emulator's actual
+floating-point multiplication and comparison, and a work queue covers the
+entire representable interval. Exhausting the cell budget is inconclusive. This
+oracle is exact for a fixed timestep, not for the continuum between timestep
+slices.
+
 We also implement a path-separated diagnostic domain for a single zero-delay
 member. It enumerates possible spike vectors, propagates a separate interval
 state for each path, and merges only paths with identical current spikes and

@@ -269,7 +269,14 @@ may consume at most one eighth of the leaves gives 99.68\% at 4,096 leaves and
 99.9477\% after 31,725 polygon analyses at 16,384 leaves. The latter leaves
 6,625 tiny polygons and 0.0523\% area unresolved, about 84 times less than
 matched axis-aligned affine refinement. We stop leaf escalation and issue no
-certificate: an exact boundary oracle is still required.
+certificate: a joint timestep--threshold boundary oracle is still required.
+
+The exact threshold oracle then exhausts every binary64 threshold scale in the
+same plus/minus 1\% range at 257 fixed timestep slices. All 257 slices preserve
+the reference class, using 2,716 exact trace cells in 12.1 seconds and at most
+17 cells for any slice. This removes threshold-only relaxation as the cause at
+those slices, but the open timestep regions between slices remain unproved; the
+result is therefore diagnostic, not a joint continuous-family certificate.
 
 \begin{figure}[t]
   \centering
