@@ -7,6 +7,7 @@ import numpy as np
 from transportcert.abstract import IntervalFamilyCertifier, SemanticsBox
 from transportcert.affine import (
     AdaptiveAffineGuardCutCertifier,
+    AdaptiveHybridPolygonCertifier,
     AffineGuardFamilyCertifier,
     FixedTraceAffineAnalyzer,
     PolygonBranchCertifier,
@@ -488,3 +489,37 @@ def test_polygon_branch_cap_is_inconclusive(small_model, event_batch) -> None:
     assert not result.complete
     assert not result.certified
     assert result.first_cap_timestep is not None
+
+
+def test_adaptive_hybrid_closes_prediction_invariant_root() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[1.0]]),
+        recurrent_weights=np.zeros((1, 1)),
+        output_weights=np.asarray([[1.0, 0.0]]),
+        bias=np.zeros(1),
+        threshold=np.ones(1),
+        tau_mem=np.ones(1),
+        reset_value=np.zeros(1),
+    )
+    reference = ExecutionSemantics()
+    target = replace(reference, reset_rule=ResetRule.TO_VALUE)
+    box = SemanticsBox(
+        base=target,
+        timestep_bounds=(0.9, 1.1),
+        threshold_scale_bounds=(0.9, 1.1),
+        integration_rules=(target.integration_rule,),
+        threshold_timings=(target.threshold_timing,),
+        reset_rules=(target.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    result = AdaptiveHybridPolygonCertifier(max_branches=4).certify(
+        model,
+        np.ones((1, 1, 1)),
+        reference,
+        box,
+        max_leaves=1,
+    )
+    assert result.certified
+    assert result.branch_certified_leaves == 1
+    assert result.final_leaves == 1

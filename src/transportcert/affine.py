@@ -75,6 +75,24 @@ class PolygonBranchCertificateResult:
 
 
 @dataclass(frozen=True)
+class AdaptiveHybridCertificateResult:
+    certified: bool
+    certified_parameter_fraction: float
+    unresolved_parameter_fraction: float
+    analyzed_polygons: int
+    final_leaves: int
+    branch_certified_leaves: int
+    affine_certified_leaves: int
+    unresolved_leaves: int
+    branch_attempts: int
+    branch_cap_hits: int
+    branch_prediction_rejections: int
+    maximum_completed_branches: int
+    guard_band_splits: int
+    axis_fallback_splits: int
+
+
+@dataclass(frozen=True)
 class _PolygonBranch:
     voltage: _HybridAffine
     previous_spikes: np.ndarray
@@ -984,6 +1002,191 @@ class PolygonBranchCertifier:
             total_branch_splits=total_splits,
             maximum_uncertain_neurons_at_step=maximum_uncertain,
             first_cap_timestep=None,
+        )
+
+
+class AdaptiveHybridPolygonCertifier:
+    """Refine polygons only when local spike-branch closure cannot certify."""
+
+    def __init__(
+        self,
+        *,
+        max_branches: int = 64,
+        max_guard_band_splits: int | None = None,
+        member_certifier: AffineGuardFamilyCertifier | None = None,
+        branch_certifier: PolygonBranchCertifier | None = None,
+    ) -> None:
+        if max_branches < 1:
+            raise ValueError("max_branches must be positive")
+        if max_guard_band_splits is not None and max_guard_band_splits < 0:
+            raise ValueError("maximum guard-band splits must be nonnegative")
+        self.max_branches = max_branches
+        self.max_guard_band_splits = max_guard_band_splits
+        self.member_certifier = member_certifier or AffineGuardFamilyCertifier()
+        self.branch_certifier = branch_certifier or PolygonBranchCertifier()
+
+    def certify(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        box: SemanticsBox,
+        *,
+        max_leaves: int = 256,
+    ) -> AdaptiveHybridCertificateResult:
+        events = _validate_inputs(model, inputs)
+        if len(events) != 1:
+            raise ValueError("adaptive hybrid certification accepts one input")
+        if max_leaves < 1:
+            raise ValueError("max_leaves must be positive")
+        reference_predictions = VectorizedEmulator().run(
+            model, events, reference
+        ).predictions
+        root_polygon = np.asarray(
+            [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]],
+            dtype=np.float64,
+        )
+        root_area = polygon_area(root_polygon)
+        queue: list[tuple[float, int, int, np.ndarray]] = []
+        counter = itertools.count()
+        heapq.heappush(queue, (-root_area, 0, next(counter), root_polygon))
+        leaf_count = 1
+        analyzed = 0
+        certified_area = 0.0
+        unresolved_area = 0.0
+        branch_certified_leaves = 0
+        affine_certified_leaves = 0
+        unresolved_leaves = 0
+        branch_attempts = 0
+        branch_cap_hits = 0
+        branch_prediction_rejections = 0
+        maximum_completed_branches = 0
+        guard_band_splits = 0
+        axis_fallback_splits = 0
+
+        while queue:
+            _, depth, _, polygon = heapq.heappop(queue)
+            del depth
+            area = polygon_area(polygon)
+            branch = self.branch_certifier.certify(
+                model,
+                events,
+                reference,
+                box,
+                polygon,
+                max_branches=self.max_branches,
+            )
+            branch_attempts += 1
+            if branch.complete:
+                maximum_completed_branches = max(
+                    maximum_completed_branches, branch.final_branch_count
+                )
+                if branch.certified:
+                    certified_area += area
+                    branch_certified_leaves += 1
+                    analyzed += 1
+                    continue
+                branch_prediction_rejections += 1
+            else:
+                branch_cap_hits += 1
+
+            result = self.member_certifier.certify_with_reference_predictions(
+                model,
+                events,
+                reference,
+                box,
+                reference_predictions,
+                polygon,
+            )
+            analyzed += 1
+            if bool(result.certified[0]):
+                certified_area += area
+                affine_certified_leaves += 1
+                continue
+            children: tuple[np.ndarray, ...] = (polygon,)
+            split_kind: str | None = None
+            guard_budget_available = (
+                self.max_guard_band_splits is None
+                or guard_band_splits < self.max_guard_band_splits
+            )
+            if (
+                bool(result.guard_cut_valid[0])
+                and leaf_count < max_leaves
+                and guard_budget_available
+            ):
+                children = split_polygon_guard_band(
+                    polygon,
+                    float(result.guard_cut_center[0]),
+                    result.guard_cut_generators[0],
+                    float(result.guard_cut_radius[0]),
+                )
+                split_kind = "guard"
+
+            def is_useful(candidate: tuple[np.ndarray, ...]) -> bool:
+                candidate_area = sum(polygon_area(child) for child in candidate)
+                return (
+                    len(candidate) >= 2
+                    and leaf_count + len(candidate) - 1 <= max_leaves
+                    and np.isclose(candidate_area, area, rtol=1e-8, atol=1e-12)
+                    and max(polygon_area(child) for child in candidate)
+                    < area * (1.0 - 1e-12)
+                )
+
+            useful_split = is_useful(children)
+            if not useful_split and leaf_count < max_leaves:
+                coordinate_widths = np.ptp(polygon, axis=0)
+                scores = np.asarray(result.split_axis_scores[0]) * coordinate_widths
+                axis = int(np.argmax(scores)) if np.any(scores > 0.0) else 0
+                lower_coordinate = float(np.min(polygon[:, axis]))
+                upper_coordinate = float(np.max(polygon[:, axis]))
+                if upper_coordinate > lower_coordinate:
+                    midpoint = (lower_coordinate + upper_coordinate) / 2.0
+                    normal = np.zeros(2, dtype=np.float64)
+                    normal[axis] = 1.0
+                    children = (
+                        clip_polygon_halfspace(polygon, normal, midpoint),
+                        clip_polygon_halfspace(polygon, -normal, -midpoint),
+                    )
+                    split_kind = "axis"
+                    useful_split = is_useful(children)
+            if not useful_split:
+                unresolved_area += area
+                unresolved_leaves += 1
+                continue
+            leaf_count += len(children) - 1
+            if split_kind == "guard":
+                guard_band_splits += 1
+            else:
+                axis_fallback_splits += 1
+            for child in children:
+                heapq.heappush(
+                    queue,
+                    (-polygon_area(child), 0, next(counter), child),
+                )
+
+        certified_fraction = certified_area / root_area
+        unresolved_fraction = unresolved_area / root_area
+        if not np.isclose(certified_fraction + unresolved_fraction, 1.0):
+            raise AssertionError("hybrid polygons do not cover the root domain")
+        return AdaptiveHybridCertificateResult(
+            certified=unresolved_leaves == 0,
+            certified_parameter_fraction=certified_fraction,
+            unresolved_parameter_fraction=unresolved_fraction,
+            analyzed_polygons=analyzed,
+            final_leaves=(
+                branch_certified_leaves
+                + affine_certified_leaves
+                + unresolved_leaves
+            ),
+            branch_certified_leaves=branch_certified_leaves,
+            affine_certified_leaves=affine_certified_leaves,
+            unresolved_leaves=unresolved_leaves,
+            branch_attempts=branch_attempts,
+            branch_cap_hits=branch_cap_hits,
+            branch_prediction_rejections=branch_prediction_rejections,
+            maximum_completed_branches=maximum_completed_branches,
+            guard_band_splits=guard_band_splits,
+            axis_fallback_splits=axis_fallback_splits,
         )
 
 
