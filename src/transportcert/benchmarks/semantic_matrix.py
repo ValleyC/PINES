@@ -113,6 +113,7 @@ def run_shd_semantic_matrix(
     *,
     confidence: float = 0.95,
     batch_size: int = 256,
+    benchmark: str = "SHD",
 ) -> dict[str, Any]:
     import torch
 
@@ -201,7 +202,8 @@ def run_shd_semantic_matrix(
     with predictions_path.open("xb") as handle:
         np.savez_compressed(handle, **raw_payload)
     summary = {
-        "schema_version": "SHDSemanticMatrix/v1",
+        "schema_version": f"{benchmark}SemanticMatrix/v1",
+        "benchmark": benchmark,
         "model_hash": model.model_hash,
         "model_artifact_hash": sha256_file(model_path),
         "train_store_hash": train_store.data_hash,
@@ -236,4 +238,3 @@ def run_shd_semantic_matrix(
     }
     write_json_immutable(summary_path, summary)
     return summary
-
