@@ -15,6 +15,14 @@ accuracy-change inequality is elementary. The proposed contribution is prospecti
 SNN execution-family certification, sound state analysis, physical conformance,
 and repair under a separated audit protocol.
 
+Formal SNN robustness work encodes spike dynamics in SMT and reports severe
+scaling limits for rate-coded models; a more efficient direct search relies on
+temporal encoding in which each neuron fires at most once
+\citep{seong2024verification}. Our recurrent rate-coded setting permits repeated
+spikes and varies execution parameters rather than inputs. Its explicit
+branch-set failure is therefore consistent with, but not solved by, that line of
+work.
+
 The guarantee assumes a fixed finite horizon, immutable model and semantics,
 paired audit inputs drawn independently from the deployment distribution, and
 correct capture identities. Distribution drift after certification is outside
@@ -28,4 +36,3 @@ The scope is digital classification. We exclude analog mismatch, continual
 learning, control, safety certification, and energy claims. A certificate bounds
 absolute accuracy change, not class-conditional harm unless the sampling and
 report are extended accordingly.
-

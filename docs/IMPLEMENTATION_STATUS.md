@@ -75,6 +75,15 @@
   fails to complete representative 50-step cells even with a 65,536-state cap
   and 128-by-128 parameter partitioning. Merging equivalent spike/logit states
   and retaining all states fail at essentially the same timestep.
+- Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
+  grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
+  delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
+  and the full family 31.09%. Every primary-axis seed remains above 56.25%.
+- Five-seed post-repair reset-family diagnostic: certificate-directed repair
+  raises sampled family identity from 64.84% to 75.00% and improves every seed,
+  but logit-only reaches 76.41%. A single-seed sound branch-set test completes
+  no representative repaired-model cell; at the finest partition, repair
+  reduces rather than increases the reached proof depth.
 - Sample-complexity analysis: under ten-way simultaneous 95% confidence, zero
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the
@@ -95,6 +104,12 @@ certificate operationally tight. The evidence also does not support the intended
 continuous bounded-family claim with the current interval abstraction.
 Recurrence causes much of the true finite-family instability, while continuous
 interval relaxation and decision-identity loss remain substantial.
+
+Targeted bounded-axis contracts remain scientifically viable: their sampled
+ceilings are 60--69%, and repair can add roughly ten points of reset-family
+headroom. However, the current method restores predictions rather than static
+certifiability. It must be described as transport repair, not certificate
+restoration, until a sound post-repair family bound succeeds.
 
 The distribution certificate is mathematically valid but cannot be made
 uniformly tighter without adding information or assumptions. A top-venue claim

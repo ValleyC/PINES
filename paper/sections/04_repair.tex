@@ -30,3 +30,9 @@ scaling, per-platform quantization-aware training, logit-only distillation, and
 fully supervised target retraining. Calibration examples, label counts,
 optimization evaluations, wall-clock/GPU cost, and hardware runs are matched or
 reported explicitly.
+
+The differentiable margin term is a proxy for eventual certification, not a
+static certificate. We therefore evaluate separately whether a selected repair
+increases sound-analysis coverage or reduces proof complexity. If it only
+restores sampled decisions or labeled accuracy, we call it \emph{transport
+repair}, not certificate restoration.

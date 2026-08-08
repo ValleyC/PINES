@@ -197,6 +197,26 @@ contribute interchangeable perturbations.
   \label{fig:full-family-grid}
 \end{figure*}
 
+The Cartesian family is not the only meaningful deployment contract. On the
+same grid and inputs, reset, integration, timing, and delay subfamilies retain
+60.31\%, 68.91\%, 69.06\%, and 69.06\% mean prediction identity,
+respectively; every primary-axis seed remains above 56.25\%. Reset plus delay
+retains 46.72\%, integration plus timing 55.47\%, and the full family 31.09\%.
+Continuous variation costs 14.7--16.3 points for the single-axis families. This
+supports a targeted bounded-axis fallback with substantial attainable headroom,
+but does not turn the grid into a proof. Figure~\ref{fig:subfamily-grid} makes
+the hierarchy explicit.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/shd_subfamily_grid.pdf}
+  \caption{Five-seed sampled identity ceiling for nested SHD semantics
+  contracts. Green evaluates only the discrete members at the center; purple
+  adds the $9\times9$ timestep/threshold grid to the same members. All values
+  are falsification diagnostics, not certificates.}
+  \label{fig:subfamily-grid}
+\end{figure*}
+
 We then test the most direct correlated alternative: soundly retain each
 possible spike vector as a separate abstract state, merging only states with
 identical current spikes and accumulated logits. This prototype is safely
@@ -420,6 +440,24 @@ decision identity.
   gates. Strong accuracy recovery does not restore reference decision identity.}
   \label{fig:shd-repair}
 \end{figure*}
+
+We additionally ask whether repair increases the attainable ceiling over a
+local target family. Taking the original source/reference predictions as the
+contract, we execute each selected reset-target model over the $9\times9$
+$\pm1\%$ grid. No repair retains 64.84\% identity. Certificate-directed repair
+raises this to $75.00\pm3.43\%$ and improves all five seeds; logit-only reaches
+$76.41\pm3.53\%$, global scaling 68.91\%, and the labeled target fine-tune
+71.09\%. Thus repair creates roughly ten points of extra sampled certification
+headroom, but the proposed objective remains 1.41 points below logit-only.
+
+The sound-analysis outcome is less favorable. On seed 1701 representative
+reset-family cells with a 65,536-state cap, none of the no-repair,
+certificate-directed, or logit-only models completes. At $128\times128$
+partitioning, the mean cell-median abort timestep is 47.0 without repair, 42.83
+after certificate-directed repair, and 40.33 after logit-only repair. Hence the
+current proxy restores sampled decisions while making explicit branch proof no
+easier. We do not claim certificate restoration; the next repair objective must
+directly enlarge verified guard margins or reduce proof complexity.
 
 Repair can therefore restore aggregate accuracy without restoring decision
 identity. The current evidence supports the semantic transport problem, a

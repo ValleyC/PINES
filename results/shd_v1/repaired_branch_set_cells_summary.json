@@ -1,0 +1,86 @@
+{
+  "aggregate_rows": [
+    {
+      "complete_cell_input_count": 0,
+      "max_cell_median_abort_step": 43.5,
+      "maximum_state_branches_observed": 55038,
+      "mean_cell_median_abort_step": 43.083333333333336,
+      "merge_cell_combinations": 6,
+      "method": "no_repair",
+      "min_cell_median_abort_step": 43.0,
+      "partitions_per_axis": 64,
+      "samples_per_cell": 2
+    },
+    {
+      "complete_cell_input_count": 0,
+      "max_cell_median_abort_step": 47.0,
+      "maximum_state_branches_observed": 58880,
+      "mean_cell_median_abort_step": 47.0,
+      "merge_cell_combinations": 6,
+      "method": "no_repair",
+      "min_cell_median_abort_step": 47.0,
+      "partitions_per_axis": 128,
+      "samples_per_cell": 2
+    },
+    {
+      "complete_cell_input_count": 0,
+      "max_cell_median_abort_step": 40.0,
+      "maximum_state_branches_observed": 11574,
+      "mean_cell_median_abort_step": 39.75,
+      "merge_cell_combinations": 6,
+      "method": "certificate_directed",
+      "min_cell_median_abort_step": 39.5,
+      "partitions_per_axis": 64,
+      "samples_per_cell": 2
+    },
+    {
+      "complete_cell_input_count": 0,
+      "max_cell_median_abort_step": 43.0,
+      "maximum_state_branches_observed": 23589,
+      "mean_cell_median_abort_step": 42.833333333333336,
+      "merge_cell_combinations": 6,
+      "method": "certificate_directed",
+      "min_cell_median_abort_step": 42.5,
+      "partitions_per_axis": 128,
+      "samples_per_cell": 2
+    },
+    {
+      "complete_cell_input_count": 0,
+      "max_cell_median_abort_step": 37.5,
+      "maximum_state_branches_observed": 39060,
+      "mean_cell_median_abort_step": 37.333333333333336,
+      "merge_cell_combinations": 6,
+      "method": "logit_only",
+      "min_cell_median_abort_step": 37.0,
+      "partitions_per_axis": 64,
+      "samples_per_cell": 2
+    },
+    {
+      "complete_cell_input_count": 0,
+      "max_cell_median_abort_step": 40.5,
+      "maximum_state_branches_observed": 46656,
+      "mean_cell_median_abort_step": 40.333333333333336,
+      "merge_cell_combinations": 6,
+      "method": "logit_only",
+      "min_cell_median_abort_step": 40.0,
+      "partitions_per_axis": 128,
+      "samples_per_cell": 2
+    }
+  ],
+  "code_revision": "6deb0c1951f7386d0600e7ceaf914f75d5739ad5",
+  "condition": "reset_to_value",
+  "input_report_hash": "9a61adda525e8825ddab0bd1815d36f44329dfa8e6986ea55ad65ac2ea2c06d2",
+  "interpretation": "Both label-free repairs increase sampled family identity but reduce the depth reached by explicit sound branch analysis on these cells. The current repair objective recovers decisions; it does not restore static certifiability.",
+  "max_branches": 65536,
+  "relative_radius": 0.01,
+  "route_assessment": {
+    "any_complete_cell_input": false,
+    "certificate_directed_improves_explicit_proof_depth": false,
+    "finest_certificate_directed_mean_abort_step": 42.833333333333336,
+    "finest_logit_only_mean_abort_step": 40.333333333333336,
+    "finest_no_repair_mean_abort_step": 47.0
+  },
+  "schema_version": "SHDRepairedBranchSetCellAggregate/v1",
+  "seed": 1701,
+  "status": "single-seed representative-cell kill diagnostic; cap failures are inconclusive and cells do not cover the family"
+}

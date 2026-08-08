@@ -169,6 +169,17 @@ python experiments/run_shd_full_family_grid.py --seed 1701
 python experiments/aggregate_shd_full_family_grid.py
 ```
 
+`subfamily_grid_summary.json` decomposes the same 9-by-9 grid into targeted
+contracts. Reset retains 60.31% sampled identity, integration 68.91%, timing and
+delay 69.06%, reset plus delay 46.72%, integration plus timing 55.47%, and the
+full family 31.09%. This supports targeted bounded-axis contracts as the fallback
+formulation; all values remain empirical ceilings rather than proofs.
+
+```powershell
+python experiments/run_shd_subfamily_grid.py --seed 1701
+python experiments/aggregate_shd_subfamily_grid.py
+```
+
 ### Explicit branch-set kill diagnostic
 
 `branch_set_feasibility_summary.json` records a sound, single-seed feasibility
@@ -185,6 +196,28 @@ python experiments/run_shd_branch_set_partition.py --seed 1701
 python experiments/run_shd_branch_set_cell_sweep.py --seed 1701 --partitions 32 64 128 --max-branches 65536
 python experiments/run_shd_branch_set_cell_sweep.py --seed 1701 --partitions 32 64 128 --max-branches 65536 --merge
 python experiments/aggregate_shd_branch_set_feasibility.py
+```
+
+### Post-repair bounded-family headroom
+
+`repair_family_grid_summary.json` compares selected reset-target models against
+the original source/reference predictions over a 9-by-9 local family.
+Certificate-directed repair raises sampled family identity from 64.84% to 75.00%
+and improves every seed, while logit-only reaches 76.41%, global threshold
+scaling 68.91%, and the labeled target fine-tune 71.09%.
+
+`repaired_branch_set_cells_summary.json` asks whether the sampled improvement
+makes sound explicit branch analysis easier. It does not: no representative
+cell completes, and at 128 partitions per axis the mean cell-median abort step
+falls from 47.0 without repair to 42.83 for certificate-directed repair and
+40.33 for logit-only. The present methods are transport repairs, not
+certificate-restoring repairs.
+
+```powershell
+python experiments/run_shd_repair_family_grid.py --seed 1701
+python experiments/aggregate_shd_repair_family_grid.py
+python experiments/run_shd_repaired_branch_set_cells.py --seed 1701
+python experiments/aggregate_shd_repaired_branch_set_cells.py
 ```
 
 ### Horizon diagnostic
