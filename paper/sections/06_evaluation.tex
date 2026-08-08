@@ -469,6 +469,16 @@ without improving proof depth. We therefore kill the pointwise penalty before a
 five-seed expansion; a successful repair must optimize a multi-step
 family-verified margin rather than center-execution threshold distance.
 
+We next optimize the worst per-input reference-class loss over either the four
+family corners or a $3\times3$ family grid. The best single-seed development
+checkpoint is the 10-epoch $3\times3$ model: its denser $9\times9$ audit-grid
+identity is 75.00\%, one input above certificate-directed repair's 74.22\% but
+below logit-only's 77.34\%. Extending the identical objective to 40 epochs
+reduces calibration family disagreements from 131 to 106, yet audit-grid
+identity falls to 71.88\%. We stop before sound branch analysis and five seeds:
+sampled-family loss does not reliably predict untouched family identity, much
+less a continuous-family certificate.
+
 Repair can therefore restore aggregate accuracy without restoring decision
 identity. The current evidence supports the semantic transport problem, a
 substantial label-free repair opportunity, and exact prospective certification

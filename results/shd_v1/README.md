@@ -235,6 +235,22 @@ The immutable summary is regenerated from ignored development artifacts with:
 python experiments/aggregate_shd_guard_margin_development.py
 ```
 
+### Sampled-family repair kill test
+
+`sampled_family_repair_development_summary.json` compares worst-point training
+on four corners and on a 3-by-3 timestep/threshold grid. The best single-seed
+checkpoint uses the 3-by-3 grid for 10 epochs and reaches 75.00% identity on the
+disjoint 9-by-9 audit grid. This is one of 128 inputs above certificate-directed
+repair (74.22%) but below logit-only (77.34%). At 40 epochs, calibration family
+disagreements improve from 131 to 106 while audit-grid identity falls to 71.88%.
+The method therefore fails the gate for sound proof analysis and five seeds.
+
+Regenerate the immutable development summary from ignored artifacts with:
+
+```powershell
+python experiments/aggregate_shd_sampled_family_repair.py
+```
+
 ### Horizon diagnostic
 
 On deterministic 256-input audit subsets, trained recurrent finite-family static

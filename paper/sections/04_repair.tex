@@ -43,3 +43,9 @@ selected on calibration data and evaluated by the independent sound analyzer;
 it is not itself a verified multi-step margin. We stop this route before the
 five-seed matrix if it fails to complete cells or outperform the unrepaired
 model's proof depth.
+
+A second development variant minimizes the worst reference-class loss over a
+sampled timestep/threshold family. It is selected by joint prediction identity
+on the calibration grid, then evaluated on a denser disjoint audit grid. Because
+recurrent threshold branches can change between sampled points, this objective
+also remains a transport surrogate rather than a family certificate.

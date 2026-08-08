@@ -1,0 +1,93 @@
+{
+  "code_revision": "3694c45f9ed624e4038e6e561fbcf299bc4faa7a",
+  "condition": "reset_to_value",
+  "evaluation_grid_resolution": 9,
+  "existing_seed_1701_baselines": {
+    "certificate_directed": 0.7421875,
+    "global_threshold": 0.703125,
+    "logit_only": 0.7734375,
+    "no_repair": 0.625,
+    "per_platform_qat": 0.734375
+  },
+  "family_radius": 0.01,
+  "gate_rule": "Sound branch analysis and five-seed expansion require reliable audit-family improvement over both certificate-directed and logit-only baselines.",
+  "input_report_hashes": {
+    "artifacts/shd_v12_repair_family_grid/seed_1701/reset_to_value_family_grid.json": "6e57dd276afc1504b82868ee545689c9dbaaa166e8ad64142323fd287b395068",
+    "artifacts/shd_v18_family_margin/seed_1701/reset_to_value/family_margin/repair_report.json": "3064e69cf55c6470c126fc76bed795a95df11dd45bb1e6f990d5bff32be3adfe",
+    "artifacts/shd_v18_family_margin_smoke/seed_1701/reset_to_value/family_margin/repair_report.json": "117c4ce1d5408e9a0ba5dfbec9852a36115d350c735aa780abb37789d308ccb9",
+    "artifacts/shd_v19_family_margin_grid/seed_1701/reset_to_value_family_grid.json": "12bf502794c7a4f0d1396d1d91bda6ce5b67724be27b1b3f2d695b9e7d55b3cc",
+    "artifacts/shd_v19_family_margin_smoke_grid/seed_1701/reset_to_value_family_grid.json": "f5975522f2bb95cb78b50ab091028048928008f0f84186b2d7b24673d254ad50",
+    "artifacts/shd_v20_family_margin_grid3_full/seed_1701/reset_to_value/family_margin/repair_report.json": "80a6f087afa85d2588b280fff5b4b4eb7eb611fb0a69532a8606d6ee8f1d2601",
+    "artifacts/shd_v20_family_margin_grid3_smoke/seed_1701/reset_to_value/family_margin/repair_report.json": "579d48010f23ed49d1cd74415f2e3bebaa2026597f98a716e1466a1ff6f1e93f",
+    "artifacts/shd_v21_family_margin_grid3_full_grid/seed_1701/reset_to_value_family_grid.json": "95da372c5ae0fa6cef295df6225ecd42b3e61d6070ce81dafb162f061b52ba71",
+    "artifacts/shd_v21_family_margin_grid3_smoke_grid/seed_1701/reset_to_value_family_grid.json": "b11871135865b4c7ebd44892c01aebb304c8146aa4a4f475d57d5d9331c421d8"
+  },
+  "interpretation": "Worst-point training on four corners or a three-by-three grid restores accuracy but does not reliably generalize to the untouched nine-by-nine family. The best development checkpoint beats certificate-directed repair by one of 128 audit inputs but remains below logit-only; longer training improves calibration disagreement while reducing audit-family identity. A sampled execution loss is therefore not a certificate-restoring proxy.",
+  "route_assessment": {
+    "advance_to_five_seed": false,
+    "best_exceeds_certificate_directed": true,
+    "best_exceeds_logit_only": false,
+    "best_family_identity_fraction": 0.75,
+    "best_variant": "three_by_three_10_epochs",
+    "full_training_improves_audit_family_identity": false,
+    "full_training_improves_calibration_count": true,
+    "run_sound_branch_analysis": false
+  },
+  "rows": [
+    {
+      "accuracy_recovery_fraction": 0.7538461538461538,
+      "audit_disagreement_rate": 0.14285714285714285,
+      "best_calibration_family_disagreements": 129,
+      "center_identity_fraction": 0.8125,
+      "certificate_upper_bound": 0.16396152625764,
+      "elapsed_seconds": 23.814908800181,
+      "epochs": 10,
+      "nine_by_nine_family_identity_fraction": 0.7109375,
+      "optimization_steps": 70,
+      "training_grid_resolution": 2,
+      "variant": "four_corner_10_epochs"
+    },
+    {
+      "accuracy_recovery_fraction": 1.1038461538461537,
+      "audit_disagreement_rate": 0.13472706155632985,
+      "best_calibration_family_disagreements": 93,
+      "center_identity_fraction": 0.859375,
+      "certificate_upper_bound": 0.15537836020144624,
+      "elapsed_seconds": 94.77884729998186,
+      "epochs": 40,
+      "nine_by_nine_family_identity_fraction": 0.7265625,
+      "optimization_steps": 280,
+      "training_grid_resolution": 2,
+      "variant": "four_corner_40_epochs"
+    },
+    {
+      "accuracy_recovery_fraction": 0.7423076923076922,
+      "audit_disagreement_rate": 0.13472706155632985,
+      "best_calibration_family_disagreements": 131,
+      "center_identity_fraction": 0.8359375,
+      "certificate_upper_bound": 0.15537836020144624,
+      "elapsed_seconds": 51.831192899961025,
+      "epochs": 10,
+      "nine_by_nine_family_identity_fraction": 0.75,
+      "optimization_steps": 70,
+      "training_grid_resolution": 3,
+      "variant": "three_by_three_10_epochs"
+    },
+    {
+      "accuracy_recovery_fraction": 0.8384615384615381,
+      "audit_disagreement_rate": 0.13472706155632985,
+      "best_calibration_family_disagreements": 106,
+      "center_identity_fraction": 0.8359375,
+      "certificate_upper_bound": 0.15537836020144624,
+      "elapsed_seconds": 197.57475390005857,
+      "epochs": 40,
+      "nine_by_nine_family_identity_fraction": 0.71875,
+      "optimization_steps": 280,
+      "training_grid_resolution": 3,
+      "variant": "three_by_three_40_epochs"
+    }
+  ],
+  "schema_version": "SHDSampledFamilyRepairDevelopment/v1",
+  "seed": 1701,
+  "status": "single-seed calibration-only method-development and kill decision; not sound, five-seed, or primary evidence"
+}

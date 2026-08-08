@@ -89,6 +89,12 @@
   certificate-directed repair's 42.83 but below 47.0 without repair, and
   completes no cell. Stronger weights reduce transport recovery without
   improving proof depth, so this route is not expanded to five seeds.
+- Single-seed sampled-family repair kill test: worst-point training on four
+  corners or a 3-by-3 grid restores accuracy but does not reliably improve a
+  disjoint 9-by-9 family. The best checkpoint reaches 75.00% identity, one of
+  128 inputs above certificate-directed repair but below logit-only's 77.34%.
+  Longer training improves calibration disagreements while audit identity drops
+  to 71.88%, so sound-analysis and five-seed expansion are skipped.
 - Sample-complexity analysis: under ten-way simultaneous 95% confidence, zero
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the
@@ -136,7 +142,8 @@ systems/risk-ranking contribution.
   merging, a single fixed branch, uniform partitioning, and explicit branch
   lists are now empirically ruled out at plus/minus 1%.
 - Multi-step family-verified repair margins. A pointwise center-execution guard
-  penalty is now empirically ruled out as a certificate-restoring objective.
+  penalty and worst-loss objectives over sparse execution grids are now
+  empirically ruled out as certificate-restoring objectives.
 - Full-training-set supervised retraining as a separately budgeted oracle; the
   completed matched baseline intentionally uses only 800 labels and 280 updates.
 - Fresh sequestered DVS Gesture replication.
