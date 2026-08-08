@@ -24,6 +24,8 @@ def main() -> None:
         required=True,
     )
     parser.add_argument("--epochs", type=int, default=40)
+    parser.add_argument("--guard-weight", type=float, default=0.1)
+    parser.add_argument("--guard-target", type=float, default=0.05)
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1")
     parser.add_argument(
@@ -31,6 +33,8 @@ def main() -> None:
     )
     parser.add_argument("--output-root", default="artifacts/shd_v1_repairs")
     args = parser.parse_args()
+    if args.guard_weight < 0 or args.guard_target <= 0:
+        raise ValueError("guard weight must be nonnegative and target must be positive")
     root = Path(__file__).resolve().parents[1]
     seed_dir = root / args.artifact_root / f"seed_{args.seed}"
     semantic_dir = root / args.semantic_root / f"seed_{args.seed}"
@@ -51,7 +55,11 @@ def main() -> None:
         args.method,
         output,
         root,
-        SHDRepairConfig(epochs=args.epochs),
+        SHDRepairConfig(
+            epochs=args.epochs,
+            guard_weight=args.guard_weight,
+            guard_target=args.guard_target,
+        ),
         seed=args.seed,
     )
     print(f"before_loss={report['before']['accuracy_loss']:.4f}")
