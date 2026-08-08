@@ -25,7 +25,9 @@ def main() -> None:
     preprocess, training, raw = load_dvs_gesture_config(root / args.config)
     data_root = root / args.data_root
     raw_root = data_root / "raw" / "DVSGesture"
-    processed = data_root / "processed" / "dvs_gesture_v1"
+    processed = data_root / "processed" / raw.get(
+        "artifact_name", "dvs_gesture_v1"
+    )
     train_path = preprocess_dvs_gesture(
         raw_root, processed / "train.npz", "train", preprocess
     )

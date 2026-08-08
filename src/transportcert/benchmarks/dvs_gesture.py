@@ -43,6 +43,7 @@ class DVSGesturePreprocessConfig:
     source_height: int = 128
     polarities: int = 2
     window_position: str = "center"
+    windows_per_sample: int = 1
     binary_frames: bool = True
 
     @property
@@ -63,6 +64,7 @@ class DVSGestureTrainConfig:
     tau_mem: float = 3.0
     threshold: float = 1.0
     recurrent_scale: float = 0.2
+    dropout: float = 0.0
     gradient_clip: float = 1.0
 
 
@@ -80,16 +82,51 @@ class PackedDVSGesture:
         self.sensor_height = int(config["sensor_height"])
         self.polarities = int(config["polarities"])
         self.input_channels = self.sensor_width * self.sensor_height * self.polarities
-        if self.packed.shape[:2] != (len(self.labels), self.time_bins):
+        if self.packed.ndim == 3:
+            self.windows_per_sample = 1
+            temporal_shape = self.packed.shape[:2]
+        elif self.packed.ndim == 4:
+            self.windows_per_sample = self.packed.shape[1]
+            temporal_shape = (self.packed.shape[0], self.packed.shape[2])
+        else:
+            raise ValueError("packed DVS Gesture artifact must have 3 or 4 axes")
+        if temporal_shape != (len(self.labels), self.time_bins):
             raise ValueError("packed DVS Gesture artifact shape is inconsistent")
 
-    def frames(self, indices: np.ndarray | list[int]) -> np.ndarray:
-        selected = self.packed[np.asarray(indices)]
+    def frames(
+        self,
+        indices: np.ndarray | list[int],
+        window_indices: np.ndarray | list[int] | None = None,
+    ) -> np.ndarray:
+        indices_array = np.asarray(indices)
+        if self.packed.ndim == 3:
+            selected = self.packed[indices_array]
+        else:
+            if window_indices is None:
+                raise ValueError("window_indices are required for multi-window data")
+            selected = self.packed[indices_array, np.asarray(window_indices)]
         flat = np.unpackbits(
             selected, axis=-1, count=self.input_channels, bitorder="little"
         ).astype(np.float32)
         return flat.reshape(
             len(selected),
+            self.time_bins,
+            self.polarities,
+            self.sensor_height,
+            self.sensor_width,
+        )
+
+    def windowed_frames(self, indices: np.ndarray | list[int]) -> np.ndarray:
+        indices_array = np.asarray(indices)
+        if self.packed.ndim == 3:
+            return self.frames(indices_array)[:, None]
+        selected = self.packed[indices_array]
+        flat = np.unpackbits(
+            selected, axis=-1, count=self.input_channels, bitorder="little"
+        ).astype(np.float32)
+        return flat.reshape(
+            len(selected),
+            self.windows_per_sample,
             self.time_bins,
             self.polarities,
             self.sensor_height,
@@ -109,8 +146,12 @@ def preprocess_dvs_gesture(
 ) -> Path:
     from tonic.datasets import DVSGesture
 
-    if config.window_position != "center":
-        raise ValueError("only deterministic centered windows are supported")
+    if config.window_position not in {"center", "uniform"}:
+        raise ValueError("window_position must be center or uniform")
+    if config.windows_per_sample < 1:
+        raise ValueError("windows_per_sample must be positive")
+    if config.window_position == "center" and config.windows_per_sample != 1:
+        raise ValueError("center windowing supports exactly one window")
     raw_root = Path(raw_root)
     output_path = Path(output_path)
     train = split_name == "train"
@@ -128,7 +169,13 @@ def preprocess_dvs_gesture(
 
     packed_width = math.ceil(config.input_channels / 8)
     packed = np.zeros(
-        (len(dataset), config.time_bins, packed_width), dtype=np.uint8
+        (
+            len(dataset),
+            config.windows_per_sample,
+            config.time_bins,
+            packed_width,
+        ),
+        dtype=np.uint8,
     )
     labels = np.asarray(dataset.targets, dtype=np.int64)
     sample_ids: list[str] = []
@@ -137,33 +184,43 @@ def preprocess_dvs_gesture(
     for index in range(len(dataset)):
         events, label = dataset[index]
         timestamps = events["t"].astype(np.int64)
-        if len(timestamps):
-            duration = int(timestamps[-1] - timestamps[0])
-            offset = max(0, (duration - config.window_microseconds) // 2)
-            window_start = int(timestamps[0]) + offset
+        duration = int(timestamps[-1] - timestamps[0]) if len(timestamps) else 0
+        available = max(0, duration - config.window_microseconds)
+        if config.window_position == "center":
+            offsets = np.asarray([available // 2], dtype=np.int64)
         else:
-            window_start = 0
-        bins = (
-            (timestamps - window_start)
-            * config.time_bins
-            // config.window_microseconds
-        )
+            offsets = np.rint(
+                np.linspace(0, available, config.windows_per_sample)
+            ).astype(np.int64)
         x = events["x"].astype(np.int64) * config.sensor_width // config.source_width
         y = events["y"].astype(np.int64) * config.sensor_height // config.source_height
         polarity = events["p"].astype(np.int64)
         channels = (
             (polarity * config.sensor_height + y) * config.sensor_width + x
         )
-        valid = (
-            (bins >= 0)
-            & (bins < config.time_bins)
-            & (channels >= 0)
-            & (channels < config.input_channels)
-        )
-        frame = np.zeros((config.time_bins, config.input_channels), dtype=np.uint8)
-        frame[bins[valid], channels[valid]] = 1
-        packed[index] = np.packbits(frame, axis=-1, bitorder="little")
-        selected_events += int(np.count_nonzero(valid))
+        for window_index, offset in enumerate(offsets):
+            window_start = (int(timestamps[0]) if len(timestamps) else 0) + int(
+                offset
+            )
+            bins = (
+                (timestamps - window_start)
+                * config.time_bins
+                // config.window_microseconds
+            )
+            valid = (
+                (bins >= 0)
+                & (bins < config.time_bins)
+                & (channels >= 0)
+                & (channels < config.input_channels)
+            )
+            frame = np.zeros(
+                (config.time_bins, config.input_channels), dtype=np.uint8
+            )
+            frame[bins[valid], channels[valid]] = 1
+            packed[index, window_index] = np.packbits(
+                frame, axis=-1, bitorder="little"
+            )
+            selected_events += int(np.count_nonzero(valid))
         total_events += len(events)
         relative = Path(dataset.data[index]).relative_to(dataset.location_on_system)
         sample_ids.append(f"dvs-gesture-{split_name}-{relative.as_posix()}")
@@ -394,7 +451,11 @@ def build_dvs_conv_srnn(
                 )
                 current2 = delay(_quantize_tensor(raw2, qs, generator), queue2)
                 conv2_voltage, spikes2 = lif_step(conv2_voltage, current2)
-                flattened = spikes2.flatten(1)
+                flattened = torch.nn.functional.dropout(
+                    spikes2.flatten(1),
+                    p=config.dropout,
+                    training=self.training and training_surrogate,
+                )
                 raw_hidden = (
                     torch.nn.functional.linear(
                         flattened, hidden_weight, hidden_bias
@@ -409,8 +470,13 @@ def build_dvs_conv_srnn(
                 hidden_voltage, hidden_spikes = lif_step(
                     hidden_voltage, hidden_current
                 )
+                readout_spikes = torch.nn.functional.dropout(
+                    hidden_spikes,
+                    p=config.dropout,
+                    training=self.training and training_surrogate,
+                )
                 contribution = _quantize_tensor(
-                    torch.nn.functional.linear(hidden_spikes, readout_weight, None),
+                    torch.nn.functional.linear(readout_spikes, readout_weight, None),
                     qs,
                     generator,
                 )
@@ -450,8 +516,14 @@ def evaluate_dvs_model(
     model.eval()
     with torch.no_grad():
         for batch_indices in _batches(indices, batch_size):
-            events = torch.as_tensor(store.frames(batch_indices), device=device)
-            batch_logits = model(events, semantics)
+            windows = store.windowed_frames(batch_indices)
+            batch, window_count = windows.shape[:2]
+            events = torch.as_tensor(
+                windows.reshape(batch * window_count, *windows.shape[2:]),
+                device=device,
+            )
+            window_logits = model(events, semantics)
+            batch_logits = window_logits.reshape(batch, window_count, -1).mean(dim=1)
             logits.append(batch_logits.cpu().numpy())
             predictions.append(torch.argmax(batch_logits, dim=1).cpu().numpy())
     all_predictions = np.concatenate(predictions)
@@ -517,7 +589,12 @@ def train_dvs_gesture_seed(
         seen = 0
         epoch_started = time.perf_counter()
         for batch_indices in _batches(shuffled, config.batch_size):
-            events = torch.as_tensor(train_store.frames(batch_indices), device=device)
+            window_indices = generator.integers(
+                train_store.windows_per_sample, size=len(batch_indices)
+            )
+            events = torch.as_tensor(
+                train_store.frames(batch_indices, window_indices), device=device
+            )
             targets = torch.as_tensor(
                 train_store.labels[batch_indices], dtype=torch.long, device=device
             )

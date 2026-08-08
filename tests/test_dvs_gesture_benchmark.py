@@ -5,6 +5,7 @@ import pytest
 
 from transportcert.benchmarks.dvs_gesture import (
     DVSGestureTrainConfig,
+    PackedDVSGesture,
     build_dvs_conv_srnn,
 )
 from transportcert.semantics import ExecutionSemantics, NumericFormat
@@ -53,3 +54,36 @@ def test_dvs_fixed_semantics_produces_finite_logits() -> None:
         logits = model(events, semantics)
     assert logits.shape == (1, 3)
     assert torch.all(torch.isfinite(logits))
+
+
+def test_packed_dvs_selects_windows_without_changing_sample_identity(tmp_path) -> None:
+    import json
+
+    frames = np.zeros((2, 3, 4, 2 * 8 * 8), dtype=np.uint8)
+    frames[0, 2, 1, 7] = 1
+    packed = np.packbits(frames, axis=-1, bitorder="little")
+    path = tmp_path / "dvs.npz"
+    np.savez_compressed(
+        path,
+        packed=packed,
+        labels=np.asarray([0, 1]),
+        sample_ids=np.asarray(["a", "b"]),
+        metadata=np.asarray(
+            json.dumps(
+                {
+                    "config": {
+                        "time_bins": 4,
+                        "sensor_width": 8,
+                        "sensor_height": 8,
+                        "polarities": 2,
+                    }
+                }
+            )
+        ),
+    )
+    store = PackedDVSGesture(path)
+    selected = store.frames(np.asarray([0]), np.asarray([2]))
+    all_windows = store.windowed_frames(np.asarray([0]))
+    assert selected.shape == (1, 4, 2, 8, 8)
+    assert all_windows.shape == (1, 3, 4, 2, 8, 8)
+    assert selected[0, 1].sum() == 1
