@@ -93,9 +93,10 @@ family agreement.
 \end{figure}
 
 This result triggers the declared stop rule for the broad NeurIPS guarantee
-framing. Continuing that framing now requires a substantially tighter sound
-abstraction to reverse the gate; otherwise the evidence supports a narrower
-per-axis certificate or a systems/risk-ranking paper.
+framing on the recurrent primary task. Continuing that framing now requires a
+substantially tighter recurrence-aware sound abstraction to reverse the gate;
+otherwise the evidence supports a narrower per-axis certificate or a
+systems/risk-ranking paper.
 
 The five frozen convolutional/recurrent DVS Gesture models reach
 $84.85\pm1.76\%$ reference test accuracy. Floor-rounded fixed point loses 36.6
@@ -133,6 +134,38 @@ software tightness gates. Figure~\ref{fig:recurrent-vs-feedforward} summarizes
 the contrast. The result supports recurrent amplification as a central part of
 the transport problem, but it also falsifies any claim that raw disagreement is
 uniformly tight across architectures and semantic regimes.
+
+The static analysis yields the same model-class contrast. On deterministic
+128-input subsets from each frozen N-MNIST audit split, the full 16-member family
+is soundly certified on $96.72\pm1.02\%$ of inputs, compared with $18.79\pm0.62\%$
+for all 861 SHD audit inputs per seed. Exact N-MNIST family agreement is 98.59\%,
+so the mean interval-relaxation gap is only 1.88 points. Every N-MNIST single-axis
+family certifies at least 98.4\%, and no static certificate contradicts exact
+enumeration. This cross-dataset subset result is diagnostic rather than causal or
+a primary full-audit estimate.
+
+A within-SHD intervention isolates the feedback mechanism more directly. We zero
+only each trained model's recurrent matrix, retaining its inputs, audit split, and
+all other parameters. Full-family static coverage rises by 48.41 points to
+$67.20\pm5.21\%$, while exact family agreement rises by 50.59 points to
+$89.31\pm0.85\%$. No static certificate contradicts exact enumeration. Because
+this intervention changes predictions and margins, it is not an accuracy-matched
+architecture comparison. It nevertheless establishes that recurrent feedback is
+a major cause of the true semantic instability as well as the failed coverage
+gate. The remaining 22.11-point relaxation gap motivates recurrence-aware
+abstractions rather than a claim that removing recurrence solves certification.
+Figure~\ref{fig:recurrence-ablation-static} summarizes the result.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/recurrence_ablation_static.pdf}
+  \caption{Five-seed full-family diagnostic. Zeroing only recurrent feedback in
+  each trained SHD model reverses the 20\% coverage failure and substantially
+  increases exact semantic agreement. N-MNIST uses deterministic 128-input audit
+  subsets; both SHD conditions use all 861 inputs per seed. The ablation is not
+  accuracy-matched.}
+  \label{fig:recurrence-ablation-static}
+\end{figure}
 
 Table~\ref{tab:sample-complexity} isolates confidence inflation at zero observed
 disagreement. Under the frozen ten-way Bonferroni correction, one-, two-, and
@@ -180,8 +213,9 @@ two criteria explicit.
 \end{figure}
 
 Repair can therefore restore aggregate accuracy without restoring decision
-identity. The current evidence supports the semantic transport problem and
-repair opportunity, but it does \emph{not} support the intended tight-certificate
-claim. The next formulation must either target a different certifiable quantity,
-introduce and validate additional assumptions, or accept a systems/risk-ranking
-contribution.
+identity. The current evidence supports the semantic transport problem, repair
+opportunity, and usefulness of static certification on feedforward transport. It
+does \emph{not} support the intended broad tight-certificate claim for recurrent
+models. The next formulation must introduce and validate a tighter
+recurrence-aware abstraction, target a narrower certifiable quantity, or accept
+a systems/risk-ranking contribution.

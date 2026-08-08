@@ -15,6 +15,8 @@ Reproduce the aggregate from the raw artifacts with:
 ```text
 python experiments/aggregate_nmnist.py
 python experiments/correct_software_aggregate_float32.py --result-root results/nmnist_v1 --semantic-root artifacts/nmnist_v1_semantics --benchmark N-MNIST
+python experiments/run_nmnist_static_family.py --seed 1701 --max-samples 128
+python experiments/aggregate_nmnist_static_family.py
 ```
 
 Key results across 50 seed-condition cells:
@@ -26,6 +28,10 @@ Key results across 50 seed-condition cells:
 - The frozen three-point median and eight-point 90th-percentile software gates
   both pass.
 - Disagreement ranks absolute accuracy change with Pearson r = 0.986.
+- On deterministic 128-input subsets of each frozen audit split, the sound
+  interval certificate covers 96.72% of inputs for the full 16-member semantic
+  family. Exact family agreement is 98.59%, leaving only a 1.88-point relaxation
+  gap. This diagnostic subset is not a replacement for the full audit.
 
 These are emulator results, not physical certificates. Together with the SHD
 matrix, they show that the distribution-free bound can be tight for a robust

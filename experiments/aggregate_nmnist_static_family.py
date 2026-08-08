@@ -136,7 +136,7 @@ def main() -> None:
     axis.set_xticks(positions, families)
     axis.set_ylim(0, 105)
     axis.set_ylabel("Soundly certified inputs (%)")
-    axis.set_title("Recurrence, not audit size, drives interval-family vacuity")
+    axis.set_title("Static-family certificate contrast across trained models")
     axis.grid(axis="y", alpha=0.2)
     axis.legend(frameon=False, fontsize=8, ncol=2)
     fig.savefig(figure_pdf, bbox_inches="tight")

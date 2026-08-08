@@ -42,9 +42,12 @@ DVS Gesture, and N-MNIST. Across five-seed software studies, disagreement ranks
 semantic failures reliably and is tight on a feedforward negative control, but
 its distribution-free accuracy bound is operationally loose on recurrent SHD
 and convolutional/recurrent DVS Gesture. A sound interval analysis certifies
-only 18.8\% of SHD inputs over the broad high-risk family, crossing our declared
-pivot threshold. This draft reports that formulation failure explicitly;
-sequestered replication and physical certificates remain unfinished.
+only 18.8\% of SHD inputs over the broad high-risk family, but 96.7\% on matched
+128-input diagnostics from the feedforward N-MNIST control. Zeroing only the
+trained SHD recurrent matrices raises coverage to 67.2\% and exact family
+agreement from 38.7\% to 89.3\%. Recurrence is therefore a major mechanism behind
+the declared pivot failure, while the trained recurrent certificate remains
+inadequate. Sequestered replication and physical certificates remain unfinished.
 \end{abstract}
 
 \input{sections/01_introduction}

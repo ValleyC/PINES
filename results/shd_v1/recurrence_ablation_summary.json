@@ -1,0 +1,60 @@
+{
+  "audit_samples_per_seed": 861,
+  "causal_diagnostic": {
+    "exact_agreement_increase": 0.5059233449477352,
+    "interpretation": "Holding SHD inputs and all nonrecurrent parameters fixed, removing the feedback path reverses the 20-percent static-coverage failure and substantially increases exact semantic agreement. The intervention also changes model predictions and margins, so it is a mechanism diagnostic, not an accuracy-matched architecture comparison.",
+    "static_coverage_increase": 0.4840882694541231
+  },
+  "code_revision": "bb4f4c5f4df2c76675df17e8937cf3af8585fde6",
+  "feedforward_nmnist_subset": {
+    "exact_family_agreement_mean": 0.9859375,
+    "exact_family_agreement_std": 0.006536406457297465,
+    "family": "full",
+    "observed_unsound_certificates": 0,
+    "relaxation_gap_mean": 0.01875,
+    "static_certified_mean": 0.9671875,
+    "static_certified_std": 0.010186253758129139
+  },
+  "feedforward_summary_hash": "e76869fe75be239212c6ce401d1325b8e2991d788b4ff3c0907d56a6a0df0bdd",
+  "gate_assessment": {
+    "no_observed_static_unsoundness": true,
+    "zero_recurrence_full_family_certifies_at_least_20_percent": true
+  },
+  "input_report_hashes": {
+    "seed_1701": "38cdd424b342c0607fb8c924e99caafdad14b3e92b537b562773d47ef70ceb01",
+    "seed_2718": "9e9d7d288ee2ca1eb45e28d5d30e03d06372551bf1ea2904241ab8f6f28c6989",
+    "seed_3141": "e72c38702f943c36d90f3ab937851f05bdd32b65fe6e09873ab7561a9db9250d",
+    "seed_5772": "50c0bbc3ec111de4d8ff6d241a24b9d05b1cd8a3b193784d6d6171c8ce5d1d7b",
+    "seed_8119": "94551e7391ee31388cb512bae24ba8c0941d4b80d822b4b860d0d0fc68ca0cee"
+  },
+  "rows_csv_hash": "ba7efcf5960ec0544faa1cb3a77ff1a207c653a750bad30ffd553c92fd576709",
+  "schema_version": "SHDRecurrenceAblationAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed within-model software diagnostic; zeroing recurrence changes the reference model and is not an accuracy-matched architecture comparison",
+  "trained_shd": {
+    "exact_family_agreement_mean": 0.3872241579558653,
+    "exact_family_agreement_std": 0.02972016279035903,
+    "family": "full",
+    "mean_static_seconds": 4.17462446000427,
+    "observed_unsound_certificates": 0,
+    "relaxation_gap_mean": 0.19930313588850174,
+    "static_certified_mean": 0.18792102206736352,
+    "static_certified_std": 0.006222111607887972,
+    "static_vacuous_mean": 0.8120789779326365
+  },
+  "trained_summary_hash": "63b7d930095340a9dd8a88f79ccffbad054f5fb8b36ce11aa01f97084b0c37b1",
+  "zero_recurrence_shd": {
+    "exact_family_agreement_mean": 0.8931475029036005,
+    "exact_family_agreement_std": 0.008534807466143476,
+    "observed_unsound_certificates": 0,
+    "relaxation_gap_mean": 0.2211382113821138,
+    "static_certified_mean": 0.6720092915214866,
+    "static_certified_std": 0.05210065847163898
+  }
+}

@@ -55,7 +55,7 @@ Single-axis families certify 49.8% of inputs for reset, 76.0% for integration,
 and 75.7% for timing or delay. Nearest fixed point certifies 95.0%.
 
 The preregistered 16-member high-risk family certifies only 18.79% on average
-(17.77–19.40% by seed), leaving 81.21% vacuous. Exact enumeration agrees across
+(17.77--19.40% by seed), leaving 81.21% vacuous. Exact enumeration agrees across
 the same family on 38.72%, so the mean interval-relaxation gap is 19.93 points.
 No static certificate contradicts exact execution. Because every seed is
 vacuous on more than 80% of inputs, this experiment triggers the plan's explicit
@@ -66,4 +66,21 @@ Regenerate with:
 ```powershell
 python experiments/run_shd_static_family.py --seed 1701
 python experiments/aggregate_shd_static_family.py
+```
+
+### Recurrence intervention
+
+Zeroing only the trained recurrent matrix, while retaining the same SHD inputs
+and every other parameter, raises full-family static coverage to 67.20% and exact
+family agreement to 89.31%. The increases over the trained recurrent models are
+48.41 and 50.59 points, respectively, with no observed static soundness failure.
+This establishes recurrent feedback as a major mechanism behind the failure,
+but it is not an accuracy-matched comparison because predictions and margins also
+change. The remaining interval-relaxation gap is 22.11 points.
+
+Regenerate with:
+
+```powershell
+python experiments/run_shd_static_family.py --seed 1701 --output-root artifacts/shd_v1_static_family_zero_recurrence --families full --zero-recurrence
+python experiments/aggregate_shd_recurrence_ablation.py
 ```
