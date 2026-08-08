@@ -314,6 +314,22 @@ python experiments/run_shd_exact_threshold_slices.py --seed 1701 --output-root a
 python experiments/aggregate_shd_exact_threshold_slices.py
 ```
 
+### Residual polygon geometry
+
+`guard_residual_geometry_summary.json` characterizes the exact input to the next
+joint solver. The corrected 4,096-leaf run exports 3,365 unresolved convex
+polygons to a hashed 111-KB archive. Their median actual timestep-factor width is
+4.19e-5, below the 7.8125e-5 spacing of the 257 exact slices, and 1,271 polygons
+fall entirely between slice locations. Although individually small, their
+projections collectively span both complete parameter axes. This rejects more
+uniform slice densification: the next oracle must reason within the polygon
+constraints.
+
+```powershell
+python experiments/run_shd_guard_cut_certificate.py --seed 1701 --max-leaves 4096 --max-guard-band-splits 512 --save-residual-polygons --output-root artifacts/shd_v50_rounding_guard_residuals
+python experiments/aggregate_shd_guard_residual_geometry.py
+```
+
 ### Post-repair bounded-family headroom
 
 `repair_family_grid_summary.json` compares selected reset-target models against

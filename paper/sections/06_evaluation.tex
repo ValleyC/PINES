@@ -278,6 +278,13 @@ the reference class, using 2,716 exact trace cells in 12.1 seconds and at most
 those slices, but the open timestep regions between slices remain unproved; the
 result is therefore diagnostic, not a joint continuous-family certificate.
 
+Exporting the 4,096-leaf residual makes the gap concrete. Its 3,365 polygons
+have median timestep-factor width $4.19\times10^{-5}$, below the
+$7.81\times10^{-5}$ exact-slice spacing; 1,271 polygons lie entirely between
+the 257 slices. Their projections collectively span both full parameter axes.
+Thus denser uniform slicing does not compose into a proof: the next oracle must
+consume the residual polygon constraints directly.
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/shd_branch_set_feasibility.pdf}

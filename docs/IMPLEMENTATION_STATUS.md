@@ -109,6 +109,12 @@
   slices for the same SHD development input preserve the reference class; 2,716
   cells are sufficient in 12.1 seconds, with at most 17 in one slice. This is
   not a proof between timestep slices, so the joint certificate remains open.
+- Hashed residual-geometry export: the corrected 4,096-leaf cover retains 3,365
+  unresolved convex polygons in a compact archive. Their median actual
+  timestep-factor width is 4.19e-5, below the 7.8125e-5 exact-slice spacing, and
+  1,271 polygons intersect no exact slice. Their projections span both full
+  axes, rejecting more uniform slice densification and requiring a solver that
+  consumes the polygon constraints directly.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
@@ -176,9 +182,10 @@ systems/risk-ranking contribution.
 ## Open experimental milestones
 
 - Joint timestep--threshold guard-boundary oracle for the residual polygon
-  cover. Roundoff-aware polygonal cuts reduce unresolved area to 0.1669%, and the exact
-  threshold oracle closes 257 fixed-timestep slices, but neither proves the open
-  regions between slices. Further leaf/grid escalation is stopped and five-seed
+  cover. Roundoff-aware polygonal cuts reduce unresolved area to 0.1669%, and
+  the exact threshold oracle closes 257 fixed-timestep slices, but neither proves the open
+  regions between slices. A hashed 3,365-polygon residue is now available for
+  direct solver input. Further leaf/grid escalation is stopped and five-seed
   expansion remains gated.
 - Multi-step family-verified repair margins. A pointwise center-execution guard
   penalty and worst-loss objectives over sparse execution grids are now
