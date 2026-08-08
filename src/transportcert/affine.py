@@ -18,6 +18,7 @@ class AffineGuardCertificateResult:
     reference_predictions: np.ndarray
     target_margin_lower: np.ndarray
     target_margin_upper: np.ndarray
+    split_axis_scores: np.ndarray
 
 
 @dataclass(frozen=True)
@@ -185,6 +186,7 @@ class AffineGuardFamilyCertifier:
         certified = np.ones(len(events), dtype=bool)
         lower = np.full((len(events), model.output_size), np.inf)
         upper = np.full((len(events), model.output_size), -np.inf)
+        split_axis_scores = np.zeros((len(events), 2), dtype=np.float64)
         rows = np.arange(len(events))
         for integration, timing, reset, synaptic_delay, output_delay in itertools.product(
             box.integration_rules,
@@ -197,7 +199,7 @@ class AffineGuardFamilyCertifier:
                 raise NotImplementedError(
                     "affine guards currently support forward Euler only"
                 )
-            member_lower, member_upper = self._propagate_member(
+            member_lower, member_upper, member_scores = self._propagate_member(
                 model,
                 events,
                 prediction,
@@ -212,12 +214,14 @@ class AffineGuardFamilyCertifier:
             certified &= np.all(competing > 0.0, axis=1)
             lower = np.minimum(lower, member_lower)
             upper = np.maximum(upper, member_upper)
+            split_axis_scores += member_scores
         return AffineGuardCertificateResult(
             certified=certified,
             certified_fraction=float(np.mean(certified)),
             reference_predictions=prediction,
             target_margin_lower=lower,
             target_margin_upper=upper,
+            split_axis_scores=split_axis_scores,
         )
 
     @staticmethod
@@ -258,7 +262,7 @@ class AffineGuardFamilyCertifier:
         reset: ResetRule,
         synaptic_delay: int,
         output_delay: int,
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         weight = box.base.weight_format
         w_in = np.asarray(weight.quantize(model.input_weights), dtype=np.float64)
         w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
@@ -294,6 +298,15 @@ class AffineGuardFamilyCertifier:
         ]
         chosen_weights = w_out[:, reference_predictions].T
         margin_weights = chosen_weights[:, :, None] - w_out[None, :, :]
+        split_axis_scores = np.zeros((batch, 2), dtype=np.float64)
+
+        def relax_guard(guard: _HybridAffine) -> _HybridAffine:
+            guard_lower, guard_upper = guard.bounds()
+            uncertain = ~((guard_upper < 0.0) | (guard_lower >= 0.0))
+            split_axis_scores[:] += np.sum(
+                np.abs(guard.generators) * uncertain[..., None], axis=1
+            )
+            return _spike_relaxation(guard)
 
         for step in range(horizon):
             current = _HybridAffine.exact(base_drive[:, step, :]).add(
@@ -303,7 +316,7 @@ class AffineGuardFamilyCertifier:
                 current_queue.append(current)
                 current = current_queue.pop(0)
             if timing is ThresholdTiming.PRE_INTEGRATION:
-                spikes = _spike_relaxation(voltage.subtract(threshold))
+                spikes = relax_guard(voltage.subtract(threshold))
                 voltage = self._integrate(
                     self._reset(
                         voltage,
@@ -323,7 +336,7 @@ class AffineGuardFamilyCertifier:
                     timestep,
                     model.tau_mem,
                 )
-                spikes = _spike_relaxation(voltage.subtract(threshold))
+                spikes = relax_guard(voltage.subtract(threshold))
                 voltage = self._reset(
                     voltage,
                     spikes,
@@ -336,4 +349,5 @@ class AffineGuardFamilyCertifier:
                 output_queue.append(contribution)
                 contribution = output_queue.pop(0)
             margins = margins.add(contribution)
-        return margins.bounds()
+        margin_lower, margin_upper = margins.bounds()
+        return margin_lower, margin_upper, split_axis_scores

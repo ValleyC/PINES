@@ -30,6 +30,11 @@ def main() -> None:
         choices=("decision_margin", "affine_guard"),
         default="decision_margin",
     )
+    parser.add_argument(
+        "--split-strategy",
+        choices=("widest", "guard"),
+        default="widest",
+    )
     parser.add_argument("--radius", type=float, default=0.01)
     parser.add_argument("--sample-count", type=int, default=2)
     parser.add_argument("--selection-pool", type=int, default=128)
@@ -127,7 +132,8 @@ def main() -> None:
     certifier = AdaptiveDecisionMarginCertifier(
         AffineGuardFamilyCertifier()
         if args.domain == "affine_guard"
-        else None
+        else None,
+        split_strategy=args.split_strategy,
     )
     rows = []
     for max_leaves in args.max_leaves:
@@ -182,6 +188,7 @@ def main() -> None:
         "seed": args.seed,
         "condition": args.condition,
         "domain": args.domain,
+        "split_strategy": args.split_strategy,
         "relative_radius": args.radius,
         "selection_pool": len(pool_indices),
         "selection_grid_resolution": args.selection_grid,

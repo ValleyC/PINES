@@ -758,9 +758,15 @@ class AdaptiveDecisionMarginCertifier:
     """
 
     def __init__(
-        self, member_certifier: DecisionMarginFamilyCertifier | None = None
+        self,
+        member_certifier: DecisionMarginFamilyCertifier | None = None,
+        *,
+        split_strategy: str = "widest",
     ) -> None:
+        if split_strategy not in {"widest", "guard"}:
+            raise ValueError("split strategy must be 'widest' or 'guard'")
         self.member_certifier = member_certifier or DecisionMarginFamilyCertifier()
+        self.split_strategy = split_strategy
 
     @staticmethod
     def _measure(
@@ -781,6 +787,7 @@ class AdaptiveDecisionMarginCertifier:
         box: SemanticsBox,
         root_timestep_width: float,
         root_threshold_width: float,
+        preferred_axis: int | None = None,
     ) -> tuple[SemanticsBox, SemanticsBox] | None:
         timestep_width = box.timestep_bounds[1] - box.timestep_bounds[0]
         threshold_width = (
@@ -798,7 +805,12 @@ class AdaptiveDecisionMarginCertifier:
             if root_threshold_width > 0.0
             else -1.0
         )
-        if timestep_score >= threshold_score and timestep_width > 0.0:
+        split_timestep = timestep_score >= threshold_score
+        if preferred_axis == 0 and timestep_width > 0.0:
+            split_timestep = True
+        elif preferred_axis == 1 and threshold_width > 0.0:
+            split_timestep = False
+        if split_timestep and timestep_width > 0.0:
             midpoint = sum(box.timestep_bounds) / 2.0
             return (
                 replace(
@@ -915,6 +927,13 @@ class AdaptiveDecisionMarginCertifier:
                     leaf,
                     root_timestep_width,
                     root_threshold_width,
+                    (
+                        int(np.argmax(result.split_axis_scores[0]))
+                        if self.split_strategy == "guard"
+                        and hasattr(result, "split_axis_scores")
+                        and np.any(np.asarray(result.split_axis_scores[0]) > 0.0)
+                        else None
+                    ),
                 )
                 if leaf_count < max_leaves
                 else None

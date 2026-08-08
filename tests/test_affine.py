@@ -79,6 +79,8 @@ def test_affine_guard_bounds_contain_sampled_recurrent_executions(
     result = AffineGuardFamilyCertifier().certify(
         small_model, inputs, reference, box
     )
+    assert result.split_axis_scores.shape == (len(inputs), 2)
+    assert np.all(result.split_axis_scores >= 0.0)
     rows = np.arange(len(inputs))
     for timestep in (0.9, 1.0, 1.1):
         semantics = replace(target, timestep=timestep)

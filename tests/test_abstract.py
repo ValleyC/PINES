@@ -277,3 +277,12 @@ def test_adaptive_margin_certifier_preserves_unresolved_cover() -> None:
         + result.unresolved_parameter_fraction,
         1.0,
     )
+
+
+def test_adaptive_margin_certifier_rejects_unknown_split_strategy() -> None:
+    try:
+        AdaptiveDecisionMarginCertifier(split_strategy="diagonal")
+    except ValueError as error:
+        assert "split strategy" in str(error)
+    else:
+        raise AssertionError("unknown adaptive split strategy was accepted")
