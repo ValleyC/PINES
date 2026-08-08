@@ -358,7 +358,7 @@ def _collect_reference_trace(
 ) -> dict[str, np.ndarray]:
     import torch
 
-    emulator = TorchEmulator(device=device, dtype=torch.float32)
+    emulator = TorchEmulator(device=device, dtype=torch.float64)
     collected: dict[str, list[np.ndarray]] = {
         "membrane": [],
         "spikes": [],

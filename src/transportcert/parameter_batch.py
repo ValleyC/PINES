@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 import numpy as np
@@ -14,6 +14,7 @@ from .semantics import (
     ThresholdTiming,
 )
 from .torch_emulator import TorchEmulator, _torch
+from .emulator import VectorizedEmulator
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,82 @@ class CartesianParameterBatchResult:
 
     final_logits: np.ndarray
     predictions: np.ndarray
+
+
+@dataclass(frozen=True)
+class ReferenceParameterSweepResult:
+    """Cast-faithful oracle outputs for aligned semantic parameter points."""
+
+    predictions: np.ndarray
+    minimum_reference_margin: np.ndarray
+
+
+class ReferenceParameterSweepEmulator:
+    """Evaluate a parameter sweep through the canonical NumPy interpreter.
+
+    This deliberately loops over parameter points while batching inputs.  It is
+    slower than the Torch Cartesian executor, but it preserves the exact
+    NumericFormat cast points and operation ordering used by the certificate
+    oracle, making it appropriate for post-certificate falsification.
+    """
+
+    def __init__(self, emulator: VectorizedEmulator | None = None) -> None:
+        self.emulator = emulator or VectorizedEmulator()
+
+    def run(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        semantics: ExecutionSemantics,
+        timesteps: np.ndarray,
+        threshold_scales: np.ndarray,
+        reference_predictions: np.ndarray,
+    ) -> ReferenceParameterSweepResult:
+        events = _validate_inputs(model, inputs)
+        timestep_values = np.asarray(timesteps, dtype=np.float64)
+        threshold_values = np.asarray(threshold_scales, dtype=np.float64)
+        references = np.asarray(reference_predictions, dtype=np.int64)
+        if timestep_values.ndim != 1 or threshold_values.shape != timestep_values.shape:
+            raise ValueError("timesteps and threshold scales must be aligned vectors")
+        if len(timestep_values) < 1:
+            raise ValueError("parameter points must be non-empty")
+        if references.shape != (len(events),):
+            raise ValueError("reference predictions must match the input batch")
+        if (
+            np.any(~np.isfinite(timestep_values))
+            or np.any(timestep_values <= 0.0)
+            or np.any(~np.isfinite(threshold_values))
+            or np.any(threshold_values <= 0.0)
+        ):
+            raise ValueError("parameter values must be finite and positive")
+
+        predictions = np.empty(
+            (len(events), len(timestep_values)), dtype=np.int16
+        )
+        minimum_margin = np.full(len(events), np.inf, dtype=np.float64)
+        rows = np.arange(len(events))
+        for point, (timestep, threshold_scale) in enumerate(
+            zip(timestep_values, threshold_values, strict=True)
+        ):
+            candidate = model.with_parameters(
+                threshold=model.threshold * float(threshold_scale)
+            )
+            trace = self.emulator.run(
+                candidate,
+                events,
+                replace(semantics, timestep=float(timestep)),
+            )
+            predictions[:, point] = trace.predictions
+            competing = trace.final_logits.copy()
+            competing[rows, references] = -np.inf
+            margin = trace.final_logits[rows, references] - np.max(
+                competing, axis=1
+            )
+            minimum_margin = np.minimum(minimum_margin, margin)
+        return ReferenceParameterSweepResult(
+            predictions=predictions,
+            minimum_reference_margin=minimum_margin,
+        )
 
 
 class TorchParameterBatchEmulator:

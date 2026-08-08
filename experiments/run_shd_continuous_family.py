@@ -61,7 +61,7 @@ def main() -> None:
     reference = primary_semantic_conditions()["reference"]
     discrete_box, _ = _families()["full"]
     certifier = IntervalFamilyCertifier()
-    emulator = TorchEmulator(device=args.device, dtype=torch.float32)
+    emulator = TorchEmulator(device=args.device, dtype=torch.float64)
     reference_predictions = (
         emulator.run(model, validation_inputs, reference)
         .predictions.detach()

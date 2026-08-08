@@ -33,7 +33,10 @@ def _outward_radius(radius: np.ndarray, error: np.ndarray) -> np.ndarray:
     inflated = np.asarray(radius, dtype=np.float64) + np.asarray(
         error, dtype=np.float64
     )
-    return np.nextafter(inflated + _ANALYSIS_MINIMUM, np.inf)
+    outward = np.nextafter(inflated + _ANALYSIS_MINIMUM, np.inf)
+    # IEEE operations on an identically zero expression are exact.  Retaining
+    # that fact is important for zero logit channels and deterministic ties.
+    return np.where(inflated == 0.0, 0.0, outward)
 
 
 @dataclass(frozen=True)
@@ -114,9 +117,9 @@ class AdaptiveHybridCertificateResult:
 class _PolygonBranch:
     voltage: _HybridAffine
     previous_spikes: np.ndarray
-    logits: np.ndarray
+    logits: _HybridAffine
     current_queue: tuple[_HybridAffine, ...]
-    output_queue: tuple[np.ndarray, ...]
+    output_queue: tuple[_HybridAffine, ...]
 
 
 @dataclass(frozen=True)
@@ -170,21 +173,23 @@ class _HybridAffine:
             shared_radius = np.sum(np.abs(self.generators), axis=-1)
             magnitude = np.abs(self.center) + shared_radius + self.radius
             evaluation_error = _analysis_gamma(8) * magnitude
-            return (
-                np.nextafter(
+            lower = np.nextafter(
                     self.center
                     - shared_radius
                     - self.radius
                     - evaluation_error,
                     -np.inf,
-                ),
-                np.nextafter(
+                )
+            upper = np.nextafter(
                     self.center
                     + shared_radius
                     + self.radius
                     + evaluation_error,
                     np.inf,
-                ),
+                )
+            exact = (shared_radius == 0.0) & (self.radius == 0.0)
+            return np.where(exact, self.center, lower), np.where(
+                exact, self.center, upper
             )
         vertices = np.asarray(parameter_vertices, dtype=np.float64)
         if vertices.ndim != 2 or vertices.shape[1] != 2 or len(vertices) < 1:
@@ -198,8 +203,7 @@ class _HybridAffine:
             + shared_magnitude
             + self.radius[..., None]
         )
-        return (
-            np.nextafter(
+        lower = np.nextafter(
                 np.min(
                     self.center[..., None]
                     + shared_values
@@ -208,8 +212,8 @@ class _HybridAffine:
                     axis=-1,
                 ),
                 -np.inf,
-            ),
-            np.nextafter(
+            )
+        upper = np.nextafter(
                 np.max(
                     self.center[..., None]
                     + shared_values
@@ -218,7 +222,12 @@ class _HybridAffine:
                     axis=-1,
                 ),
                 np.inf,
-            ),
+            )
+        exact = (np.sum(np.abs(self.generators), axis=-1) == 0.0) & (
+            self.radius == 0.0
+        )
+        return np.where(exact, self.center, lower), np.where(
+            exact, self.center, upper
         )
 
     def add(self, other: "_HybridAffine") -> "_HybridAffine":
@@ -471,9 +480,45 @@ def _floating_rounding_radius(
         raise OverflowError("floating affine enclosure exceeds numeric range")
     minimum_subnormal = float(np.nextafter(dtype(0.0), dtype(1.0)))
     radius = np.finfo(dtype).eps * maximum_magnitude + minimum_subnormal
-    return np.nextafter(
+    outward = np.nextafter(
         radius + _analysis_gamma(8) * radius + _ANALYSIS_MINIMUM,
         np.inf,
+    )
+    return np.where(maximum_magnitude == 0.0, 0.0, outward)
+
+
+def _constant_matmul_affine(
+    values: np.ndarray, weights: np.ndarray
+) -> _HybridAffine:
+    """Enclose a binary64 matrix product of constant operands.
+
+    The center is the implementation's binary64 product.  The residual covers
+    both its reduction error and a second conforming evaluation of the same
+    real-valued product, so the analyzer does not rely on an identical BLAS
+    reduction tree in the operational interpreter.
+    """
+
+    left = np.asarray(values, dtype=np.float64)
+    right = np.asarray(weights, dtype=np.float64)
+    if left.ndim < 1 or right.ndim != 2 or left.shape[-1] != right.shape[0]:
+        raise ValueError("constant matrix product has incompatible shapes")
+    center = left @ right
+    absolute_sum = np.abs(left) @ np.abs(right)
+    error = 2.0 * _analysis_gamma(2 * right.shape[0] + 8) * absolute_sum
+    return _HybridAffine(
+        center=center,
+        generators=np.zeros((*center.shape, 2), dtype=np.float64),
+        radius=_outward_radius(np.zeros_like(center), error),
+    )
+
+
+def _affine_time_slice(value: _HybridAffine, step: int) -> _HybridAffine:
+    """Select one horizon position from a [batch, time, feature] form."""
+
+    return _HybridAffine(
+        center=value.center[:, step, :],
+        generators=value.generators[:, step, :, :],
+        radius=value.radius[:, step, :],
     )
 
 
@@ -682,7 +727,9 @@ class AffineGuardFamilyCertifier:
         w_out = np.asarray(weight.quantize(model.output_weights), dtype=np.float64)
         batch, horizon, _ = events.shape
         bias = np.asarray(state.quantize(model.bias), dtype=np.float64)
-        base_drive = events @ w_in + bias
+        base_drive = _constant_matmul_affine(events, w_in).add(
+            _HybridAffine.exact(bias)
+        )
         voltage = _HybridAffine.exact(np.zeros((batch, model.hidden_size)))
         spikes = _HybridAffine.exact(np.zeros_like(voltage.center))
         margins = _HybridAffine.exact(np.zeros((batch, model.output_size)))
@@ -764,7 +811,7 @@ class AffineGuardFamilyCertifier:
             return _spike_relaxation(guard, vertices)
 
         for step in range(horizon):
-            current = _HybridAffine.exact(base_drive[:, step, :]).add(
+            current = _affine_time_slice(base_drive, step).add(
                 spikes.linear(w_rec)
             ).float_quantize(state, vertices)
             if current_queue:
@@ -928,7 +975,7 @@ class FixedTraceAffineAnalyzer:
         w_in = np.asarray(weight.quantize(model.input_weights), dtype=np.float64)
         w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
         bias = np.asarray(state.quantize(model.bias), dtype=np.float64)
-        input_drive = events @ w_in
+        input_drive = _constant_matmul_affine(events, w_in)
         voltage = _HybridAffine.exact(np.zeros((1, model.hidden_size)))
         threshold = _HybridAffine.semantic_interval(
             model.threshold[None, :] * box.threshold_scale_bounds[0],
@@ -969,11 +1016,11 @@ class FixedTraceAffineAnalyzer:
                     first_uncertain = step
 
         for step in range(events.shape[1]):
-            exact_current = (
-                input_drive[:, step, :] + previous_spikes @ w_rec + bias
-            )
-            current = _HybridAffine.exact(
-                np.asarray(state.quantize(exact_current), dtype=np.float64)
+            current = (
+                _affine_time_slice(input_drive, step)
+                .add(_constant_matmul_affine(previous_spikes, w_rec))
+                .add(_HybridAffine.exact(bias))
+                .float_quantize(state, vertices)
             )
             if current_queue:
                 current_queue.append(current)
@@ -1145,7 +1192,7 @@ class PolygonBranchCertifier:
         w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
         w_out = np.asarray(weight.quantize(model.output_weights), dtype=np.float64)
         bias = np.asarray(state.quantize(model.bias), dtype=np.float64)
-        input_drive = events @ w_in
+        input_drive = _constant_matmul_affine(events, w_in)
         threshold = _HybridAffine.semantic_interval(
             model.threshold[None, :] * box.threshold_scale_bounds[0],
             model.threshold[None, :] * box.threshold_scale_bounds[1],
@@ -1167,7 +1214,9 @@ class PolygonBranchCertifier:
                     np.zeros((1, model.hidden_size), dtype=np.float64)
                 ),
                 previous_spikes=np.zeros(model.hidden_size, dtype=np.float64),
-                logits=np.zeros(model.output_size, dtype=np.float64),
+                logits=_HybridAffine.exact(
+                    np.zeros((1, model.output_size), dtype=np.float64)
+                ),
                 current_queue=tuple(
                     _HybridAffine.exact(
                         np.zeros((1, model.hidden_size), dtype=np.float64)
@@ -1175,7 +1224,9 @@ class PolygonBranchCertifier:
                     for _ in range(box.synaptic_delays[0])
                 ),
                 output_queue=tuple(
-                    np.zeros(model.output_size, dtype=np.float64)
+                    _HybridAffine.exact(
+                        np.zeros((1, model.output_size), dtype=np.float64)
+                    )
                     for _ in range(box.output_delays[0])
                 ),
             )
@@ -1187,15 +1238,15 @@ class PolygonBranchCertifier:
         for step in range(events.shape[1]):
             next_branches: list[_PolygonBranch] = []
             for branch in branches:
-                exact_current = (
-                    input_drive[0, step, :]
-                    + branch.previous_spikes @ w_rec
-                    + bias
-                )
-                raw_current = _HybridAffine.exact(
-                    np.asarray(
-                        state.quantize(exact_current), dtype=np.float64
-                    )[None, :]
+                raw_current = (
+                    _affine_time_slice(input_drive, step)
+                    .add(
+                        _constant_matmul_affine(
+                            branch.previous_spikes, w_rec
+                        )
+                    )
+                    .add(_HybridAffine.exact(bias))
+                    .float_quantize(state, vertices)
                 )
                 if branch.current_queue:
                     current = branch.current_queue[0]
@@ -1274,9 +1325,9 @@ class PolygonBranchCertifier:
                             reset,
                             vertices,
                         ).float_quantize(state, vertices)
-                    contribution = np.asarray(
-                        state.quantize(spikes_array @ w_out), dtype=np.float64
-                    )
+                    contribution = _constant_matmul_affine(
+                        spikes_array[None, :], w_out
+                    ).float_quantize(state, vertices)
                     if branch.output_queue:
                         delivered = branch.output_queue[0]
                         next_output_queue = (
@@ -1286,9 +1337,8 @@ class PolygonBranchCertifier:
                     else:
                         delivered = contribution
                         next_output_queue = ()
-                    logits = np.asarray(
-                        state.quantize(branch.logits + delivered),
-                        dtype=np.float64,
+                    logits = branch.logits.add(delivered).float_quantize(
+                        state, vertices
                     )
                     next_branches.append(
                         _PolygonBranch(
@@ -1302,9 +1352,19 @@ class PolygonBranchCertifier:
             branches = next_branches
             maximum_active = max(maximum_active, len(branches))
 
-        predictions = tuple(
-            sorted({int(np.argmax(branch.logits)) for branch in branches})
-        )
+        possible_predictions: set[int] = set()
+        for branch in branches:
+            logit_lower, logit_upper = branch.logits.bounds(vertices)
+            for index in range(model.output_size):
+                beats_lower_indices = bool(
+                    np.all(logit_upper[0, index] > logit_lower[0, :index])
+                )
+                ties_or_beats_higher_indices = bool(
+                    np.all(logit_upper[0, index] >= logit_lower[0, index + 1 :])
+                )
+                if beats_lower_indices and ties_or_beats_higher_indices:
+                    possible_predictions.add(index)
+        predictions = tuple(sorted(possible_predictions))
         return PolygonBranchCertificateResult(
             certified=predictions == (reference_prediction,),
             complete=True,
@@ -1395,7 +1455,7 @@ class AdaptiveHybridPolygonCertifier:
                     maximum_completed_branches, branch.final_branch_count
                 )
                 if branch.certified:
-                    certified_area += area
+                    certified_area += polygon_area_bounds(polygon)[0]
                     branch_certified_leaves += 1
                     analyzed += 1
                     continue
@@ -1413,7 +1473,7 @@ class AdaptiveHybridPolygonCertifier:
             )
             analyzed += 1
             if bool(result.certified[0]):
-                certified_area += area
+                certified_area += polygon_area_bounds(polygon)[0]
                 affine_certified_leaves += 1
                 continue
             children: tuple[np.ndarray, ...] = (polygon,)
@@ -1436,11 +1496,13 @@ class AdaptiveHybridPolygonCertifier:
                 split_kind = "guard"
 
             def is_useful(candidate: tuple[np.ndarray, ...]) -> bool:
-                candidate_area = sum(polygon_area(child) for child in candidate)
+                parent_lower, parent_upper = polygon_area_bounds(polygon)
+                child_bounds = [polygon_area_bounds(child) for child in candidate]
                 return (
                     len(candidate) >= 2
                     and leaf_count + len(candidate) - 1 <= max_leaves
-                    and np.isclose(candidate_area, area, rtol=1e-8, atol=1e-12)
+                    and sum(lower for lower, _ in child_bounds) <= parent_upper
+                    and sum(upper for _, upper in child_bounds) >= parent_lower
                     and max(polygon_area(child) for child in candidate)
                     < area * (1.0 - 1e-12)
                 )
@@ -1456,9 +1518,8 @@ class AdaptiveHybridPolygonCertifier:
                     midpoint = (lower_coordinate + upper_coordinate) / 2.0
                     normal = np.zeros(2, dtype=np.float64)
                     normal[axis] = 1.0
-                    children = (
-                        clip_polygon_halfspace(polygon, normal, midpoint),
-                        clip_polygon_halfspace(polygon, -normal, -midpoint),
+                    children = split_polygon_halfspace(
+                        polygon, normal, midpoint
                     )
                     split_kind = "axis"
                     useful_split = is_useful(children)
@@ -1477,10 +1538,13 @@ class AdaptiveHybridPolygonCertifier:
                     (-polygon_area(child), 0, next(counter), child),
                 )
 
-        certified_fraction = certified_area / root_area
-        unresolved_fraction = unresolved_area / root_area
-        if not np.isclose(certified_fraction + unresolved_fraction, 1.0):
-            raise AssertionError("hybrid polygons do not cover the root domain")
+        if unresolved_leaves == 0:
+            certified_fraction = 1.0
+            unresolved_fraction = 0.0
+        else:
+            root_upper = polygon_area_bounds(root_polygon)[1]
+            certified_fraction = min(1.0, certified_area / root_upper)
+            unresolved_fraction = 1.0 - certified_fraction
         return AdaptiveHybridCertificateResult(
             certified=unresolved_leaves == 0,
             certified_parameter_fraction=certified_fraction,
@@ -1512,14 +1576,49 @@ def polygon_area(vertices: np.ndarray) -> float:
     return float(abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1))) / 2.0)
 
 
+def polygon_area_bounds(vertices: np.ndarray) -> tuple[float, float]:
+    """Outward binary64 bounds on the area of a represented polygon."""
+
+    values = np.asarray(vertices, dtype=np.float64)
+    if values.ndim != 2 or values.shape[1] != 2 or len(values) < 3:
+        return 0.0, 0.0
+    x = values[:, 0]
+    y = values[:, 1]
+    forward_terms = x * np.roll(y, -1)
+    reverse_terms = y * np.roll(x, -1)
+    signed_twice_area = float(np.sum(forward_terms) - np.sum(reverse_terms))
+    operation_scale = float(
+        np.sum(np.abs(forward_terms)) + np.sum(np.abs(reverse_terms))
+    )
+    error = _analysis_gamma(4 * len(values) + 8) * operation_scale
+    magnitude = abs(signed_twice_area)
+    lower = max(0.0, float(np.nextafter((magnitude - error) / 2.0, -np.inf)))
+    upper = float(np.nextafter((magnitude + error) / 2.0, np.inf))
+    return lower, upper
+
+
 def clip_polygon_halfspace(
     vertices: np.ndarray,
     normal: np.ndarray,
     bound: float,
     *,
-    tolerance: float = 1e-12,
+    tolerance: float = 0.0,
 ) -> np.ndarray:
     """Clip a convex polygon by ``normal @ point <= bound``."""
+
+    if tolerance != 0.0:
+        return split_polygon_halfspace(
+            vertices, normal, float(bound) + float(tolerance)
+        )[0]
+    return split_polygon_halfspace(vertices, normal, bound)[0]
+
+
+def split_polygon_halfspace(
+    vertices: np.ndarray,
+    normal: np.ndarray,
+    bound: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Partition a convex polygon at one line using shared intersections."""
 
     polygon = np.asarray(vertices, dtype=np.float64)
     direction = np.asarray(normal, dtype=np.float64)
@@ -1528,35 +1627,46 @@ def clip_polygon_halfspace(
     if direction.shape != (2,):
         raise ValueError("halfspace normal must have two entries")
     if len(polygon) == 0:
-        return np.empty((0, 2), dtype=np.float64)
-    output: list[np.ndarray] = []
+        empty = np.empty((0, 2), dtype=np.float64)
+        return empty, empty.copy()
+    lower: list[np.ndarray] = []
+    upper: list[np.ndarray] = []
     previous = polygon[-1]
     previous_value = float(direction @ previous - bound)
-    previous_inside = previous_value <= tolerance
+    previous_inside = previous_value <= 0.0
     for current in polygon:
         current_value = float(direction @ current - bound)
-        current_inside = current_value <= tolerance
+        current_inside = current_value <= 0.0
         if current_inside != previous_inside:
             denominator = previous_value - current_value
-            if abs(denominator) > tolerance:
-                fraction = previous_value / denominator
-                output.append(previous + fraction * (current - previous))
+            if denominator == 0.0:
+                raise AssertionError("crossing polygon edge has zero denominator")
+            fraction = previous_value / denominator
+            intersection = previous + fraction * (current - previous)
+            lower.append(intersection)
+            upper.append(intersection.copy())
         if current_inside:
-            output.append(current.copy())
+            lower.append(current.copy())
+        else:
+            upper.append(current.copy())
         previous = current
         previous_value = current_value
         previous_inside = current_inside
-    if not output:
-        return np.empty((0, 2), dtype=np.float64)
-    deduplicated = [output[0]]
-    for point in output[1:]:
-        if not np.allclose(point, deduplicated[-1], atol=tolerance, rtol=0.0):
-            deduplicated.append(point)
-    if len(deduplicated) > 1 and np.allclose(
-        deduplicated[0], deduplicated[-1], atol=tolerance, rtol=0.0
-    ):
-        deduplicated.pop()
-    return np.asarray(deduplicated, dtype=np.float64)
+
+    def finalize(points: list[np.ndarray]) -> np.ndarray:
+        if not points:
+            return np.empty((0, 2), dtype=np.float64)
+        deduplicated = [points[0]]
+        for point in points[1:]:
+            if not np.array_equal(point, deduplicated[-1]):
+                deduplicated.append(point)
+        if len(deduplicated) > 1 and np.array_equal(
+            deduplicated[0], deduplicated[-1]
+        ):
+            deduplicated.pop()
+        return np.asarray(deduplicated, dtype=np.float64)
+
+    return finalize(lower), finalize(upper)
 
 
 def split_polygon_guard_band(
@@ -1565,21 +1675,21 @@ def split_polygon_guard_band(
     generators: np.ndarray,
     radius: float,
     *,
-    area_tolerance: float = 1e-14,
+    area_tolerance: float = 0.0,
 ) -> tuple[np.ndarray, ...]:
     """Split a polygon into quiet, residual guard band, and spiking regions."""
 
     normal = np.asarray(generators, dtype=np.float64)
     if normal.shape != (2,) or np.linalg.norm(normal) <= 1e-15:
         return (np.asarray(vertices, dtype=np.float64),)
-    quiet = clip_polygon_halfspace(vertices, normal, -radius - center)
-    band = clip_polygon_halfspace(vertices, normal, radius - center)
-    band = clip_polygon_halfspace(band, -normal, radius + center)
-    spiking = clip_polygon_halfspace(vertices, -normal, center - radius)
+    lower = -radius - center
+    upper = radius - center
+    quiet, remaining = split_polygon_halfspace(vertices, normal, lower)
+    band, spiking = split_polygon_halfspace(remaining, normal, upper)
     children = tuple(
         polygon
         for polygon in (quiet, band, spiking)
-        if polygon_area(polygon) > area_tolerance
+        if len(polygon) >= 3 and polygon_area(polygon) > area_tolerance
     )
     return children or (np.asarray(vertices, dtype=np.float64),)
 
@@ -1651,7 +1761,7 @@ class AdaptiveAffineGuardCutCertifier:
             analyzed += 1
             area = polygon_area(polygon)
             if bool(result.certified[0]):
-                certified_area += area
+                certified_area += polygon_area_bounds(polygon)[0]
                 certified_leaves += 1
                 continue
             children: tuple[np.ndarray, ...] = (polygon,)
@@ -1674,11 +1784,13 @@ class AdaptiveAffineGuardCutCertifier:
                 split_kind = "guard"
 
             def is_useful(candidate: tuple[np.ndarray, ...]) -> bool:
-                candidate_area = sum(polygon_area(child) for child in candidate)
+                parent_lower, parent_upper = polygon_area_bounds(polygon)
+                child_bounds = [polygon_area_bounds(child) for child in candidate]
                 return (
                     len(candidate) >= 2
                     and leaf_count + len(candidate) - 1 <= max_leaves
-                    and np.isclose(candidate_area, area, rtol=1e-8, atol=1e-12)
+                    and sum(lower for lower, _ in child_bounds) <= parent_upper
+                    and sum(upper for _, upper in child_bounds) >= parent_lower
                     and max(polygon_area(child) for child in candidate)
                     < area * (1.0 - 1e-12)
                 )
@@ -1696,9 +1808,8 @@ class AdaptiveAffineGuardCutCertifier:
                     midpoint = (lower_coordinate + upper_coordinate) / 2.0
                     normal = np.zeros(2, dtype=np.float64)
                     normal[axis] = 1.0
-                    children = (
-                        clip_polygon_halfspace(polygon, normal, midpoint),
-                        clip_polygon_halfspace(polygon, -normal, -midpoint),
+                    children = split_polygon_halfspace(
+                        polygon, normal, midpoint
                     )
                     split_kind = "axis"
                     useful_split = is_useful(children)
@@ -1720,10 +1831,13 @@ class AdaptiveAffineGuardCutCertifier:
                     (-child_area_value, depth + 1, next(counter), child),
                 )
 
-        certified_fraction = certified_area / root_area
-        unresolved_fraction = unresolved_area / root_area
-        if not np.isclose(certified_fraction + unresolved_fraction, 1.0):
-            raise AssertionError("guard-cut polygons do not cover the root domain")
+        if unresolved_leaves == 0:
+            certified_fraction = 1.0
+            unresolved_fraction = 0.0
+        else:
+            root_upper = polygon_area_bounds(root_polygon)[1]
+            certified_fraction = min(1.0, certified_area / root_upper)
+            unresolved_fraction = 1.0 - certified_fraction
         return AdaptiveGuardCutCertificateResult(
             certified=unresolved_leaves == 0,
             certified_parameter_fraction=certified_fraction,

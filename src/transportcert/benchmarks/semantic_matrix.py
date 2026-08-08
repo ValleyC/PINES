@@ -93,7 +93,7 @@ def _batched_execute(
 ) -> tuple[np.ndarray, np.ndarray]:
     import torch
 
-    emulator = TorchEmulator(device=device, dtype=torch.float32)
+    emulator = TorchEmulator(device=device, dtype=torch.float64)
     predictions: list[np.ndarray] = []
     logits: list[np.ndarray] = []
     for start in range(0, len(indices), batch_size):

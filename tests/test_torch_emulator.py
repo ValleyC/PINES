@@ -32,3 +32,35 @@ def test_torch_matches_numpy_fixed(small_model, event_batch) -> None:
     actual = TorchEmulator().run(small_model, event_batch[:6], semantics).numpy()
     np.testing.assert_array_equal(actual.membrane, expected.membrane)
     np.testing.assert_array_equal(actual.final_logits, expected.final_logits)
+
+
+@pytest.mark.parametrize("reset", list(ResetRule))
+def test_torch_matches_numpy_at_explicit_float32_cast_points(
+    small_model, event_batch, reset
+) -> None:
+    float32 = NumericFormat("float32")
+    semantics = ExecutionSemantics(
+        reset_rule=reset,
+        state_format=float32,
+        weight_format=float32,
+        synaptic_delay_steps=1,
+        output_delay_steps=1,
+    )
+    expected = VectorizedEmulator().run(small_model, event_batch[:6], semantics)
+    actual = TorchEmulator(dtype=torch.float64).run(
+        small_model, event_batch[:6], semantics
+    ).numpy()
+    np.testing.assert_allclose(
+        actual.membrane,
+        expected.membrane,
+        rtol=0.0,
+        atol=np.finfo(np.float32).eps,
+    )
+    np.testing.assert_array_equal(actual.spikes, expected.spikes)
+    np.testing.assert_allclose(
+        actual.final_logits,
+        expected.final_logits,
+        rtol=0.0,
+        atol=np.finfo(np.float32).eps,
+    )
+    np.testing.assert_array_equal(actual.predictions, expected.predictions)

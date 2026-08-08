@@ -96,7 +96,7 @@ def main() -> None:
     import torch
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    dtype = torch.float32 if target.state_format.kind == "float32" else torch.float64
+    dtype = torch.float64
     reference_prediction = int(
         TorchEmulator(device=device, dtype=dtype)
         .run(model, frame, reference)

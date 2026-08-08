@@ -58,7 +58,7 @@ def main() -> None:
     import torch
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    emulator = TorchEmulator(device=device, dtype=torch.float32)
+    emulator = TorchEmulator(device=device, dtype=torch.float64)
     factors = np.linspace(
         1.0 - args.radius, 1.0 + args.radius, MAX_RESOLUTION, dtype=np.float64
     )

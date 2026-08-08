@@ -14,15 +14,15 @@ from transportcert.affine import AdaptiveHybridPolygonCertifier
 from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
 from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
 from transportcert.benchmarks.shd import PackedSHD
+from transportcert.emulator import VectorizedEmulator
 from transportcert.models import DenseRecurrentSNN
-from transportcert.parameter_batch import TorchParameterBatchEmulator
+from transportcert.parameter_batch import ReferenceParameterSweepEmulator
 from transportcert.semantics import (
     IntegrationRule,
     ResetRule,
     ThresholdTiming,
     UpdateOrdering,
 )
-from transportcert.torch_emulator import TorchEmulator
 
 
 def _ordering(timing: ThresholdTiming) -> UpdateOrdering:
@@ -174,18 +174,11 @@ def main() -> None:
         1.0 + timestep_radius * dt_factor.ravel()
     )
     threshold_scales = 1.0 + threshold_radius * threshold_factor.ravel()
-    import torch
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    reference_emulator = VectorizedEmulator()
     reference_prediction = int(
-        TorchEmulator(device=device, dtype=torch.float32)
-        .run(model, frame, reference)
-        .predictions[0]
-        .item()
+        reference_emulator.run(model, frame, reference).predictions[0]
     )
-    parameter_engine = TorchParameterBatchEmulator(
-        device=device, dtype=torch.float32
-    )
+    parameter_engine = ReferenceParameterSweepEmulator(reference_emulator)
     member_rows = []
     all_identity = True
     for integration, timing, reset, synaptic_delay, output_delay in (
@@ -212,6 +205,7 @@ def main() -> None:
             member,
             timesteps,
             threshold_scales,
+            np.asarray([reference_prediction], dtype=np.int16),
         )
         identity = bool(np.all(execution.predictions == reference_prediction))
         all_identity &= identity
@@ -272,8 +266,8 @@ def main() -> None:
         "split_indices_hash": sha256_file(split_path),
         "train_store_hash": store.data_hash,
         "reference_semantics_hash": reference.semantics_hash,
-        "device": device,
-        "torch_version": torch.__version__,
+        "executor": "VectorizedEmulator canonical operational semantics",
+        "device": "cpu",
         "code_revision": code_revision(root),
         "interpretation": (
             "A certificate requires all 16 mutually exclusive members and every "

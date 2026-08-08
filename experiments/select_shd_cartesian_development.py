@@ -17,15 +17,15 @@ from transportcert.artifacts import (
 )
 from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
 from transportcert.benchmarks.shd import PackedSHD
+from transportcert.emulator import VectorizedEmulator
 from transportcert.models import DenseRecurrentSNN
-from transportcert.parameter_batch import TorchParameterBatchEmulator
+from transportcert.parameter_batch import ReferenceParameterSweepEmulator
 from transportcert.semantics import (
     IntegrationRule,
     ResetRule,
     ThresholdTiming,
     UpdateOrdering,
 )
-from transportcert.torch_emulator import TorchEmulator
 
 
 def _ordering(timing: ThresholdTiming) -> UpdateOrdering:
@@ -123,49 +123,28 @@ def main() -> None:
         * normalized_points[:, 1]
     )
 
-    import torch
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    dtype = torch.float32
+    reference_emulator = VectorizedEmulator()
     reference_predictions = np.asarray(
-        TorchEmulator(device=device, dtype=dtype)
-        .run(model, frames, reference)
-        .numpy()
-        .predictions,
+        reference_emulator.run(model, frames, reference).predictions,
         dtype=np.int16,
     )
-    engine = TorchParameterBatchEmulator(device=device, dtype=dtype)
+    engine = ReferenceParameterSweepEmulator(reference_emulator)
     counterexample_points = np.zeros(len(indices), dtype=np.int64)
     counterexample_members = np.zeros(len(indices), dtype=np.int64)
     minimum_margins = np.full(len(indices), np.inf, dtype=np.float64)
     member_rows = []
     started = time.perf_counter()
     for member_index, member in enumerate(members):
-        execution = engine.run_cartesian(
+        execution = engine.run(
             model,
             frames,
             member,
             timesteps,
             threshold_scales,
-            input_batch_size=args.input_batch_size,
-            parameter_batch_size=args.parameter_batch_size,
+            reference_predictions,
         )
-        row_indices = np.arange(len(indices))[:, None]
-        point_indices = np.arange(len(timesteps))[None, :]
-        competing = execution.final_logits.copy()
-        competing[
-            row_indices,
-            point_indices,
-            reference_predictions[:, None],
-        ] = -np.inf
-        reference_logits = execution.final_logits[
-            row_indices,
-            point_indices,
-            reference_predictions[:, None],
-        ]
-        member_margins = reference_logits - np.max(competing, axis=2)
         minimum_margins = np.minimum(
-            minimum_margins, np.min(member_margins, axis=1)
+            minimum_margins, execution.minimum_reference_margin
         )
         mismatches = execution.predictions != reference_predictions[:, None]
         mismatch_counts = np.count_nonzero(mismatches, axis=1)
@@ -246,8 +225,8 @@ def main() -> None:
         "split_indices_hash": sha256_file(split_path),
         "train_store_hash": store.data_hash,
         "reference_semantics_hash": reference.semantics_hash,
-        "device": device,
-        "torch_version": torch.__version__,
+        "executor": "VectorizedEmulator canonical operational semantics",
+        "device": "cpu",
         "seconds": time.perf_counter() - started,
         "code_revision": code_revision(root),
         "interpretation": (

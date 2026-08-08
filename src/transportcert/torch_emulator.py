@@ -62,7 +62,14 @@ class TorchEmulator:
 
     def _quantize(self, value: Any, numeric: Any, generator: Any) -> Any:
         torch = _torch()
-        if not numeric.is_fixed:
+        if numeric.kind == "float32":
+            # Operational semantics use binary64 arithmetic with explicit
+            # float32 storage/cast points, matching NumericFormat.quantize and
+            # the scalar/vector reference interpreters.  Cast back to the
+            # engine dtype so intervening operations do not silently become
+            # all-float32 arithmetic.
+            return value.to(torch.float32).to(self.dtype)
+        if numeric.kind == "float64":
             return value
         scale = float(1 << numeric.fractional_bits)
         scaled = value * scale

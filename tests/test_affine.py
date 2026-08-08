@@ -13,8 +13,10 @@ from transportcert.affine import (
     FixedTraceAffineAnalyzer,
     PolygonBranchCertifier,
     _HybridAffine,
+    _constant_matmul_affine,
     polygon_area,
     split_polygon_guard_band,
+    split_polygon_halfspace,
 )
 from transportcert.emulator import VectorizedEmulator
 from transportcert.models import DenseRecurrentSNN
@@ -179,6 +181,49 @@ def test_guard_band_polygons_form_a_cover() -> None:
     assert len(children) == 3
     assert np.isclose(sum(polygon_area(child) for child in children), 4.0)
     assert max(len(child) for child in children) > 4
+
+
+def test_guard_band_split_retains_positive_area_sliver() -> None:
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    children = split_polygon_guard_band(
+        square,
+        center=0.999999999999999,
+        generators=np.asarray([1.0, 0.0]),
+        radius=0.0,
+    )
+    areas = [polygon_area(child) for child in children]
+    assert 0.0 < min(areas) < 1e-14
+    assert np.isclose(sum(areas), polygon_area(square), rtol=0.0, atol=1e-15)
+
+
+def test_halfspace_partition_uses_identical_intersection_vertices() -> None:
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    lower, upper = split_polygon_halfspace(
+        square, np.asarray([0.37, -0.81]), 0.143
+    )
+    shared = {
+        tuple(point) for point in lower
+    }.intersection(tuple(point) for point in upper)
+    assert len(shared) == 2
+    assert np.isclose(
+        polygon_area(lower) + polygon_area(upper),
+        polygon_area(square),
+        rtol=0.0,
+        atol=8 * np.finfo(np.float64).eps,
+    )
+
+
+def test_constant_matmul_affine_encloses_cancellation() -> None:
+    values = np.asarray([[1e16, 1.0, -1e16]])
+    weights = np.ones((3, 1), dtype=np.float64)
+    result = _constant_matmul_affine(values, weights)
+    lower, upper = result.bounds()
+    assert lower[0, 0] <= 1.0 <= upper[0, 0]
+    assert result.radius[0, 0] > 0.0
 
 
 def test_affine_guard_polygon_bounds_contain_sampled_executions(

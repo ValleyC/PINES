@@ -83,7 +83,7 @@ def main() -> None:
     import torch
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    emulator = TorchEmulator(device=device, dtype=torch.float32)
+    emulator = TorchEmulator(device=device, dtype=torch.float64)
     reference_predictions = np.asarray(
         emulator.run(model, pool_frames, reference).numpy().predictions
     )

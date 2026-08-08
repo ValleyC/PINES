@@ -16,9 +16,9 @@ from transportcert.artifacts import (
 )
 from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
 from transportcert.benchmarks.shd import PackedSHD
+from transportcert.emulator import VectorizedEmulator
 from transportcert.models import DenseRecurrentSNN
-from transportcert.parameter_batch import TorchParameterBatchEmulator
-from transportcert.torch_emulator import TorchEmulator
+from transportcert.parameter_batch import ReferenceParameterSweepEmulator
 
 
 def main() -> None:
@@ -73,12 +73,8 @@ def main() -> None:
     threshold_scales = 1.0 + threshold_radius * normalized_points[:, 1]
     store = PackedSHD(root / args.data_root / "train.npz")
 
-    import torch
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    dtype = torch.float32 if target.state_format.kind == "float32" else torch.float64
-    reference_engine = TorchEmulator(device=device, dtype=dtype)
-    family_engine = TorchParameterBatchEmulator(device=device, dtype=dtype)
+    reference_engine = VectorizedEmulator()
+    family_engine = ReferenceParameterSweepEmulator(reference_engine)
     output_rows = []
     started = time.perf_counter()
     for seed in config["seeds"]:
@@ -91,32 +87,17 @@ def main() -> None:
         )
         frames = store.frames(indices)
         reference_predictions = np.asarray(
-            reference_engine.run(model, frames, reference).numpy().predictions,
+            reference_engine.run(model, frames, reference).predictions,
             dtype=np.int16,
         )
-        execution = family_engine.run_cartesian(
+        execution = family_engine.run(
             model,
             frames,
             target,
             timesteps,
             threshold_scales,
-            input_batch_size=args.input_batch_size,
-            parameter_batch_size=args.batch_size,
+            reference_predictions,
         )
-        row_indices = np.arange(len(seed_rows))[:, None]
-        point_indices = np.arange(len(timesteps))[None, :]
-        competing = execution.final_logits.copy()
-        competing[
-            row_indices,
-            point_indices,
-            reference_predictions[:, None],
-        ] = -np.inf
-        reference_logits = execution.final_logits[
-            row_indices,
-            point_indices,
-            reference_predictions[:, None],
-        ]
-        margins = reference_logits - np.max(competing, axis=2)
         mismatches = execution.predictions != reference_predictions[:, None]
         for position, audit_row in enumerate(seed_rows):
             output_rows.append(
@@ -130,7 +111,7 @@ def main() -> None:
                         np.count_nonzero(mismatches[position])
                     ),
                     "minimum_reference_margin": float(
-                        np.min(margins[position])
+                        execution.minimum_reference_margin[position]
                     ),
                 }
             )
@@ -169,8 +150,8 @@ def main() -> None:
         ),
         "rows": output_rows,
         "seconds": time.perf_counter() - started,
-        "device": device,
-        "torch_version": torch.__version__,
+        "executor": "VectorizedEmulator canonical operational semantics",
+        "device": "cpu",
         "train_store_hash": store.data_hash,
         "reference_semantics_hash": reference.semantics_hash,
         "target_semantics_hash": target.semantics_hash,

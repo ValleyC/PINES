@@ -6,7 +6,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import beta, spearmanr
+from scipy.stats import beta, spearmanr, t
 
 from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
 
@@ -20,6 +20,52 @@ def _exact_interval(successes: int, samples: int, confidence: float) -> list[flo
         beta.ppf(1.0 - alpha / 2.0, successes + 1, samples - successes)
     )
     return [lower, upper]
+
+
+def _input_cluster_bootstrap_interval(
+    cluster_means: np.ndarray,
+    *,
+    confidence: float,
+    repetitions: int,
+    seed: int,
+) -> list[float]:
+    """Percentile interval over input clusters with the trained models fixed."""
+
+    values = np.asarray(cluster_means, dtype=np.float64)
+    if values.ndim != 1 or len(values) < 2 or repetitions < 1:
+        raise ValueError("cluster bootstrap needs at least two inputs")
+    generator = np.random.default_rng(seed)
+    estimates = np.empty(repetitions, dtype=np.float64)
+    chunk = 2_000
+    for start in range(0, repetitions, chunk):
+        stop = min(start + chunk, repetitions)
+        draws = generator.integers(
+            0, len(values), size=(stop - start, len(values))
+        )
+        estimates[start:stop] = np.mean(values[draws], axis=1)
+    alpha = 1.0 - confidence
+    return [
+        float(np.quantile(estimates, alpha / 2.0)),
+        float(np.quantile(estimates, 1.0 - alpha / 2.0)),
+    ]
+
+
+def _training_seed_t_interval(
+    seed_fractions: np.ndarray, *, confidence: float
+) -> list[float]:
+    """Student-t interval over independently trained models, inputs fixed."""
+
+    values = np.asarray(seed_fractions, dtype=np.float64)
+    if values.ndim != 1 or len(values) < 2:
+        raise ValueError("seed interval needs at least two trained models")
+    alpha = 1.0 - confidence
+    half_width = float(
+        t.ppf(1.0 - alpha / 2.0, df=len(values) - 1)
+        * np.std(values, ddof=1)
+        / np.sqrt(len(values))
+    )
+    center = float(np.mean(values))
+    return [max(0.0, center - half_width), min(1.0, center + half_width)]
 
 
 def main() -> None:
@@ -152,6 +198,34 @@ def main() -> None:
         )
         for key in confirmation_keys
     )
+    confirmation_positions = sorted(
+        {int(audit_rows[key]["audit_position"]) for key in confirmation_keys}
+    )
+    confirmation_cluster_means = []
+    for position in confirmation_positions:
+        position_keys = [
+            key
+            for key in confirmation_keys
+            if int(audit_rows[key]["audit_position"]) == position
+        ]
+        if len(position_keys) != len(audit_seeds):
+            raise ValueError("confirmation input cluster is not balanced by seed")
+        dataset_indices = {
+            int(audit_rows[key]["dataset_index"]) for key in position_keys
+        }
+        if len(dataset_indices) != 1:
+            raise ValueError("audit position does not identify the same input across seeds")
+        confirmation_cluster_means.append(
+            float(np.mean([audit_rows[key]["certified"] for key in position_keys]))
+        )
+    cluster_bootstrap_repetitions = 100_000
+    cluster_bootstrap_seed = 20_260_808
+    input_cluster_interval = _input_cluster_bootstrap_interval(
+        np.asarray(confirmation_cluster_means),
+        confidence=confidence,
+        repetitions=cluster_bootstrap_repetitions,
+        seed=cluster_bootstrap_seed,
+    )
     coverage = np.asarray(
         [row["certified_parameter_fraction"] for row in audit_rows.values()],
         dtype=np.float64,
@@ -242,6 +316,9 @@ def main() -> None:
                 },
             }
         )
+    training_seed_interval = _training_seed_t_interval(
+        np.asarray(certified_values), confidence=confidence
+    )
 
     class_rows = []
     predictions = sorted(
@@ -292,8 +369,9 @@ def main() -> None:
         "seed_count": len(per_seed),
         "certified_input_count": certified,
         "certified_input_fraction": certified / samples,
-        "certified_input_fraction_exact_95_percent_interval": _exact_interval(
-            certified, samples, confidence
+        "dependence_note": (
+            "The same audit inputs are evaluated under all five trained models; "
+            "therefore pooled model-input rows are not independent Bernoulli trials."
         ),
         "primary_confirmation_excluding_screen": {
             "exclusion_rule": (
@@ -305,11 +383,21 @@ def main() -> None:
             "certified_input_fraction": (
                 confirmation_certified / confirmation_samples
             ),
-            "certified_input_fraction_exact_95_percent_interval": (
-                _exact_interval(
-                    confirmation_certified, confirmation_samples, confidence
-                )
+            "estimand_note": (
+                "Input-cluster uncertainty conditions on these five trained models; "
+                "training-seed uncertainty conditions on these 829 audit inputs. "
+                "No single joint population interval is claimed."
             ),
+            "unique_input_count": len(confirmation_positions),
+            "trained_model_count": len(audit_seeds),
+            "input_cluster_bootstrap_95_percent_interval": (
+                input_cluster_interval
+            ),
+            "input_cluster_bootstrap_repetitions": (
+                cluster_bootstrap_repetitions
+            ),
+            "input_cluster_bootstrap_seed": cluster_bootstrap_seed,
+            "training_seed_mean_t_95_percent_interval": training_seed_interval,
             "grid_identity_count": confirmation_stable,
             "grid_identity_fraction": confirmation_stable / confirmation_samples,
             "certified_grid_violation_count": confirmation_violations,
