@@ -19,7 +19,9 @@
 
 ## Open experimental milestones
 
-- Architecture/training pipelines for SHD, DVS Gesture, and N-MNIST.
+- DVS Gesture and N-MNIST architecture/training pipelines. The SHD recurrent
+  pipeline, canonical source verification, frozen split, and semantic matrix are
+  implemented; its five-seed evidence matrix is in progress.
 - Optional exact MILP checker and zonotope domain beyond the implemented interval
   domain; exhaustive checking is currently the exact small-network route.
 - Per-platform QAT and supervised retraining baselines.
