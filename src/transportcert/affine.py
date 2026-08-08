@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import heapq
 from dataclasses import dataclass
 
 import numpy as np
@@ -19,6 +20,25 @@ class AffineGuardCertificateResult:
     target_margin_lower: np.ndarray
     target_margin_upper: np.ndarray
     split_axis_scores: np.ndarray
+    guard_cut_valid: np.ndarray
+    guard_cut_center: np.ndarray
+    guard_cut_generators: np.ndarray
+    guard_cut_radius: np.ndarray
+
+
+@dataclass(frozen=True)
+class AdaptiveGuardCutCertificateResult:
+    certified: bool
+    certified_parameter_fraction: float
+    unresolved_parameter_fraction: float
+    analyzed_polygons: int
+    final_leaves: int
+    certified_leaves: int
+    unresolved_leaves: int
+    maximum_depth: int
+    maximum_polygon_vertices: int
+    guard_band_splits: int
+    axis_fallback_splits: int
 
 
 @dataclass(frozen=True)
@@ -60,9 +80,23 @@ class _HybridAffine:
         generators[..., generator_index] = (upper_values - lower_values) / 2.0
         return cls(center, generators, np.zeros_like(center))
 
-    def bounds(self) -> tuple[np.ndarray, np.ndarray]:
-        deviation = np.sum(np.abs(self.generators), axis=-1) + self.radius
-        return self.center - deviation, self.center + deviation
+    def bounds(
+        self, parameter_vertices: np.ndarray | None = None
+    ) -> tuple[np.ndarray, np.ndarray]:
+        if parameter_vertices is None:
+            shared_radius = np.sum(np.abs(self.generators), axis=-1)
+            return (
+                self.center - shared_radius - self.radius,
+                self.center + shared_radius + self.radius,
+            )
+        vertices = np.asarray(parameter_vertices, dtype=np.float64)
+        if vertices.ndim != 2 or vertices.shape[1] != 2 or len(vertices) < 1:
+            raise ValueError("parameter vertices must have shape [vertices, 2]")
+        shared_values = np.einsum("bfi,vi->bfv", self.generators, vertices)
+        return (
+            self.center + np.min(shared_values, axis=-1) - self.radius,
+            self.center + np.max(shared_values, axis=-1) + self.radius,
+        )
 
     def add(self, other: "_HybridAffine") -> "_HybridAffine":
         return _HybridAffine(
@@ -101,18 +135,59 @@ class _HybridAffine:
             np.einsum("bf,bfo->bo", self.radius, np.abs(matrix)),
         )
 
-    def product(self, other: "_HybridAffine") -> "_HybridAffine":
-        center = self.center * other.center
-        generators = (
-            self.center[..., None] * other.generators
-            + other.center[..., None] * self.generators
-        )
-        left_shared_radius = np.sum(np.abs(self.generators), axis=-1)
-        right_shared_radius = np.sum(np.abs(other.generators), axis=-1)
+    def product(
+        self,
+        other: "_HybridAffine",
+        parameter_vertices: np.ndarray | None = None,
+    ) -> "_HybridAffine":
+        if parameter_vertices is None:
+            center = self.center * other.center
+            generators = (
+                self.center[..., None] * other.generators
+                + other.center[..., None] * self.generators
+            )
+            left_expansion_center = self.center
+            right_expansion_center = other.center
+            left_shared_radius = np.sum(np.abs(self.generators), axis=-1)
+            right_shared_radius = np.sum(np.abs(other.generators), axis=-1)
+        else:
+            vertices = np.asarray(parameter_vertices, dtype=np.float64)
+            domain_center = np.mean(vertices, axis=0)
+            centered_vertices = vertices - domain_center[None, :]
+            left_expansion_center = self.center + np.einsum(
+                "bfi,i->bf", self.generators, domain_center
+            )
+            right_expansion_center = other.center + np.einsum(
+                "bfi,i->bf", other.generators, domain_center
+            )
+            generators = (
+                left_expansion_center[..., None] * other.generators
+                + right_expansion_center[..., None] * self.generators
+            )
+            center = (
+                left_expansion_center * right_expansion_center
+                - np.einsum("bfi,i->bf", generators, domain_center)
+            )
+            left_shared_radius = np.max(
+                np.abs(
+                    np.einsum(
+                        "bfi,vi->bfv", self.generators, centered_vertices
+                    )
+                ),
+                axis=-1,
+            )
+            right_shared_radius = np.max(
+                np.abs(
+                    np.einsum(
+                        "bfi,vi->bfv", other.generators, centered_vertices
+                    )
+                ),
+                axis=-1,
+            )
         radius = (
             left_shared_radius * right_shared_radius
-            + np.abs(self.center) * other.radius
-            + np.abs(other.center) * self.radius
+            + np.abs(left_expansion_center) * other.radius
+            + np.abs(right_expansion_center) * self.radius
             + left_shared_radius * other.radius
             + right_shared_radius * self.radius
             + self.radius * other.radius
@@ -120,8 +195,11 @@ class _HybridAffine:
         return _HybridAffine(center, generators, radius)
 
 
-def _spike_relaxation(guard: _HybridAffine) -> _HybridAffine:
-    lower, upper = guard.bounds()
+def _spike_relaxation(
+    guard: _HybridAffine,
+    parameter_vertices: np.ndarray | None = None,
+) -> _HybridAffine:
+    lower, upper = guard.bounds(parameter_vertices)
     definitely_quiet = upper < 0.0
     definitely_spiking = lower >= 0.0
     uncertain = ~(definitely_quiet | definitely_spiking)
@@ -148,11 +226,12 @@ class AffineGuardFamilyCertifier:
         inputs: np.ndarray,
         reference: ExecutionSemantics,
         box: SemanticsBox,
+        parameter_vertices: np.ndarray | None = None,
     ) -> AffineGuardCertificateResult:
         events = _validate_inputs(model, inputs)
         prediction = VectorizedEmulator().run(model, events, reference).predictions
         return self._certify_with_predictions(
-            model, events, prediction, box
+            model, events, prediction, box, parameter_vertices
         )
 
     def certify_with_reference_predictions(
@@ -162,6 +241,7 @@ class AffineGuardFamilyCertifier:
         reference: ExecutionSemantics,
         box: SemanticsBox,
         reference_predictions: np.ndarray,
+        parameter_vertices: np.ndarray | None = None,
     ) -> AffineGuardCertificateResult:
         del reference
         events = _validate_inputs(model, inputs)
@@ -170,7 +250,9 @@ class AffineGuardFamilyCertifier:
             raise ValueError("reference predictions must have one entry per input")
         if np.any(prediction < 0) or np.any(prediction >= model.output_size):
             raise ValueError("reference prediction is outside the output range")
-        return self._certify_with_predictions(model, events, prediction, box)
+        return self._certify_with_predictions(
+            model, events, prediction, box, parameter_vertices
+        )
 
     def _certify_with_predictions(
         self,
@@ -178,6 +260,7 @@ class AffineGuardFamilyCertifier:
         events: np.ndarray,
         prediction: np.ndarray,
         box: SemanticsBox,
+        parameter_vertices: np.ndarray | None,
     ) -> AffineGuardCertificateResult:
         if box.base.state_format.is_fixed:
             raise NotImplementedError("affine guards require floating-point state")
@@ -187,6 +270,11 @@ class AffineGuardFamilyCertifier:
         lower = np.full((len(events), model.output_size), np.inf)
         upper = np.full((len(events), model.output_size), -np.inf)
         split_axis_scores = np.zeros((len(events), 2), dtype=np.float64)
+        guard_cut_valid = np.zeros(len(events), dtype=bool)
+        guard_cut_center = np.full(len(events), np.nan, dtype=np.float64)
+        guard_cut_generators = np.full((len(events), 2), np.nan, dtype=np.float64)
+        guard_cut_radius = np.full(len(events), np.nan, dtype=np.float64)
+        guard_cut_strength = np.full(len(events), -np.inf, dtype=np.float64)
         rows = np.arange(len(events))
         for integration, timing, reset, synaptic_delay, output_delay in itertools.product(
             box.integration_rules,
@@ -199,7 +287,16 @@ class AffineGuardFamilyCertifier:
                 raise NotImplementedError(
                     "affine guards currently support forward Euler only"
                 )
-            member_lower, member_upper, member_scores = self._propagate_member(
+            (
+                member_lower,
+                member_upper,
+                member_scores,
+                member_cut_valid,
+                member_cut_center,
+                member_cut_generators,
+                member_cut_radius,
+                member_cut_strength,
+            ) = self._propagate_member(
                 model,
                 events,
                 prediction,
@@ -208,6 +305,7 @@ class AffineGuardFamilyCertifier:
                 reset,
                 synaptic_delay,
                 output_delay,
+                parameter_vertices,
             )
             competing = member_lower.copy()
             competing[rows, prediction] = np.inf
@@ -215,6 +313,14 @@ class AffineGuardFamilyCertifier:
             lower = np.minimum(lower, member_lower)
             upper = np.maximum(upper, member_upper)
             split_axis_scores += member_scores
+            replace_cut = member_cut_valid & (
+                member_cut_strength > guard_cut_strength
+            )
+            guard_cut_valid[replace_cut] = True
+            guard_cut_center[replace_cut] = member_cut_center[replace_cut]
+            guard_cut_generators[replace_cut] = member_cut_generators[replace_cut]
+            guard_cut_radius[replace_cut] = member_cut_radius[replace_cut]
+            guard_cut_strength[replace_cut] = member_cut_strength[replace_cut]
         return AffineGuardCertificateResult(
             certified=certified,
             certified_fraction=float(np.mean(certified)),
@@ -222,6 +328,10 @@ class AffineGuardFamilyCertifier:
             target_margin_lower=lower,
             target_margin_upper=upper,
             split_axis_scores=split_axis_scores,
+            guard_cut_valid=guard_cut_valid,
+            guard_cut_center=guard_cut_center,
+            guard_cut_generators=guard_cut_generators,
+            guard_cut_radius=guard_cut_radius,
         )
 
     @staticmethod
@@ -231,16 +341,21 @@ class AffineGuardFamilyCertifier:
         threshold: _HybridAffine,
         reset_value: np.ndarray,
         rule: ResetRule,
+        parameter_vertices: np.ndarray | None,
     ) -> _HybridAffine:
         if rule is ResetRule.SUBTRACTIVE:
-            return voltage.subtract(spikes.product(threshold))
+            return voltage.subtract(
+                spikes.product(threshold, parameter_vertices)
+            )
         one_minus_spikes = _HybridAffine.exact(
             np.ones_like(spikes.center)
         ).subtract(spikes)
         reset = _HybridAffine.exact(
             np.broadcast_to(reset_value, voltage.center.shape)
         )
-        return one_minus_spikes.product(voltage).add(spikes.product(reset))
+        return one_minus_spikes.product(voltage, parameter_vertices).add(
+            spikes.product(reset, parameter_vertices)
+        )
 
     @staticmethod
     def _integrate(
@@ -248,9 +363,10 @@ class AffineGuardFamilyCertifier:
         current: _HybridAffine,
         timestep: _HybridAffine,
         tau: np.ndarray,
+        parameter_vertices: np.ndarray | None,
     ) -> _HybridAffine:
         derivative = current.subtract(voltage).scale(1.0 / tau)
-        return voltage.add(timestep.product(derivative))
+        return voltage.add(timestep.product(derivative, parameter_vertices))
 
     def _propagate_member(
         self,
@@ -262,7 +378,17 @@ class AffineGuardFamilyCertifier:
         reset: ResetRule,
         synaptic_delay: int,
         output_delay: int,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        parameter_vertices: np.ndarray | None,
+    ) -> tuple[
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+    ]:
         weight = box.base.weight_format
         w_in = np.asarray(weight.quantize(model.input_weights), dtype=np.float64)
         w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
@@ -299,14 +425,48 @@ class AffineGuardFamilyCertifier:
         chosen_weights = w_out[:, reference_predictions].T
         margin_weights = chosen_weights[:, :, None] - w_out[None, :, :]
         split_axis_scores = np.zeros((batch, 2), dtype=np.float64)
+        cut_valid = np.zeros(batch, dtype=bool)
+        cut_center = np.full(batch, np.nan, dtype=np.float64)
+        cut_generators = np.full((batch, 2), np.nan, dtype=np.float64)
+        cut_radius = np.full(batch, np.nan, dtype=np.float64)
+        cut_strength = np.full(batch, -np.inf, dtype=np.float64)
+        vertices = (
+            np.asarray(parameter_vertices, dtype=np.float64)
+            if parameter_vertices is not None
+            else np.asarray(
+                [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]],
+                dtype=np.float64,
+            )
+        )
 
         def relax_guard(guard: _HybridAffine) -> _HybridAffine:
-            guard_lower, guard_upper = guard.bounds()
+            guard_lower, guard_upper = guard.bounds(vertices)
             uncertain = ~((guard_upper < 0.0) | (guard_lower >= 0.0))
             split_axis_scores[:] += np.sum(
                 np.abs(guard.generators) * uncertain[..., None], axis=1
             )
-            return _spike_relaxation(guard)
+            shared_values = guard.center[..., None] + np.einsum(
+                "bfi,vi->bfv", guard.generators, vertices
+            )
+            shared_lower = np.min(shared_values, axis=-1)
+            shared_upper = np.max(shared_values, axis=-1)
+            outside_band = np.maximum(
+                shared_upper - guard.radius,
+                -guard.radius - shared_lower,
+            )
+            outside_band = np.where(uncertain, outside_band, -np.inf)
+            for input_index in range(batch):
+                neuron = int(np.argmax(outside_band[input_index]))
+                strength = float(outside_band[input_index, neuron])
+                if strength > cut_strength[input_index] and strength > 0.0:
+                    cut_valid[input_index] = True
+                    cut_center[input_index] = guard.center[input_index, neuron]
+                    cut_generators[input_index] = guard.generators[
+                        input_index, neuron
+                    ]
+                    cut_radius[input_index] = guard.radius[input_index, neuron]
+                    cut_strength[input_index] = strength
+            return _spike_relaxation(guard, vertices)
 
         for step in range(horizon):
             current = _HybridAffine.exact(base_drive[:, step, :]).add(
@@ -324,10 +484,12 @@ class AffineGuardFamilyCertifier:
                         threshold,
                         model.reset_value,
                         reset,
+                        vertices,
                     ),
                     current,
                     timestep,
                     model.tau_mem,
+                    vertices,
                 )
             else:
                 voltage = self._integrate(
@@ -335,6 +497,7 @@ class AffineGuardFamilyCertifier:
                     current,
                     timestep,
                     model.tau_mem,
+                    vertices,
                 )
                 spikes = relax_guard(voltage.subtract(threshold))
                 voltage = self._reset(
@@ -343,11 +506,253 @@ class AffineGuardFamilyCertifier:
                     threshold,
                     model.reset_value,
                     reset,
+                    vertices,
                 )
             contribution = spikes.batch_linear(margin_weights)
             if output_queue:
                 output_queue.append(contribution)
                 contribution = output_queue.pop(0)
             margins = margins.add(contribution)
-        margin_lower, margin_upper = margins.bounds()
-        return margin_lower, margin_upper, split_axis_scores
+        margin_lower, margin_upper = margins.bounds(vertices)
+        return (
+            margin_lower,
+            margin_upper,
+            split_axis_scores,
+            cut_valid,
+            cut_center,
+            cut_generators,
+            cut_radius,
+            cut_strength,
+        )
+
+
+def polygon_area(vertices: np.ndarray) -> float:
+    values = np.asarray(vertices, dtype=np.float64)
+    if values.ndim != 2 or values.shape[1] != 2 or len(values) < 3:
+        return 0.0
+    x = values[:, 0]
+    y = values[:, 1]
+    return float(abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1))) / 2.0)
+
+
+def clip_polygon_halfspace(
+    vertices: np.ndarray,
+    normal: np.ndarray,
+    bound: float,
+    *,
+    tolerance: float = 1e-12,
+) -> np.ndarray:
+    """Clip a convex polygon by ``normal @ point <= bound``."""
+
+    polygon = np.asarray(vertices, dtype=np.float64)
+    direction = np.asarray(normal, dtype=np.float64)
+    if polygon.ndim != 2 or polygon.shape[1] != 2:
+        raise ValueError("polygon vertices must have shape [vertices, 2]")
+    if direction.shape != (2,):
+        raise ValueError("halfspace normal must have two entries")
+    if len(polygon) == 0:
+        return np.empty((0, 2), dtype=np.float64)
+    output: list[np.ndarray] = []
+    previous = polygon[-1]
+    previous_value = float(direction @ previous - bound)
+    previous_inside = previous_value <= tolerance
+    for current in polygon:
+        current_value = float(direction @ current - bound)
+        current_inside = current_value <= tolerance
+        if current_inside != previous_inside:
+            denominator = previous_value - current_value
+            if abs(denominator) > tolerance:
+                fraction = previous_value / denominator
+                output.append(previous + fraction * (current - previous))
+        if current_inside:
+            output.append(current.copy())
+        previous = current
+        previous_value = current_value
+        previous_inside = current_inside
+    if not output:
+        return np.empty((0, 2), dtype=np.float64)
+    deduplicated = [output[0]]
+    for point in output[1:]:
+        if not np.allclose(point, deduplicated[-1], atol=tolerance, rtol=0.0):
+            deduplicated.append(point)
+    if len(deduplicated) > 1 and np.allclose(
+        deduplicated[0], deduplicated[-1], atol=tolerance, rtol=0.0
+    ):
+        deduplicated.pop()
+    return np.asarray(deduplicated, dtype=np.float64)
+
+
+def split_polygon_guard_band(
+    vertices: np.ndarray,
+    center: float,
+    generators: np.ndarray,
+    radius: float,
+    *,
+    area_tolerance: float = 1e-14,
+) -> tuple[np.ndarray, ...]:
+    """Split a polygon into quiet, residual guard band, and spiking regions."""
+
+    normal = np.asarray(generators, dtype=np.float64)
+    if normal.shape != (2,) or np.linalg.norm(normal) <= 1e-15:
+        return (np.asarray(vertices, dtype=np.float64),)
+    quiet = clip_polygon_halfspace(vertices, normal, -radius - center)
+    band = clip_polygon_halfspace(vertices, normal, radius - center)
+    band = clip_polygon_halfspace(band, -normal, radius + center)
+    spiking = clip_polygon_halfspace(vertices, -normal, center - radius)
+    children = tuple(
+        polygon
+        for polygon in (quiet, band, spiking)
+        if polygon_area(polygon) > area_tolerance
+    )
+    return children or (np.asarray(vertices, dtype=np.float64),)
+
+
+class AdaptiveAffineGuardCutCertifier:
+    """Sound polygonal branch-and-bound using affine recurrent guard bands."""
+
+    def __init__(
+        self,
+        member_certifier: AffineGuardFamilyCertifier | None = None,
+        *,
+        max_guard_band_splits: int | None = None,
+    ) -> None:
+        if max_guard_band_splits is not None and max_guard_band_splits < 0:
+            raise ValueError("maximum guard-band splits must be nonnegative")
+        self.member_certifier = member_certifier or AffineGuardFamilyCertifier()
+        self.max_guard_band_splits = max_guard_band_splits
+
+    def certify(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        box: SemanticsBox,
+        *,
+        max_leaves: int = 4096,
+    ) -> AdaptiveGuardCutCertificateResult:
+        events = _validate_inputs(model, inputs)
+        if len(events) != 1:
+            raise ValueError("adaptive guard cuts currently accept one input")
+        if max_leaves < 1:
+            raise ValueError("max_leaves must be positive")
+        reference_predictions = VectorizedEmulator().run(
+            model, events, reference
+        ).predictions
+        root_polygon = np.asarray(
+            [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]],
+            dtype=np.float64,
+        )
+        root_area = polygon_area(root_polygon)
+        queue: list[tuple[float, int, int, np.ndarray]] = []
+        counter = itertools.count()
+        heapq.heappush(queue, (-root_area, 0, next(counter), root_polygon))
+        leaf_count = 1
+        analyzed = 0
+        certified_area = 0.0
+        unresolved_area = 0.0
+        certified_leaves = 0
+        unresolved_leaves = 0
+        maximum_depth = 0
+        maximum_vertices = len(root_polygon)
+        guard_band_splits = 0
+        axis_fallback_splits = 0
+
+        while queue:
+            _, depth, _, polygon = heapq.heappop(queue)
+            maximum_depth = max(maximum_depth, depth)
+            maximum_vertices = max(maximum_vertices, len(polygon))
+            result = self.member_certifier.certify_with_reference_predictions(
+                model,
+                events,
+                reference,
+                box,
+                reference_predictions,
+                polygon,
+            )
+            analyzed += 1
+            area = polygon_area(polygon)
+            if bool(result.certified[0]):
+                certified_area += area
+                certified_leaves += 1
+                continue
+            children: tuple[np.ndarray, ...] = (polygon,)
+            split_kind: str | None = None
+            guard_budget_available = (
+                self.max_guard_band_splits is None
+                or guard_band_splits < self.max_guard_band_splits
+            )
+            if (
+                bool(result.guard_cut_valid[0])
+                and leaf_count < max_leaves
+                and guard_budget_available
+            ):
+                children = split_polygon_guard_band(
+                    polygon,
+                    float(result.guard_cut_center[0]),
+                    result.guard_cut_generators[0],
+                    float(result.guard_cut_radius[0]),
+                )
+                split_kind = "guard"
+
+            def is_useful(candidate: tuple[np.ndarray, ...]) -> bool:
+                candidate_area = sum(polygon_area(child) for child in candidate)
+                return (
+                    len(candidate) >= 2
+                    and leaf_count + len(candidate) - 1 <= max_leaves
+                    and np.isclose(candidate_area, area, rtol=1e-8, atol=1e-12)
+                    and max(polygon_area(child) for child in candidate)
+                    < area * (1.0 - 1e-12)
+                )
+
+            useful_split = is_useful(children)
+            if not useful_split and leaf_count < max_leaves:
+                coordinate_widths = np.ptp(polygon, axis=0)
+                scores = (
+                    np.asarray(result.split_axis_scores[0]) * coordinate_widths
+                )
+                axis = int(np.argmax(scores)) if np.any(scores > 0.0) else 0
+                lower_coordinate = float(np.min(polygon[:, axis]))
+                upper_coordinate = float(np.max(polygon[:, axis]))
+                if upper_coordinate > lower_coordinate:
+                    midpoint = (lower_coordinate + upper_coordinate) / 2.0
+                    normal = np.zeros(2, dtype=np.float64)
+                    normal[axis] = 1.0
+                    children = (
+                        clip_polygon_halfspace(polygon, normal, midpoint),
+                        clip_polygon_halfspace(polygon, -normal, -midpoint),
+                    )
+                    split_kind = "axis"
+                    useful_split = is_useful(children)
+            if not useful_split:
+                unresolved_area += area
+                unresolved_leaves += 1
+                continue
+            leaf_count += len(children) - 1
+            if split_kind == "guard":
+                guard_band_splits += 1
+            else:
+                axis_fallback_splits += 1
+            for child in children:
+                child_area_value = polygon_area(child)
+                heapq.heappush(
+                    queue,
+                    (-child_area_value, depth + 1, next(counter), child),
+                )
+
+        certified_fraction = certified_area / root_area
+        unresolved_fraction = unresolved_area / root_area
+        if not np.isclose(certified_fraction + unresolved_fraction, 1.0):
+            raise AssertionError("guard-cut polygons do not cover the root domain")
+        return AdaptiveGuardCutCertificateResult(
+            certified=unresolved_leaves == 0,
+            certified_parameter_fraction=certified_fraction,
+            unresolved_parameter_fraction=unresolved_fraction,
+            analyzed_polygons=analyzed,
+            final_leaves=certified_leaves + unresolved_leaves,
+            certified_leaves=certified_leaves,
+            unresolved_leaves=unresolved_leaves,
+            maximum_depth=maximum_depth,
+            maximum_polygon_vertices=maximum_vertices,
+            guard_band_splits=guard_band_splits,
+            axis_fallback_splits=axis_fallback_splits,
+        )
