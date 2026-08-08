@@ -120,7 +120,10 @@ def main() -> None:
     violations = int(np.count_nonzero(absolute_all > bound_all))
     summary = {
         "schema_version": "DVSGestureSoftwareAggregate/v1",
-        "status": "software primary-task evidence; not physical evidence",
+        "status": (
+            "development software evidence; semantic targets were untouched before freeze, "
+            "but official test accuracy was used for reference-model selection; not physical evidence"
+        ),
         "seeds": list(seeds),
         "cells": len(rows),
         "audit_samples_per_seed": int(rows[0]["audit_samples"]),
@@ -153,7 +156,9 @@ def main() -> None:
             "A credible convolutional/recurrent reference confirms severe semantic transport "
             "loss and predictive disagreement ranking, but the distribution-free certificate "
             "again fails the frozen tightness gates. The small audit set also creates a roughly "
-            "five-point simultaneous-confidence floor near zero observed disagreement."
+            "five-point simultaneous-confidence floor near zero observed disagreement. This is "
+            "development evidence because official test accuracy selected the reference pipeline; "
+            "a fresh sequestered replication is required for submission."
         ),
         "input_artifact_hashes": input_hashes,
         "rows_csv_hash": sha256_file(rows_path),
