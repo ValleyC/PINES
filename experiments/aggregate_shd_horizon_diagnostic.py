@@ -17,15 +17,18 @@ def main() -> None:
         "--input-root", default="artifacts/shd_v1_horizon_diagnostic"
     )
     parser.add_argument("--output-root", default="results/shd_v1")
+    parser.add_argument("--suffix", default="")
+    parser.add_argument("--figure-stem", default="shd_horizon_diagnostic")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     seeds = (1701, 2718, 3141, 5772, 8119)
     output = root / args.output_root
     output.mkdir(parents=True, exist_ok=True)
-    summary_path = output / "horizon_diagnostic_summary.json"
-    rows_path = output / "horizon_diagnostic_rows.csv"
-    figure_pdf = root / "paper" / "figures" / "shd_horizon_diagnostic.pdf"
-    figure_png = root / "paper" / "figures" / "shd_horizon_diagnostic.png"
+    suffix = f"_{args.suffix}" if args.suffix else ""
+    summary_path = output / f"horizon_diagnostic{suffix}_summary.json"
+    rows_path = output / f"horizon_diagnostic{suffix}_rows.csv"
+    figure_pdf = root / "paper" / "figures" / f"{args.figure_stem}.pdf"
+    figure_png = root / "paper" / "figures" / f"{args.figure_stem}.png"
     if any(path.exists() for path in (summary_path, rows_path, figure_pdf, figure_png)):
         raise FileExistsError("horizon diagnostic aggregate exists")
 

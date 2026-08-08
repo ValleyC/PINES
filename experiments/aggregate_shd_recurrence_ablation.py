@@ -24,15 +24,18 @@ def main() -> None:
         "--feedforward-summary",
         default="results/nmnist_v1/static_family_diagnostic_summary.json",
     )
+    parser.add_argument("--suffix", default="")
+    parser.add_argument("--figure-stem", default="recurrence_ablation_static")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     seeds = (1701, 2718, 3141, 5772, 8119)
     output = root / args.output_root
     output.mkdir(parents=True, exist_ok=True)
-    summary_path = output / "recurrence_ablation_summary.json"
-    rows_path = output / "recurrence_ablation_rows.csv"
-    figure_pdf = root / "paper" / "figures" / "recurrence_ablation_static.pdf"
-    figure_png = root / "paper" / "figures" / "recurrence_ablation_static.png"
+    suffix = f"_{args.suffix}" if args.suffix else ""
+    summary_path = output / f"recurrence_ablation{suffix}_summary.json"
+    rows_path = output / f"recurrence_ablation{suffix}_rows.csv"
+    figure_pdf = root / "paper" / "figures" / f"{args.figure_stem}.pdf"
+    figure_png = root / "paper" / "figures" / f"{args.figure_stem}.png"
     if any(path.exists() for path in (summary_path, rows_path, figure_pdf, figure_png)):
         raise FileExistsError("recurrence-ablation aggregate exists")
 
@@ -58,12 +61,47 @@ def main() -> None:
     feedforward = json.loads(
         (root / args.feedforward_summary).read_text(encoding="utf-8")
     )
-    trained_full = next(
+    trained_source = next(
         item for item in trained["per_family"] if item["family"] == "full"
     )
-    feedforward_full = next(
+    feedforward_source = next(
         item for item in feedforward["per_family"] if item["family"] == "full"
     )
+
+    def normalized(item: dict[str, object]) -> dict[str, object]:
+        static_key = (
+            "memberwise_static_mean"
+            if "memberwise_static_mean" in item
+            else "static_certified_mean"
+        )
+        static_std_key = (
+            "memberwise_static_std"
+            if "memberwise_static_std" in item
+            else "static_certified_std"
+        )
+        gap_key = (
+            "remaining_relaxation_gap_mean"
+            if "remaining_relaxation_gap_mean" in item
+            else "relaxation_gap_mean"
+        )
+        return {
+            "family": item["family"],
+            "static_certified_mean": float(item[static_key]),
+            "static_certified_std": float(item[static_std_key]),
+            "exact_family_agreement_mean": float(
+                item["exact_family_agreement_mean"]
+            ),
+            "exact_family_agreement_std": float(
+                item["exact_family_agreement_std"]
+            ),
+            "relaxation_gap_mean": float(item[gap_key]),
+            "observed_unsound_certificates": int(
+                item["observed_unsound_certificates"]
+            ),
+        }
+
+    trained_full = normalized(trained_source)
+    feedforward_full = normalized(feedforward_source)
     static = np.asarray([float(row["static_certified_fraction"]) for row in rows])
     exact = np.asarray(
         [float(row["exact_family_agreement_fraction"]) for row in rows]

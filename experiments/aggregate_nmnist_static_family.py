@@ -20,16 +20,18 @@ def main() -> None:
     parser.add_argument(
         "--shd-summary", default="results/shd_v1/static_family_summary.json"
     )
+    parser.add_argument("--suffix", default="diagnostic")
+    parser.add_argument("--figure-stem", default="architecture_static_family")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     seeds = (1701, 2718, 3141, 5772, 8119)
     families = ("reset", "integration", "timing", "delay", "full")
     output = root / args.output_root
     output.mkdir(parents=True, exist_ok=True)
-    summary_path = output / "static_family_diagnostic_summary.json"
-    rows_path = output / "static_family_diagnostic_rows.csv"
-    figure_pdf = root / "paper" / "figures" / "architecture_static_family.pdf"
-    figure_png = root / "paper" / "figures" / "architecture_static_family.png"
+    summary_path = output / f"static_family_{args.suffix}_summary.json"
+    rows_path = output / f"static_family_{args.suffix}_rows.csv"
+    figure_pdf = root / "paper" / "figures" / f"{args.figure_stem}.pdf"
+    figure_png = root / "paper" / "figures" / f"{args.figure_stem}.png"
     if any(path.exists() for path in (summary_path, rows_path, figure_pdf, figure_png)):
         raise FileExistsError("N-MNIST static-family aggregate exists")
 
@@ -115,12 +117,17 @@ def main() -> None:
     shd = json.loads((root / args.shd_summary).read_text(encoding="utf-8"))
     shd_by_family = {item["family"]: item for item in shd["per_family"]}
     nmnist_by_family = {item["family"]: item for item in per_family}
+
+    def static_mean(item: dict[str, object]) -> float:
+        if "memberwise_static_mean" in item:
+            return float(item["memberwise_static_mean"])
+        return float(item["static_certified_mean"])
     positions = np.arange(len(families))
     width = 0.38
     fig, axis = plt.subplots(figsize=(7.2, 3.8), constrained_layout=True)
     axis.bar(
         positions - width / 2,
-        [float(shd_by_family[name]["static_certified_mean"]) * 100 for name in families],
+        [static_mean(shd_by_family[name]) * 100 for name in families],
         width=width,
         label="SHD recurrent (861/seed)",
         color="#d95f02",
