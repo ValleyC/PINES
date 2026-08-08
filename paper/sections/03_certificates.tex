@@ -53,6 +53,23 @@ differ. Taking expectations and applying $|\mathbb{E}Z|\leq\mathbb{E}|Z|$
 proves the statement.
 \end{proof}
 
+\begin{proposition}[Sharpness without labels]
+For any paired predictors $f,g$ with disagreement probability $d$, there are two
+label distributions consistent with the same unlabeled prediction pairs for
+which the signed accuracy change is $d$ in either direction.
+\end{proposition}
+\begin{proof}
+Set $Y=f(X)$. Then $f$ has accuracy one and $g$ has accuracy $1-d$, so the
+reference-favoring change is $d$. Setting $Y=g(X)$ reverses the roles. The
+unlabeled joint distribution of $(f(X),g(X))$ is unchanged.
+\end{proof}
+
+Consequently, no method using only paired predictions can provide a uniformly
+smaller distribution-free upper bound on absolute accuracy change. Operational
+tightening requires explicit additional information or assumptions, such as a
+restricted label mechanism, a small labeled audit, or a validated structural
+relationship between disagreement direction and correctness.
+
 \subsection{Physical certificate}
 
 An emulator cannot certify unmodeled hardware behavior. We therefore execute an

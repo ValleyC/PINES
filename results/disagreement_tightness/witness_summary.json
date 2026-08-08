@@ -1,0 +1,54 @@
+{
+  "cells": 150,
+  "code_revision": "efdef54a061f2fb4c510b71d97effdb13b022c66",
+  "gate_assessment": {
+    "every_prediction_pair_attains_both_signs": true
+  },
+  "per_benchmark": [
+    {
+      "all_reference_witnesses_attain_bound": true,
+      "all_target_witnesses_attain_bound": true,
+      "benchmark": "SHD",
+      "cells": 50,
+      "maximum_disagreement_rate": 0.8408826945412311,
+      "minimum_disagreement_rate": 0.041811846689895474
+    },
+    {
+      "all_reference_witnesses_attain_bound": true,
+      "all_target_witnesses_attain_bound": true,
+      "benchmark": "N-MNIST",
+      "cells": 50,
+      "maximum_disagreement_rate": 0.07593671940049958,
+      "minimum_disagreement_rate": 0.0
+    },
+    {
+      "all_reference_witnesses_attain_bound": true,
+      "all_target_witnesses_attain_bound": true,
+      "benchmark": "DVS Gesture",
+      "cells": 50,
+      "maximum_disagreement_rate": 0.6057692307692307,
+      "minimum_disagreement_rate": 0.0
+    }
+  ],
+  "prediction_artifact_hashes": {
+    "DVS Gesture/seed_1701": "e54728e8e98b8262ca9c8accac523e32095af6ac15f036e02f5b667747cacd5b",
+    "DVS Gesture/seed_2718": "f9a459ec9f40f9d634ac855b9e8ab117b06302a5af546371864513e8dd41d4f3",
+    "DVS Gesture/seed_3141": "2f4a07a69fea9397dd5c8167b22d8e1ccedd0c978ac456539a1b27e90b3c7130",
+    "DVS Gesture/seed_5772": "796cca7efb5bb208e93183060895b456b6180c9b46130f616aaa8e7df287e93d",
+    "DVS Gesture/seed_8119": "46fa25bc8d82754118ed80de8c99b408bb5d5fd702add79b5a967c2215ccc89f",
+    "N-MNIST/seed_1701": "7f5c96fd208c4079f084f1af657fdbcf77c09bec79fb4a3ebefb789e2cf5c934",
+    "N-MNIST/seed_2718": "462eccd072d668287049b19f1c99d894c591d94a1fdbb3ad2f6b879cc9b91d24",
+    "N-MNIST/seed_3141": "2feef0a2d4cde412c9b6c876e6e57c5944df19d999c48b141319c596cf490e20",
+    "N-MNIST/seed_5772": "c78f2abcb1d766958ce749765cd453f9457a079c556db55eb276da7a98fcbd57",
+    "N-MNIST/seed_8119": "1d013033fe7753f36e532a831148b01c96e1b694a8e9d49aa132bf6bd33edc56",
+    "SHD/seed_1701": "2412ab4753da0d81f9029ff8ed7ac834468cf550d8b0dc04eb8d3c1e02441899",
+    "SHD/seed_2718": "2e9cc4c5778a0e680de7bc506905452a3fa530286586103f9f0444f84d37fa4e",
+    "SHD/seed_3141": "198b6fd5106ff637ed838018d854013efafc93ad243d3d6aab0288c4b9c8fc49",
+    "SHD/seed_5772": "b76b0e67cabf5da6cecfea53e1e48acfa8f3cb2f4482f44291900169d0f32d1c",
+    "SHD/seed_8119": "734c956f29d42966b42cc87f7a7187ce81f9e274fdd32d0a90158788731bafd3"
+  },
+  "rows_csv_hash": "3c8b24778cab87034b564363457671790fce57148847d1232ab69a59bbf2770c",
+  "schema_version": "DisagreementTightnessWitnessAggregate/v1",
+  "status": "label-construction audit over stored unlabeled prediction pairs; the constructed labels are witnesses, not observed dataset labels",
+  "theoretical_implication": "For predictions alone, disagreement is a sharp distribution-free upper bound on absolute accuracy change. A uniformly tighter label-free guarantee requires additional assumptions or information."
+}

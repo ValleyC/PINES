@@ -50,6 +50,10 @@
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the
   first two.
+- Disagreement sharpness audit: adversarial label constructions attain both
+  signs of the empirical disagreement bound for all 150 stored benchmark,
+  seed, and target prediction pairs. No uniformly tighter distribution-free
+  accuracy-change bound is possible from paired predictions alone.
 
 ## Current scientific verdict
 
@@ -60,6 +64,11 @@ enumerated execution family. It does not support the intended continuous bounded
 family claim with the current interval abstraction. Recurrence causes much of
 the true finite-family instability, while continuous interval relaxation and
 decision-identity loss remain substantial.
+
+The distribution certificate is mathematically valid but cannot be made
+uniformly tighter without adding information or assumptions. A top-venue claim
+must therefore specify and validate such an assumption rather than presenting
+raw label-free disagreement as both universal and operationally tight.
 
 The NeurIPS framing remains conditional on a materially tighter recurrence-aware
 sound abstraction and prospective physical conformance. If that does not reverse

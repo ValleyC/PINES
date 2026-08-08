@@ -224,6 +224,17 @@ in the best observed case. SHD and N-MNIST exceed all three zero-error sample
 requirements; SHD looseness is consequently driven by empirical disagreement,
 not audit size.
 
+The looseness is also not removable by a different confidence interval alone.
+For every one of the 150 stored audit prediction pairs (three benchmarks, five
+seeds, and ten targets), we construct two label vectors without reading dataset
+labels: one equals the reference predictions and one equals the target
+predictions. In all 150 cells, the resulting signed accuracy changes attain the
+empirical disagreement rate in both directions exactly, as predicted by the
+sharpness proposition. Thus the observed gap between disagreement and actual
+accuracy change cannot support a claim that a uniformly tighter label-free
+absolute-accuracy certificate exists. Such a claim must state and validate new
+assumptions or use labels.
+
 \begin{table}[t]
   \centering
   \caption{Conditional emulator-certificate sample complexity. The zero-error
