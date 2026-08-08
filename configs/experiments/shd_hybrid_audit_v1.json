@@ -1,0 +1,31 @@
+{
+  "schema_version": "SHDHybridFamilyAudit/v1",
+  "condition": "reset_to_value",
+  "relative_timestep_radius": 0.01,
+  "relative_threshold_radius": 0.01,
+  "seeds": [1701, 2718, 3141, 5772, 8119],
+  "audit_selection": {
+    "split": "certificate_audit",
+    "rule": "first indices in frozen split order",
+    "sample_count_per_seed": 32,
+    "uses_predictions_for_selection": false,
+    "uses_labels_for_selection": false
+  },
+  "certificate_budgets": {
+    "maximum_polygon_leaves": 64,
+    "maximum_local_branches": 64,
+    "maximum_guard_band_splits": 8
+  },
+  "development_provenance": {
+    "seed": 1701,
+    "dataset_index": 6,
+    "configuration_locked_after_full_development_certificate": true
+  },
+  "advance_gate": {
+    "minimum_mean_certified_input_fraction": 0.2,
+    "require_every_seed_nonzero": true,
+    "require_zero_area_cover_failures": true,
+    "next_stage": "full frozen certificate audit for all available audit inputs"
+  },
+  "interpretation": "This configuration is frozen before running the five-seed audit subset. Inputs are not filtered for grid stability or prediction identity. A cap hit or unresolved leaf is inconclusive, never certified."
+}
