@@ -31,6 +31,11 @@ def main() -> None:
     parser.add_argument("--radius", type=float, default=0.01)
     parser.add_argument("--partitions", type=int, nargs="+", default=(1, 2, 4, 8))
     parser.add_argument("--max-samples", type=int, default=128)
+    parser.add_argument(
+        "--vary",
+        choices=("joint", "timestep", "threshold"),
+        default="joint",
+    )
     args = parser.parse_args()
     if not 0 < args.radius < 1:
         raise ValueError("radius must lie strictly between zero and one")
@@ -59,29 +64,45 @@ def main() -> None:
     model = DenseRecurrentSNN.load(seed_dir / "model.npz")
     reference = primary_semantic_conditions()["reference"]
     discrete_box, _ = _families()["full"]
+    timestep_bounds = (
+        (1.0 - args.radius, 1.0 + args.radius)
+        if args.vary in ("joint", "timestep")
+        else (1.0, 1.0)
+    )
+    threshold_bounds = (
+        (1.0 - args.radius, 1.0 + args.radius)
+        if args.vary in ("joint", "threshold")
+        else (1.0, 1.0)
+    )
     box = SemanticsBox(
         base=reference,
-        timestep_bounds=(1.0 - args.radius, 1.0 + args.radius),
-        threshold_scale_bounds=(1.0 - args.radius, 1.0 + args.radius),
+        timestep_bounds=timestep_bounds,
+        threshold_scale_bounds=threshold_bounds,
         integration_rules=discrete_box.integration_rules,
         threshold_timings=discrete_box.threshold_timings,
         reset_rules=discrete_box.reset_rules,
         synaptic_delays=discrete_box.synaptic_delays,
         output_delays=discrete_box.output_delays,
-        name=f"full-continuous-pm-{args.radius:.4f}",
+        name=f"full-continuous-{args.vary}-pm-{args.radius:.4f}",
     )
     certifier = IntervalFamilyCertifier()
     rows = []
     previous_certified: np.ndarray | None = None
     for partitions in args.partitions:
+        timestep_partitions = (
+            partitions if args.vary in ("joint", "timestep") else 1
+        )
+        threshold_partitions = (
+            partitions if args.vary in ("joint", "threshold") else 1
+        )
         started = time.perf_counter()
         result = certifier.certify_partitioned(
             model,
             inputs,
             reference,
             box,
-            timestep_partitions=partitions,
-            threshold_partitions=partitions,
+            timestep_partitions=timestep_partitions,
+            threshold_partitions=threshold_partitions,
         )
         elapsed = time.perf_counter() - started
         lost_from_previous = (
@@ -92,9 +113,13 @@ def main() -> None:
         rows.append(
             {
                 "partitions_per_axis": partitions,
-                "subbox_count": partitions**2,
+                "timestep_partitions": timestep_partitions,
+                "threshold_partitions": threshold_partitions,
+                "subbox_count": timestep_partitions * threshold_partitions,
                 "discrete_members_per_subbox": 16,
-                "total_abstract_members": partitions**2 * 16,
+                "total_abstract_members": timestep_partitions
+                * threshold_partitions
+                * 16,
                 "samples": len(audit_indices),
                 "certified_inputs": int(np.count_nonzero(result.certified)),
                 "certified_fraction": result.certified_fraction,
@@ -105,7 +130,8 @@ def main() -> None:
         previous_certified = result.certified
         print(
             f"seed={args.seed} partitions={partitions} "
-            f"subboxes={partitions**2} coverage={result.certified_fraction:.4f} "
+            f"subboxes={timestep_partitions * threshold_partitions} "
+            f"coverage={result.certified_fraction:.4f} "
             f"lost={lost_from_previous} seconds={elapsed:.2f}",
             flush=True,
         )
@@ -117,6 +143,7 @@ def main() -> None:
             "subset; not primary or physical evidence"
         ),
         "seed": args.seed,
+        "varied_axes": args.vary,
         "relative_radius": args.radius,
         "box_hash": box.box_hash,
         "model_hash": model.model_hash,
