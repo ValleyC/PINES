@@ -9,6 +9,7 @@ from transportcert.statistics import (
     compose_physical_bound,
     disagreement_bound,
     regularized_incomplete_beta,
+    zero_error_sample_size,
 )
 
 
@@ -43,3 +44,10 @@ def test_bonferroni_and_invalid_counts() -> None:
     with pytest.raises(ValueError):
         clopper_pearson_upper(3, 2, 0.05)
 
+
+def test_zero_error_sample_size_is_minimal() -> None:
+    alpha = bonferroni_alpha(0.05, 10)
+    for budget in (0.01, 0.02, 0.05):
+        samples = zero_error_sample_size(budget, alpha)
+        assert clopper_pearson_upper(0, samples, alpha) <= budget
+        assert clopper_pearson_upper(0, samples - 1, alpha) > budget

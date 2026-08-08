@@ -114,6 +114,21 @@ def bonferroni_alpha(total_alpha: float, comparisons: int) -> float:
     return total_alpha / comparisons
 
 
+def zero_error_sample_size(budget: float, alpha: float) -> int:
+    """Minimum paired samples whose zero-error upper limit is within budget."""
+
+    if not 0 < budget < 1:
+        raise ValueError("budget must be in (0,1)")
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must be in (0,1)")
+    samples = max(1, math.ceil(math.log(alpha) / math.log1p(-budget)))
+    while clopper_pearson_upper(0, samples, alpha) > budget:
+        samples += 1
+    while samples > 1 and clopper_pearson_upper(0, samples - 1, alpha) <= budget:
+        samples -= 1
+    return samples
+
+
 @dataclass(frozen=True)
 class DisagreementBound:
     errors: int
@@ -149,4 +164,3 @@ def compose_physical_bound(semantic: float, conformance: float) -> float:
     if not 0 <= semantic <= 1 or not 0 <= conformance <= 1:
         raise ValueError("component bounds must be in [0,1]")
     return min(1.0, semantic + conformance)
-
