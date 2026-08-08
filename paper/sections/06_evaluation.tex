@@ -285,6 +285,12 @@ the 257 slices. Their projections collectively span both full parameter axes.
 Thus denser uniform slicing does not compose into a proof: the next oracle must
 consume the residual polygon constraints directly.
 
+A targeted falsification search evaluates every residual vertex, edge midpoint,
+and centroid plus 32 deterministic random convex points per polygon. All 128,460
+unique executions preserve class 2; the smallest reference-class margin is
+1.033. This supports abstraction slack rather than a hidden sampled flip, but
+does not certify any unsampled point.
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/shd_branch_set_feasibility.pdf}

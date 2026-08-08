@@ -330,6 +330,23 @@ python experiments/run_shd_guard_cut_certificate.py --seed 1701 --max-leaves 409
 python experiments/aggregate_shd_guard_residual_geometry.py
 ```
 
+### Residual-targeted counterexample search
+
+`residual_counterexample_search_summary.json` records a falsification attempt
+inside the exact unresolved geometry. A validated GPU parameter-batch executor
+evaluates every polygon vertex, edge midpoint, and centroid plus 32 deterministic
+random convex combinations per polygon. Across 128,460 unique parameter points,
+every execution retains class 2 and the minimum reference-class margin is 1.033.
+
+This is strong evidence that the residual reflects abstraction slack, but it is
+not a certificate and does not cover unsampled points. More random search is
+stopped; the result advances only to a sound joint polygon oracle.
+
+```powershell
+python experiments/run_shd_residual_counterexample_search.py --seed 1701 --random-points-per-polygon 32 --output-root artifacts/shd_v52_residual_counterexample_search_dense
+python experiments/aggregate_shd_residual_counterexample_search.py
+```
+
 ### Post-repair bounded-family headroom
 
 `repair_family_grid_summary.json` compares selected reset-target models against

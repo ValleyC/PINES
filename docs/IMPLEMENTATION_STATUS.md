@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 95
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 96
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -115,6 +115,12 @@
   1,271 polygons intersect no exact slice. Their projections span both full
   axes, rejecting more uniform slice densification and requiring a solver that
   consumes the polygon constraints directly.
+- Residual-targeted counterexample search: a validated GPU parameter-batch
+  executor evaluates every polygon vertex, edge midpoint, and centroid plus 32
+  deterministic random convex points per polygon. All 128,460 unique executions
+  retain class 2 and the minimum reference-class margin is 1.033. This supports
+  abstraction slack but is explicitly not used as a certificate; further random
+  search is stopped in favor of the sound joint oracle.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
