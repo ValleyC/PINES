@@ -201,7 +201,7 @@ def main() -> None:
         frameon=False,
     )
     fig.suptitle(
-        "Shortening the unroll does not rescue recurrent SHD certification",
+        "Recurrent semantic agreement remains low across the SHD unroll",
         y=0.995,
         fontsize=12,
     )
