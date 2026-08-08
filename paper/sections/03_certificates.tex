@@ -35,6 +35,10 @@ margin using the shared uncertain spike vector. This prevents the same spike
 from independently minimizing the reference logit and maximizing a competitor.
 The current sound implementation covers floating-point state execution; fixed-
 point output rounding requires an additional correlated accumulator state.
+An adaptive cover can then retire any proved timestep/threshold sub-box and
+bisect only unresolved leaves. Its leaves always cover the original rectangle;
+the input is certified only if every leaf is proved. Covered parameter volume
+is a tractability diagnostic, not a probability over target semantics.
 
 We also implement a path-separated diagnostic domain for a single zero-delay
 member. It enumerates possible spike vectors, propagates a separate interval

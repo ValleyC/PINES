@@ -216,6 +216,22 @@ python experiments/run_shd_decision_margin_certificate.py --seed 1701 --partitio
 python experiments/aggregate_shd_decision_margin_domain.py
 ```
 
+### Adaptive margin-cover kill diagnostic
+
+`adaptive_margin_domain_summary.json` asks whether nonuniform subdivision can
+focus work on difficult guard regions. It first selects inputs stable at all 81
+points of a finite 9-by-9 grid; 80 of the first 128 frozen audit-pool inputs meet
+that diagnostic. For the first two, no sub-box is retired through 256 adaptive
+leaves. The first input still has 0% certified parameter volume after 8,191 box
+analyses and 4,096 final leaves. Full certification is never claimed from finite
+grid stability or partial volume.
+
+```powershell
+python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --max-leaves 64 256
+python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --sample-count 1 --max-leaves 1024 4096 --output-root artifacts/shd_v26_adaptive_margin_fine
+python experiments/aggregate_shd_adaptive_margin_domain.py
+```
+
 ### Post-repair bounded-family headroom
 
 `repair_family_grid_summary.json` compares selected reset-target models against

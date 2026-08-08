@@ -80,6 +80,11 @@
   ordinary interval coverage at zero on staged SHD reset-family audits through
   32-by-32 partitioning. Hidden recurrent state/guard correlation, rather than
   independent output bounds, is the dominant unresolved loss.
+- Sound adaptive-cover kill test: 80 of 128 frozen audit-pool inputs are stable
+  on a finite 9-by-9 reset-family grid, but adaptive margin branch-and-bound
+  retires no sub-box for the first two through 256 leaves and still covers 0% of
+  the first input after 8,191 analyses and 4,096 leaves. Adaptive scheduling
+  cannot rescue the non-relational recurrent-state domain.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
@@ -145,9 +150,9 @@ systems/risk-ranking contribution.
 
 - Symbolic guard compression or a decision-level correlated domain. Interval
   merging, a single fixed branch, uniform partitioning, explicit branch lists,
-  and output-only decision-margin correlation are now empirically ruled out at
-  plus/minus 1%. The remaining domain must retain correlation through recurrent
-  hidden states and threshold guards.
+  output-only decision-margin correlation, and adaptive interval covers are now
+  empirically ruled out at plus/minus 1%. The remaining domain must retain
+  correlation through recurrent hidden states and threshold guards.
 - Multi-step family-verified repair margins. A pointwise center-execution guard
   penalty and worst-loss objectives over sparse execution grids are now
   empirically ruled out as certificate-restoring objectives.
