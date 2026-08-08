@@ -56,6 +56,11 @@
   partition at plus/minus 1% still covers zero of 128 inputs; a 16-by-16 grid
   covers zero of 64 after 89 seconds. Useful uniform cells would imply about one
   million continuous boxes before the 16 discrete semantics are included.
+- Five-seed fixed-branch endpoint diagnostic: joint center-trace identity falls
+  from 99.28% at radius 1e-6 to 54.12% at 1e-4, 0.74% at 1e-3, and zero at 1e-2,
+  while one-percent corner prediction identity remains 89.36%. A fixed-center-
+  branch affine analyzer may help at tiny radii but has no coverage headroom for
+  the intended plus/minus 1% box.
 - Sample-complexity analysis: under ten-way simultaneous 95% confidence, zero
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the
@@ -89,8 +94,9 @@ finite-family or systems/risk-ranking contribution.
 
 ## Open experimental milestones
 
-- Tighter recurrence-aware analysis, such as branch budgeting, zonotopes, or a
-  hybrid exact/abstract domain, evaluated against the existing exact-family gap.
+- Branch-switch-aware recurrence analysis, such as correlated branch sets,
+  zonotopes with guarded splits, or a hybrid exact/abstract domain. The simpler
+  single-fixed-branch route is now empirically ruled out at plus/minus 1%.
 - Full-training-set supervised retraining as a separately budgeted oracle; the
   completed matched baseline intentionally uses only 800 labels and 280 updates.
 - Fresh sequestered DVS Gesture replication.

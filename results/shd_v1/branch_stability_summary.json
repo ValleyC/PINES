@@ -1,0 +1,460 @@
+{
+  "aggregate_rows": [
+    {
+      "axis": "timestep",
+      "corner_prediction_identity_fraction": {
+        "max": 1.0,
+        "mean": 1.0,
+        "min": 1.0,
+        "std": 0.0
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.9976771196283392,
+        "mean": 0.9965156794425087,
+        "min": 0.9953542392566783,
+        "std": 0.000821262231343254
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 2.377322880371661e-05,
+        "mean": 1.440911730545877e-05,
+        "min": 4.173925667828107e-06,
+        "std": 7.564048143821852e-06
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.004645760743321719,
+        "mean": 0.003484320557491289,
+        "min": 0.0023228803716608595,
+        "std": 0.0008212622313432607
+      },
+      "relative_radius": 1e-06
+    },
+    {
+      "axis": "threshold",
+      "corner_prediction_identity_fraction": {
+        "max": 1.0,
+        "mean": 1.0,
+        "min": 1.0,
+        "std": 0.0
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.9988385598141696,
+        "mean": 0.9958188153310104,
+        "min": 0.9930313588850174,
+        "std": 0.0021098608739355536
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 2.7584204413472706e-05,
+        "mean": 1.7058652729384437e-05,
+        "min": 2.5406504065040655e-06,
+        "std": 9.69915698792307e-06
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.006968641114982578,
+        "mean": 0.004181184668989547,
+        "min": 0.0011614401858304297,
+        "std": 0.002109860873935534
+      },
+      "relative_radius": 1e-06
+    },
+    {
+      "axis": "joint_corners",
+      "corner_prediction_identity_fraction": {
+        "max": 1.0,
+        "mean": 1.0,
+        "min": 1.0,
+        "std": 0.0
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.9953542392566783,
+        "mean": 0.9927990708478512,
+        "min": 0.9907084785133565,
+        "std": 0.0020776473658534987
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 3.1576655052264815e-05,
+        "mean": 2.1885888501742162e-05,
+        "min": 6.714576074332172e-06,
+        "std": 9.456398912380652e-06
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.009291521486643438,
+        "mean": 0.007200929152148665,
+        "min": 0.004645760743321719,
+        "std": 0.002077647365853463
+      },
+      "relative_radius": 1e-06
+    },
+    {
+      "axis": "timestep",
+      "corner_prediction_identity_fraction": {
+        "max": 1.0,
+        "mean": 1.0,
+        "min": 1.0,
+        "std": 0.0
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.9790940766550522,
+        "mean": 0.972822299651568,
+        "min": 0.9581881533101045,
+        "std": 0.008791726303263882
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.00011614401858304297,
+        "mean": 6.99767711962834e-05,
+        "min": 5.3535133565621374e-05,
+        "std": 2.6609338884695536e-05
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.041811846689895474,
+        "mean": 0.027177700348432053,
+        "min": 0.020905923344947737,
+        "std": 0.00879172630326391
+      },
+      "relative_radius": 1e-05
+    },
+    {
+      "axis": "threshold",
+      "corner_prediction_identity_fraction": {
+        "max": 1.0,
+        "mean": 1.0,
+        "min": 1.0,
+        "std": 0.0
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.9732868757259001,
+        "mean": 0.9653890824622531,
+        "min": 0.9547038327526133,
+        "std": 0.007936980052622474
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.0001453614982578397,
+        "mean": 9.019308943089431e-05,
+        "min": 6.460511033681765e-05,
+        "std": 3.423799490187657e-05
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.04529616724738676,
+        "mean": 0.03461091753774681,
+        "min": 0.026713124274099883,
+        "std": 0.00793698005262248
+      },
+      "relative_radius": 1e-05
+    },
+    {
+      "axis": "joint_corners",
+      "corner_prediction_identity_fraction": {
+        "max": 1.0,
+        "mean": 0.9997677119628339,
+        "min": 0.9988385598141696,
+        "std": 0.0005194118414633615
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.9512195121951219,
+        "mean": 0.9398373983739837,
+        "min": 0.9303135888501742,
+        "std": 0.007454962386007511
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.00021595528455284552,
+        "mean": 0.00016496080139372823,
+        "min": 0.00011668844367015098,
+        "std": 3.582994552657181e-05
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.06968641114982578,
+        "mean": 0.05993031358885017,
+        "min": 0.04878048780487805,
+        "std": 0.007464004187251858
+      },
+      "relative_radius": 1e-05
+    },
+    {
+      "axis": "timestep",
+      "corner_prediction_identity_fraction": {
+        "max": 1.0,
+        "mean": 0.9967479674796749,
+        "min": 0.9953542392566783,
+        "std": 0.0019084409669169395
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.7700348432055749,
+        "mean": 0.7554006968641115,
+        "min": 0.7375145180023229,
+        "std": 0.01166076692033553
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.0007538472706155633,
+        "mean": 0.000692907955865273,
+        "min": 0.000622459349593496,
+        "std": 5.775831610132205e-05
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.2590011614401858,
+        "mean": 0.24134727061556333,
+        "min": 0.2264808362369338,
+        "std": 0.011940825238071889
+      },
+      "relative_radius": 0.0001
+    },
+    {
+      "axis": "threshold",
+      "corner_prediction_identity_fraction": {
+        "max": 1.0,
+        "mean": 0.9962833914053426,
+        "min": 0.9941927990708479,
+        "std": 0.0023802440803622565
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.7200929152148664,
+        "mean": 0.7073170731707317,
+        "min": 0.6759581881533101,
+        "std": 0.017880144388316668
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.000860917537746806,
+        "mean": 0.0008013574332171893,
+        "min": 0.0007592915214866434,
+        "std": 5.071478705917397e-05
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.3205574912891986,
+        "mean": 0.28896631823461094,
+        "min": 0.2764227642276423,
+        "std": 0.017887687162070558
+      },
+      "relative_radius": 0.0001
+    },
+    {
+      "axis": "joint_corners",
+      "corner_prediction_identity_fraction": {
+        "max": 0.9941927990708479,
+        "mean": 0.9914053426248547,
+        "min": 0.9883855981416957,
+        "std": 0.0022640637270171966
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.5725900116144018,
+        "mean": 0.5412311265969802,
+        "min": 0.5098722415795587,
+        "std": 0.024637866940297803
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.0014721254355400698,
+        "mean": 0.0013563443670150986,
+        "min": 0.0012138864692218352,
+        "std": 9.807403198974601e-05
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.4808362369337979,
+        "mean": 0.4501742160278746,
+        "min": 0.4181184668989547,
+        "std": 0.023825099010375068
+      },
+      "relative_radius": 0.0001
+    },
+    {
+      "axis": "timestep",
+      "corner_prediction_identity_fraction": {
+        "max": 0.9814169570267132,
+        "mean": 0.9751451800232289,
+        "min": 0.9698025551684089,
+        "std": 0.005168082569404635
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.10336817653890824,
+        "mean": 0.09036004645760742,
+        "min": 0.059233449477351915,
+        "std": 0.01771719806104866
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.004286984610917538,
+        "mean": 0.00399843931475029,
+        "min": 0.003609356852497096,
+        "std": 0.0002663023158448396
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.9186991869918699,
+        "mean": 0.8847851335656214,
+        "min": 0.8664343786295006,
+        "std": 0.020306943847328167
+      },
+      "relative_radius": 0.001
+    },
+    {
+      "axis": "threshold",
+      "corner_prediction_identity_fraction": {
+        "max": 0.9790940766550522,
+        "mean": 0.9742160278745645,
+        "min": 0.9686411149825784,
+        "std": 0.004674706573170253
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.06039488966318235,
+        "mean": 0.05272938443670151,
+        "min": 0.030197444831591175,
+        "std": 0.012659165243613206
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.004693670150987224,
+        "mean": 0.004385924796747967,
+        "min": 0.00399390243902439,
+        "std": 0.000271057375216476
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.9465737514518002,
+        "mean": 0.9214866434378628,
+        "min": 0.9094076655052264,
+        "std": 0.014977625701860812
+      },
+      "relative_radius": 0.001
+    },
+    {
+      "axis": "joint_corners",
+      "corner_prediction_identity_fraction": {
+        "max": 0.9698025551684089,
+        "mean": 0.9623693379790941,
+        "min": 0.9535423925667829,
+        "std": 0.00690055785250311
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.011614401858304297,
+        "mean": 0.00743321718931475,
+        "min": 0.0011614401858304297,
+        "std": 0.004073328203658579
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.006197553716608594,
+        "mean": 0.005944468641114984,
+        "min": 0.005574368466898955,
+        "std": 0.0002688677220662035
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.9686411149825784,
+        "mean": 0.9549361207897794,
+        "min": 0.9477351916376306,
+        "std": 0.008471350768320802
+      },
+      "relative_radius": 0.001
+    },
+    {
+      "axis": "timestep",
+      "corner_prediction_identity_fraction": {
+        "max": 0.9419279907084785,
+        "mean": 0.9349593495934961,
+        "min": 0.9291521486643438,
+        "std": 0.005630290194444064
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.01226371951219512,
+        "mean": 0.011640352787456445,
+        "min": 0.011221145470383276,
+        "std": 0.0005610834458823227
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.9419279907084785,
+        "mean": 0.9349593495934961,
+        "min": 0.9291521486643438,
+        "std": 0.005630290194444064
+      },
+      "relative_radius": 0.01
+    },
+    {
+      "axis": "threshold",
+      "corner_prediction_identity_fraction": {
+        "max": 0.9337979094076655,
+        "mean": 0.9310104529616725,
+        "min": 0.9291521486643438,
+        "std": 0.001943461153389242
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.013693742740998839,
+        "mean": 0.012879173925667828,
+        "min": 0.012301284843205576,
+        "std": 0.0006722846071126532
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.9337979094076655,
+        "mean": 0.9310104529616725,
+        "min": 0.9291521486643438,
+        "std": 0.001943461153389242
+      },
+      "relative_radius": 0.01
+    },
+    {
+      "axis": "joint_corners",
+      "corner_prediction_identity_fraction": {
+        "max": 0.9047619047619048,
+        "mean": 0.8936120789779327,
+        "min": 0.8826945412311266,
+        "std": 0.007987804350313321
+      },
+      "corner_trace_identity_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "mean_per_input_max_spike_hamming": {
+        "max": 0.019255770905923345,
+        "mean": 0.01807182781649245,
+        "min": 0.01717987804878049,
+        "std": 0.0010606268133144451
+      },
+      "prediction_identity_with_trace_change_fraction": {
+        "max": 0.9047619047619048,
+        "mean": 0.8936120789779327,
+        "min": 0.8826945412311266,
+        "std": 0.007987804350313321
+      },
+      "relative_radius": 0.01
+    }
+  ],
+  "axes": [
+    "timestep",
+    "threshold",
+    "joint_corners"
+  ],
+  "code_revision": "60f78d4c7e0ea93054df3b2cf2a3d0bc1d0702a2",
+  "input_report_hashes": {
+    "seed_1701": "26a59d0da11d2493ddf2a71fa5613bcd33acf35d8b5d09e9515eef204211ff9b",
+    "seed_2718": "4d6048f921a6328b8db487792a4c6408125f9ae64893e45542108b4cc2ce63ba",
+    "seed_3141": "b6b1741c2e4319180d4e385d4fae4b13e080e23391f725545904dac54cd3ae4a",
+    "seed_5772": "72060b045978decd4ffad9d5c804b4467f1e4bb38b4627e9e75c430cbb08ad15",
+    "seed_8119": "96f4f760ee54cd884189058aa826478fdddf5b717fabe3bf09eef0791caa0853"
+  },
+  "interpretation": "Corner trace identity is an optimistic upper bound on coverage for a method that must preserve the center spike branch throughout the continuous box: observed corner changes rule out that branch, while observed corner identity is not a proof about the interior. Prediction identity can remain high despite trace changes.",
+  "radii": [
+    1e-06,
+    1e-05,
+    0.0001,
+    0.001,
+    0.01
+  ],
+  "route_assessment": {
+    "fixed_center_trace_certificate_has_twenty_percent_endpoint_headroom": false,
+    "joint_one_percent_prediction_identity_mean": 0.8936120789779327,
+    "joint_one_percent_trace_identity_mean": 0.0
+  },
+  "rows_csv_hash": "abc6623617b03d41322189062ac2983315a7448e521e2aa21dc000827053bf64",
+  "schema_version": "SHDBranchStabilityAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed endpoint diagnostic; not a continuous-box proof"
+}

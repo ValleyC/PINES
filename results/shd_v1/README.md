@@ -131,6 +131,26 @@ python experiments/run_shd_static_family.py --seed 1701 --output-root artifacts/
 python experiments/aggregate_shd_recurrence_ablation.py --input-root artifacts/shd_v2_memberwise_zero_recurrence --suffix memberwise --figure-stem recurrence_ablation_memberwise --trained-summary results/shd_v1/static_family_memberwise_summary.json --feedforward-summary results/nmnist_v1/static_family_memberwise_summary.json
 ```
 
+### Fixed-branch continuous diagnostic
+
+The canonical endpoint diagnostic is `branch_stability_summary.json`. For the
+reference discrete semantics, exact center-spike-trace identity across joint
+timestep/threshold corners averages 99.28% at relative radius 1e-6, 93.98% at
+1e-5, 54.12% at 1e-4, 0.74% at 1e-3, and zero at 1e-2. Prediction identity at
+the same corners remains 89.36% at 1e-2.
+
+Corner trace identity is necessary but not sufficient for a sound certificate
+that assumes the center branch throughout the box. The result therefore rules
+out that simple route at plus/minus 1%, while leaving useful headroom for a
+fixed-branch analyzer at much smaller radii. A successful target-radius method
+must represent correlated branch changes rather than merely avoid interval
+merging along one trace.
+
+```powershell
+python experiments/run_shd_branch_stability.py --seed 1701
+python experiments/aggregate_shd_branch_stability.py
+```
+
 ### Horizon diagnostic
 
 On deterministic 256-input audit subsets, trained recurrent finite-family static

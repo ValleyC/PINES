@@ -129,6 +129,31 @@ claim, not for finite enumeration.
   \label{fig:shd-continuous}
 \end{figure}
 
+A fixed-center-branch analyzer could preserve timestep/threshold dependence more
+accurately than intervals, but only while the reference spike trace remains
+valid. We test the necessary endpoint condition on all five SHD audits for the
+reference discrete semantics. Across the four joint box corners, center-trace
+identity is $99.28\%$ at radius $10^{-6}$, $93.98\%$ at $10^{-5}$,
+$54.12\%$ at $10^{-4}$, $0.74\%$ at $10^{-3}$, and zero at $10^{-2}$.
+Prediction identity at the same radii is $100\%$, $99.98\%$, $99.14\%$,
+$96.24\%$, and $89.36\%$. Corner trace identity is not an interior proof, but
+any observed corner change rules out a certificate that assumes the center trace
+throughout the box. Thus fixed-branch propagation has useful headroom near
+$10^{-4}$ but cannot solve the intended $\pm1\%$ claim; the next abstraction
+must retain correlations across branch changes. Figure~\ref{fig:branch-stability}
+shows the divergence between internal trajectories and decisions.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/shd_branch_stability.pdf}
+  \caption{Five-seed SHD endpoint diagnostic for the reference discrete
+  semantics. Shading is one sample standard deviation. Exact center-trace
+  identity collapses far earlier than prediction identity, ruling out a
+  single-fixed-branch certificate at the intended radius. Corner identity is a
+  necessary condition only, not a continuous-box certificate.}
+  \label{fig:branch-stability}
+\end{figure*}
+
 The five frozen convolutional/recurrent DVS Gesture models reach
 $84.85\pm1.76\%$ reference test accuracy. Floor-rounded fixed point loses 36.6
 points on average, whereas exponential integration loses 3.7 points and
