@@ -36,8 +36,8 @@ class SHDRepairConfig:
     weight_decay: float = 1e-5
     gradient_clip: float = 1.0
     logit_weight: float = 0.05
-    spike_weight: float = 0.10
-    state_weight: float = 0.02
+    spike_weight: float = 0.02
+    state_weight: float = 0.005
     regularization_weight: float = 1e-4
 
 
@@ -114,11 +114,15 @@ def build_repairable_srnn(
             self.log_incoming_scale = torch.nn.Parameter(
                 torch.zeros(model.hidden_size, dtype=torch.float32)
             )
+            self.log_output_scale = torch.nn.Parameter(
+                torch.zeros(model.hidden_size, dtype=torch.float32)
+            )
 
         def forward(self, events):
             threshold = torch.exp(self.log_threshold).clamp(0.05, 20.0)
             tau = torch.exp(self.log_tau).clamp(0.25, 100.0)
             scale = torch.exp(self.log_incoming_scale).clamp(0.25, 4.0)
+            output_scale = torch.exp(self.log_output_scale).clamp(0.25, 4.0)
             w_in = _quantize_ste(
                 self.base_input_weights * scale.unsqueeze(0), semantics.weight_format
             )
@@ -126,7 +130,10 @@ def build_repairable_srnn(
                 self.base_recurrent_weights * scale.unsqueeze(0),
                 semantics.weight_format,
             )
-            w_out = _quantize_ste(self.output_weights, semantics.weight_format)
+            w_out = _quantize_ste(
+                self.output_weights * output_scale.unsqueeze(1),
+                semantics.weight_format,
+            )
             bias = _quantize_ste(self.bias, semantics.state_format)
             voltage = torch.zeros(
                 (events.shape[0], model.hidden_size),
@@ -223,9 +230,11 @@ def _export_repaired(module: Any, source: DenseRecurrentSNN, name: str) -> Dense
     import torch
 
     scale = torch.exp(module.log_incoming_scale).detach().cpu().double().numpy()
+    output_scale = torch.exp(module.log_output_scale).detach().cpu().double().numpy()
     return source.with_parameters(
         input_weights=source.input_weights * scale[None, :],
         recurrent_weights=source.recurrent_weights * scale[None, :],
+        output_weights=source.output_weights * output_scale[:, None],
         threshold=torch.exp(module.log_threshold).detach().cpu().double().numpy(),
         tau_mem=torch.exp(module.log_tau).detach().cpu().double().numpy(),
         bias=module.bias.detach().cpu().double().numpy(),
@@ -414,14 +423,18 @@ def run_shd_repair(
                     torch.mean(module.log_threshold**2)
                     + torch.mean((module.log_tau - np.log(5.0)) ** 2)
                     + torch.mean(module.log_incoming_scale**2)
+                    + torch.mean(module.log_output_scale**2)
                 )
-                loss = (
-                    margin_loss
-                    + config.logit_weight * logit_loss
-                    + config.spike_weight * spike_loss
-                    + config.state_weight * state_loss
-                    + config.regularization_weight * regularization
-                )
+                if method == "logit_only":
+                    loss = logit_loss + config.regularization_weight * regularization
+                else:
+                    loss = (
+                        margin_loss
+                        + config.logit_weight * logit_loss
+                        + config.spike_weight * spike_loss
+                        + config.state_weight * state_loss
+                        + config.regularization_weight * regularization
+                    )
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(
                     module.parameters(), config.gradient_clip
@@ -474,6 +487,12 @@ def run_shd_repair(
                 np.mean(best_model.threshold / source_model.threshold)
             ),
             "tau_ratio_mean": float(np.mean(best_model.tau_mem / source_model.tau_mem)),
+            "output_weight_scale_mean": float(
+                np.mean(
+                    np.linalg.norm(best_model.output_weights, axis=1)
+                    / (np.linalg.norm(source_model.output_weights, axis=1) + 1e-12)
+                )
+            ),
         }
 
     best_model.save(model_output_path)
@@ -545,4 +564,3 @@ def run_shd_repair(
     }
     write_json_immutable(report_path, report)
     return report
-
