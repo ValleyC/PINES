@@ -1,0 +1,4 @@
+dataset,audit_samples,zero_disagreement_upper_bound,enough_for_1_point_budget,enough_for_2_point_budget,enough_for_5_point_budget
+SHD,861,0.00613478360397679,True,True,True
+DVS Gesture,104,0.04966940415125787,False,False,True
+N-MNIST,6005,0.0008819285019865397,True,True,True

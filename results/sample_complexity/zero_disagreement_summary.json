@@ -1,0 +1,46 @@
+{
+  "code_revision": "908bf101ae06436e4d1ad13e25237d0f201b66c6",
+  "confidence": 0.95,
+  "datasets": [
+    {
+      "audit_samples": 861,
+      "dataset": "SHD",
+      "enough_for_1_point_budget": true,
+      "enough_for_2_point_budget": true,
+      "enough_for_5_point_budget": true,
+      "zero_disagreement_upper_bound": 0.00613478360397679
+    },
+    {
+      "audit_samples": 104,
+      "dataset": "DVS Gesture",
+      "enough_for_1_point_budget": false,
+      "enough_for_2_point_budget": false,
+      "enough_for_5_point_budget": true,
+      "zero_disagreement_upper_bound": 0.04966940415125787
+    },
+    {
+      "audit_samples": 6005,
+      "dataset": "N-MNIST",
+      "enough_for_1_point_budget": true,
+      "enough_for_2_point_budget": true,
+      "enough_for_5_point_budget": true,
+      "zero_disagreement_upper_bound": 0.0008819285019865397
+    }
+  ],
+  "input_report_hashes": {
+    "DVS Gesture": "e53a3e7153847ddaae2df407da6b609480d196a7f03fa2b7347e56b36682471b",
+    "N-MNIST": "a9a2ae203c755996c93bb35d73935e17010dab6bb024417933be8d096373b854",
+    "SHD": "b883d43afd1972809ab34e208bfb11bb9e0b12eeb0ea5ac6efb345195dca1631"
+  },
+  "interpretation": "DVS Gesture cannot accept one- or two-point budgets from 104 audit recordings even with zero observed disagreement, while SHD and N-MNIST exceed the zero-error sample requirement for all three budgets. SHD looseness is therefore dominated by empirical decision disagreement, not finite-sample confidence inflation.",
+  "minimum_zero_disagreement_samples": {
+    "0.01": 528,
+    "0.02": 263,
+    "0.05": 104
+  },
+  "per_comparison_alpha": 0.0050000000000000044,
+  "physical_note": "These requirements apply to the conditional reference-emulator term. A physical certificate splits confidence between semantic and conformance terms and must plan canary sizes against the allocated component budgets.",
+  "rows_csv_hash": "b2080f488161d511f388663f8032baf72b92c640e4d40311e5039e00298402a6",
+  "schema_version": "SampleComplexityAnalysis/v1",
+  "simultaneous_comparisons": 10
+}

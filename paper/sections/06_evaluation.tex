@@ -134,6 +134,22 @@ the contrast. The result supports recurrent amplification as a central part of
 the transport problem, but it also falsifies any claim that raw disagreement is
 uniformly tight across architectures and semantic regimes.
 
+Table~\ref{tab:sample-complexity} isolates confidence inflation at zero observed
+disagreement. Under the frozen ten-way Bonferroni correction, one-, two-, and
+five-point budgets require at least 528, 263, and 104 paired audit samples,
+respectively. DVS Gesture therefore cannot accept one- or two-point budgets even
+in the best observed case. SHD and N-MNIST exceed all three zero-error sample
+requirements; SHD looseness is consequently driven by empirical disagreement,
+not audit size.
+
+\begin{table}[t]
+  \centering
+  \caption{Conditional emulator-certificate sample complexity. The zero-error
+  bound and budgets are percentage points under simultaneous 95\% confidence.}
+  \label{tab:sample-complexity}
+  \input{generated/sample_complexity_table.tex}
+\end{table}
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/recurrent_vs_feedforward.pdf}
