@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 import json
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -117,6 +117,45 @@ class IntervalCertificateResult:
     reference_predictions: np.ndarray
     target_logit_lower: np.ndarray
     target_logit_upper: np.ndarray
+
+
+def partition_semantics_box(
+    box: SemanticsBox,
+    timestep_partitions: int,
+    threshold_partitions: int,
+) -> tuple[SemanticsBox, ...]:
+    """Cover a continuous box by a Cartesian grid of closed sub-boxes."""
+
+    if timestep_partitions <= 0 or threshold_partitions <= 0:
+        raise ValueError("partition counts must be positive")
+    timestep_edges = np.linspace(
+        box.timestep_bounds[0], box.timestep_bounds[1], timestep_partitions + 1
+    )
+    threshold_edges = np.linspace(
+        box.threshold_scale_bounds[0],
+        box.threshold_scale_bounds[1],
+        threshold_partitions + 1,
+    )
+    return tuple(
+        replace(
+            box,
+            timestep_bounds=(
+                float(timestep_edges[timestep_index]),
+                float(timestep_edges[timestep_index + 1]),
+            ),
+            threshold_scale_bounds=(
+                float(threshold_edges[threshold_index]),
+                float(threshold_edges[threshold_index + 1]),
+            ),
+            name=(
+                f"{box.name}-dt-{timestep_index + 1}-of-{timestep_partitions}"
+                f"-threshold-{threshold_index + 1}-of-{threshold_partitions}"
+            ),
+        )
+        for timestep_index, threshold_index in itertools.product(
+            range(timestep_partitions), range(threshold_partitions)
+        )
+    )
 
 
 def _linear_interval(
@@ -252,46 +291,75 @@ class IntervalFamilyCertifier:
         reference: ExecutionSemantics,
         box: SemanticsBox,
     ) -> IntervalCertificateResult:
+        return self.certify_union(model, inputs, reference, (box,))
+
+    def certify_partitioned(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        box: SemanticsBox,
+        timestep_partitions: int,
+        threshold_partitions: int,
+    ) -> IntervalCertificateResult:
+        boxes = partition_semantics_box(
+            box, timestep_partitions, threshold_partitions
+        )
+        return self.certify_union(model, inputs, reference, boxes)
+
+    def certify_union(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        boxes: tuple[SemanticsBox, ...],
+    ) -> IntervalCertificateResult:
+        if not boxes:
+            raise ValueError("at least one semantics box is required")
         events = _validate_inputs(model, inputs)
         reference_trace = VectorizedEmulator().run(model, events, reference)
-        weight = box.base.weight_format
-        numeric = box.base.state_format
+        first = boxes[0]
+        if any(
+            box.base.weight_format != first.base.weight_format
+            or box.base.state_format != first.base.state_format
+            for box in boxes[1:]
+        ):
+            raise ValueError("all union boxes must share weight and state formats")
+        weight = first.base.weight_format
+        numeric = first.base.state_format
         w_in = np.asarray(weight.quantize(model.input_weights))
         bias = np.asarray(numeric.quantize(model.bias))
         input_drive = events @ w_in + bias
-        member_bounds = [
-            self._propagate_member(
-                model,
-                events,
-                box,
-                integration,
-                timing,
-                reset,
-                synaptic_delay,
-                output_delay,
-                input_drive,
-            )
+        prediction = reference_trace.predictions
+        rows = np.arange(events.shape[0])
+        certified = np.ones(events.shape[0], dtype=bool)
+        lower = np.full((events.shape[0], model.output_size), np.inf)
+        upper = np.full((events.shape[0], model.output_size), -np.inf)
+        for box in boxes:
             for integration, timing, reset, synaptic_delay, output_delay in itertools.product(
                 box.integration_rules,
                 box.threshold_timings,
                 box.reset_rules,
                 box.synaptic_delays,
                 box.output_delays,
-            )
-        ]
-        prediction = reference_trace.predictions
-        rows = np.arange(events.shape[0])
-        member_certificates = []
-        for member_lower, member_upper in member_bounds:
-            chosen_lower = member_lower[rows, prediction]
-            competing_upper = member_upper.copy()
-            competing_upper[rows, prediction] = -np.inf
-            member_certificates.append(
-                chosen_lower > np.max(competing_upper, axis=1)
-            )
-        certified = np.logical_and.reduce(member_certificates)
-        lower = np.min(np.stack([item[0] for item in member_bounds]), axis=0)
-        upper = np.max(np.stack([item[1] for item in member_bounds]), axis=0)
+            ):
+                member_lower, member_upper = self._propagate_member(
+                    model,
+                    events,
+                    box,
+                    integration,
+                    timing,
+                    reset,
+                    synaptic_delay,
+                    output_delay,
+                    input_drive,
+                )
+                chosen_lower = member_lower[rows, prediction]
+                competing_upper = member_upper.copy()
+                competing_upper[rows, prediction] = -np.inf
+                certified &= chosen_lower > np.max(competing_upper, axis=1)
+                lower = np.minimum(lower, member_lower)
+                upper = np.maximum(upper, member_upper)
         return IntervalCertificateResult(
             certified=certified,
             certified_fraction=float(np.mean(certified)),

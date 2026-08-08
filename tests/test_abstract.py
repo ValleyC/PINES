@@ -4,7 +4,12 @@ from dataclasses import replace
 
 import numpy as np
 
-from transportcert.abstract import IntervalFamilyCertifier, SemanticsBox, _linear_interval
+from transportcert.abstract import (
+    IntervalFamilyCertifier,
+    SemanticsBox,
+    _linear_interval,
+    partition_semantics_box,
+)
 from transportcert.emulator import VectorizedEmulator
 from transportcert.models import DenseRecurrentSNN
 from transportcert.semantics import (
@@ -109,3 +114,37 @@ def test_discrete_members_are_certified_before_family_logit_merge() -> None:
     assert result.certified.tolist() == [True]
     assert result.target_logit_lower[0, 0] == 1.0
     assert result.target_logit_upper[0, 1] == 1.8
+
+
+def test_partitioned_box_is_a_closed_cover_and_never_loses_certificates(
+    small_model, event_batch
+) -> None:
+    reference = ExecutionSemantics()
+    box = SemanticsBox(
+        base=reference,
+        timestep_bounds=(0.9, 1.1),
+        threshold_scale_bounds=(0.9, 1.1),
+        integration_rules=(IntegrationRule.FORWARD_EULER,),
+        reset_rules=(ResetRule.SUBTRACTIVE,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    boxes = partition_semantics_box(box, 2, 4)
+    assert len(boxes) == 8
+    assert min(item.timestep_bounds[0] for item in boxes) == 0.9
+    assert max(item.timestep_bounds[1] for item in boxes) == 1.1
+    assert min(item.threshold_scale_bounds[0] for item in boxes) == 0.9
+    assert max(item.threshold_scale_bounds[1] for item in boxes) == 1.1
+
+    inputs = event_batch[:4]
+    coarse = IntervalFamilyCertifier().certify(small_model, inputs, reference, box)
+    partitioned = IntervalFamilyCertifier().certify_partitioned(
+        small_model,
+        inputs,
+        reference,
+        box,
+        timestep_partitions=2,
+        threshold_partitions=4,
+    )
+
+    assert np.all(~coarse.certified | partitioned.certified)
