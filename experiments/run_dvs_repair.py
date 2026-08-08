@@ -16,7 +16,12 @@ def main() -> None:
     parser.add_argument("--condition", default="floor_rounding_saturation")
     parser.add_argument(
         "--method",
-        choices=("certificate_directed", "logit_only", "global_threshold"),
+        choices=(
+            "certificate_directed",
+            "logit_only",
+            "global_threshold",
+            "per_platform_qat",
+        ),
         required=True,
     )
     parser.add_argument("--epochs", type=int, default=40)

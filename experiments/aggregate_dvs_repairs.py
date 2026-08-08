@@ -204,11 +204,16 @@ def main() -> None:
                 > float(logit["accuracy_recovery_fraction"])
                 for certificate, logit in zip(certificate_rows, logit_rows)
             ),
-            "certificate_directed_beats_logit_only_mean_recovery": np.mean(
-                [float(row["accuracy_recovery_fraction"]) for row in certificate_rows]
-            )
-            > np.mean(
-                [float(row["accuracy_recovery_fraction"]) for row in logit_rows]
+            "certificate_directed_beats_logit_only_mean_recovery": bool(
+                np.mean(
+                    [
+                        float(row["accuracy_recovery_fraction"])
+                        for row in certificate_rows
+                    ]
+                )
+                > np.mean(
+                    [float(row["accuracy_recovery_fraction"]) for row in logit_rows]
+                )
             ),
             "certificate_directed_certifies_five_point_budget_any_seed": any(
                 float(row["after_certificate_upper_bound"]) <= 0.05

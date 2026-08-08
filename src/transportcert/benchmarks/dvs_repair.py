@@ -32,6 +32,7 @@ class DVSGestureRepairConfig:
     gradient_clip: float = 1.0
     logit_weight: float = 0.05
     regularization_weight: float = 1e-4
+    supervised_learning_rate: float = 1e-3
     simultaneous_family_size: int = 10
 
 
@@ -212,7 +213,12 @@ def run_dvs_repair(
 ) -> dict[str, Any]:
     import torch
 
-    if method not in {"certificate_directed", "logit_only", "global_threshold"}:
+    if method not in {
+        "certificate_directed",
+        "logit_only",
+        "global_threshold",
+        "per_platform_qat",
+    }:
         raise ValueError("unsupported DVS repair method")
     conditions = primary_semantic_conditions()
     if condition == "reference" or condition not in conditions:
@@ -256,6 +262,8 @@ def run_dvs_repair(
     started = time.perf_counter()
     history: list[dict[str, float]] = []
     optimization_steps = 0
+    label_budget = 0
+    selection_criterion = "reference prediction disagreement"
 
     if method == "global_threshold":
         best_model = None
@@ -294,7 +302,7 @@ def run_dvs_repair(
             "best_calibration_disagreements": best_disagreement,
         }
         trainable_parameters = 1
-    else:
+    elif method in {"certificate_directed", "logit_only"}:
         model = build_dvs_conv_srnn(sensor_width, sensor_height, train_config)
         model.load_state_dict(checkpoint["state_dict"])
         model = make_restricted_dvs_repairable(model).to(device)
@@ -408,6 +416,99 @@ def run_dvs_repair(
         best_model = materialize_dvs_repair(model)
         best_config = train_config
         selected = {"best_calibration_disagreements": best_disagreement}
+    else:
+        model = build_dvs_conv_srnn(sensor_width, sensor_height, train_config)
+        model.load_state_dict(checkpoint["state_dict"])
+        model.to(device)
+        optimizer = torch.optim.AdamW(
+            model.parameters(),
+            lr=config.supervised_learning_rate,
+            weight_decay=config.weight_decay,
+        )
+        trainable_parameters = int(
+            sum(parameter.numel() for parameter in model.parameters())
+        )
+        label_budget = len(calibration_indices)
+        selection_criterion = "labeled calibration accuracy"
+        rng = np.random.default_rng(seed)
+        initial_prediction, _ = _predict(
+            model,
+            train_store,
+            calibration_indices,
+            target,
+            config.batch_size,
+            device,
+        )
+        best_accuracy = float(
+            np.mean(initial_prediction == train_store.labels[calibration_indices])
+        )
+        best_loss = float("inf")
+        best_state = copy.deepcopy(model.state_dict())
+        history.append({"epoch": 0, "calibration_accuracy": best_accuracy})
+        for epoch in range(config.epochs):
+            order = rng.permutation(calibration_indices)
+            total_loss = 0.0
+            seen = 0
+            model.train()
+            for start in range(0, len(order), config.batch_size):
+                sample_indices = order[start : start + config.batch_size]
+                targets = torch.as_tensor(
+                    train_store.labels[sample_indices], dtype=torch.long, device=device
+                )
+                optimizer.zero_grad(set_to_none=True)
+                logits = _train_batch_logits(
+                    model, train_store, sample_indices, target, device
+                )
+                loss = torch.nn.functional.cross_entropy(logits, targets)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), config.gradient_clip
+                )
+                optimizer.step()
+                optimization_steps += 1
+                total_loss += float(loss.detach()) * len(sample_indices)
+                seen += len(sample_indices)
+            calibration_prediction, _ = _predict(
+                model,
+                train_store,
+                calibration_indices,
+                target,
+                config.batch_size,
+                device,
+            )
+            accuracy = float(
+                np.mean(
+                    calibration_prediction
+                    == train_store.labels[calibration_indices]
+                )
+            )
+            epoch_loss = total_loss / seen
+            history.append(
+                {
+                    "epoch": epoch + 1,
+                    "loss": epoch_loss,
+                    "calibration_accuracy": accuracy,
+                }
+            )
+            print(
+                f"DVS repair {method} {condition} epoch={epoch + 1}/{config.epochs} "
+                f"loss={epoch_loss:.4f} accuracy={accuracy:.4f}",
+                flush=True,
+            )
+            if accuracy > best_accuracy or (
+                accuracy == best_accuracy and epoch_loss < best_loss
+            ):
+                best_accuracy = accuracy
+                best_loss = epoch_loss
+                best_state = copy.deepcopy(model.state_dict())
+        model.load_state_dict(best_state)
+        best_model = model
+        best_config = train_config
+        selected = {
+            "initialization": "source",
+            "best_calibration_accuracy": best_accuracy,
+            "best_calibration_loss": best_loss,
+        }
 
     best_model.eval()
     repaired_hash = _model_hash(best_model)
@@ -480,20 +581,30 @@ def run_dvs_repair(
         "calibration_samples": len(calibration_indices),
         "audit_samples": len(audit_indices),
         "test_samples": len(test_indices),
-        "label_budget": 0,
+        "label_budget": label_budget,
+        "labels_used": "none" if label_budget == 0 else "repair calibration labels",
         "optimization_steps": optimization_steps,
         "trainable_parameters": trainable_parameters,
-        "selection_criterion": "reference prediction disagreement",
+        "selection_criterion": selection_criterion,
         "test_labels_used_for_selection": False,
         "calibration_audit_disjoint": True,
         "permitted_parameter_changes": (
             ["global_threshold_scale"]
             if method == "global_threshold"
+            else ["all_weights", "conv_and_hidden_bias"]
+            if method == "per_platform_qat"
             else [
                 "per_channel_incoming_weight_scale",
                 "per_hidden_output_weight_scale",
                 "conv_and_hidden_bias",
             ]
+        ),
+        "baseline_definition": (
+            "source-initialized supervised target-semantics QAT"
+            if method == "per_platform_qat"
+            else "label-free hard-semantics global threshold search"
+            if method == "global_threshold"
+            else "restricted label-free target-semantics calibration"
         ),
         "config": asdict(config),
         "selected": selected,
