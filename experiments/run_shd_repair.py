@@ -13,10 +13,16 @@ def main() -> None:
     parser.add_argument("--condition", required=True)
     parser.add_argument(
         "--method",
-        choices=("certificate_directed", "logit_only", "global_threshold"),
+        choices=(
+            "certificate_directed",
+            "logit_only",
+            "global_threshold",
+            "per_platform_qat",
+            "supervised_target_retraining",
+        ),
         required=True,
     )
-    parser.add_argument("--epochs", type=int, default=20)
+    parser.add_argument("--epochs", type=int, default=40)
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1")
     parser.add_argument(
@@ -55,4 +61,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

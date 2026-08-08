@@ -11,7 +11,7 @@ from typing import Any
 
 import numpy as np
 
-from ..artifacts import code_revision, sha256_file, write_json_immutable
+from ..artifacts import array_hash, code_revision, sha256_file, write_json_immutable
 from ..models import DenseRecurrentSNN
 from ..semantics import (
     ExecutionSemantics,
@@ -29,8 +29,8 @@ from .shd import PackedSHD, _SurrogateSpike
 
 @dataclass(frozen=True)
 class SHDRepairConfig:
-    schema_version: str = "SHDRepair/v1"
-    epochs: int = 20
+    schema_version: str = "SHDRepair/v2"
+    epochs: int = 40
     batch_size: int = 128
     learning_rate: float = 0.02
     weight_decay: float = 1e-5
@@ -39,6 +39,7 @@ class SHDRepairConfig:
     spike_weight: float = 0.02
     state_weight: float = 0.005
     regularization_weight: float = 1e-4
+    supervised_learning_rate: float = 1e-3
 
 
 def _seed_everything(seed: int) -> None:
@@ -200,6 +201,129 @@ def build_repairable_srnn(
     return RepairableSRNN()
 
 
+def build_supervised_target_srnn(
+    model: DenseRecurrentSNN,
+    semantics: ExecutionSemantics,
+    *,
+    initialization: str,
+) -> Any:
+    """Build a fully trainable target-semantics model for labeled baselines.
+
+    ``source`` is the per-platform QAT/fine-tuning baseline. ``random`` is the
+    fully supervised, from-scratch target-retraining baseline. Both execute the
+    declared target semantics during every forward pass and use STEs for exact
+    fixed-point transitions.
+    """
+
+    import torch
+
+    if initialization not in {"source", "random"}:
+        raise ValueError("initialization must be 'source' or 'random'")
+
+    class SupervisedTargetSRNN(torch.nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.input_weights = torch.nn.Parameter(
+                torch.tensor(model.input_weights.copy(), dtype=torch.float32)
+            )
+            self.recurrent_weights = torch.nn.Parameter(
+                torch.tensor(model.recurrent_weights.copy(), dtype=torch.float32)
+            )
+            self.output_weights = torch.nn.Parameter(
+                torch.tensor(model.output_weights.copy(), dtype=torch.float32)
+            )
+            self.bias = torch.nn.Parameter(
+                torch.tensor(model.bias.copy(), dtype=torch.float32)
+            )
+            self.log_threshold = torch.nn.Parameter(
+                torch.log(torch.tensor(model.threshold.copy(), dtype=torch.float32))
+            )
+            self.log_tau = torch.nn.Parameter(
+                torch.log(torch.tensor(model.tau_mem.copy(), dtype=torch.float32))
+            )
+            self.register_buffer(
+                "reset_value", torch.tensor(model.reset_value.copy(), dtype=torch.float32)
+            )
+            if initialization == "random":
+                torch.nn.init.xavier_uniform_(self.input_weights)
+                torch.nn.init.orthogonal_(self.recurrent_weights)
+                with torch.no_grad():
+                    self.recurrent_weights.mul_(0.25)
+                torch.nn.init.xavier_uniform_(self.output_weights)
+                torch.nn.init.zeros_(self.bias)
+
+        def forward(self, events):
+            threshold = torch.exp(self.log_threshold).clamp(0.05, 20.0)
+            tau = torch.exp(self.log_tau).clamp(0.25, 100.0)
+            w_in = _quantize_ste(self.input_weights, semantics.weight_format)
+            w_rec = _quantize_ste(self.recurrent_weights, semantics.weight_format)
+            w_out = _quantize_ste(self.output_weights, semantics.weight_format)
+            bias = _quantize_ste(self.bias, semantics.state_format)
+            voltage = torch.zeros(
+                (events.shape[0], model.hidden_size),
+                dtype=events.dtype,
+                device=events.device,
+            )
+            spikes = torch.zeros_like(voltage)
+            logits = torch.zeros(
+                (events.shape[0], model.output_size),
+                dtype=events.dtype,
+                device=events.device,
+            )
+            current_queue = [
+                torch.zeros_like(voltage)
+                for _ in range(semantics.synaptic_delay_steps)
+            ]
+            output_queue = [
+                torch.zeros_like(logits) for _ in range(semantics.output_delay_steps)
+            ]
+            state_trace = []
+            spike_trace = []
+            logit_trace = []
+            for step in range(events.shape[1]):
+                current = events[:, step] @ w_in + spikes @ w_rec + bias
+                current = _quantize_ste(current, semantics.state_format)
+                if current_queue:
+                    current_queue.append(current)
+                    current = current_queue.pop(0)
+
+                def integrate(state):
+                    if semantics.integration_rule is IntegrationRule.FORWARD_EULER:
+                        return state + semantics.timestep * (-state + current) / tau
+                    alpha = torch.exp(-semantics.timestep / tau)
+                    return alpha * state + (1.0 - alpha) * current
+
+                def reset(state, emitted):
+                    if semantics.reset_rule is ResetRule.SUBTRACTIVE:
+                        return state - emitted * threshold
+                    return (1.0 - emitted) * state + emitted * self.reset_value
+
+                if semantics.threshold_timing is ThresholdTiming.PRE_INTEGRATION:
+                    spikes = _SurrogateSpike.apply(voltage - threshold)
+                    voltage = integrate(reset(voltage, spikes))
+                else:
+                    voltage = _quantize_ste(integrate(voltage), semantics.state_format)
+                    spikes = _SurrogateSpike.apply(voltage - threshold)
+                    voltage = reset(voltage, spikes)
+                voltage = _quantize_ste(voltage, semantics.state_format)
+                contribution = _quantize_ste(spikes @ w_out, semantics.state_format)
+                if output_queue:
+                    output_queue.append(contribution)
+                    contribution = output_queue.pop(0)
+                logits = _quantize_ste(logits + contribution, semantics.state_format)
+                state_trace.append(voltage)
+                spike_trace.append(spikes)
+                logit_trace.append(logits)
+            return (
+                logits,
+                torch.stack(state_trace, dim=1),
+                torch.stack(spike_trace, dim=1),
+                torch.stack(logit_trace, dim=1),
+            )
+
+    return SupervisedTargetSRNN()
+
+
 def _collect_reference_trace(
     model: DenseRecurrentSNN,
     store: PackedSHD,
@@ -237,6 +361,20 @@ def _export_repaired(module: Any, source: DenseRecurrentSNN, name: str) -> Dense
         output_weights=source.output_weights * output_scale[:, None],
         threshold=torch.exp(module.log_threshold).detach().cpu().double().numpy(),
         tau_mem=torch.exp(module.log_tau).detach().cpu().double().numpy(),
+        bias=module.bias.detach().cpu().double().numpy(),
+        name=name,
+    )
+
+
+def _export_supervised(
+    module: Any, source: DenseRecurrentSNN, name: str
+) -> DenseRecurrentSNN:
+    return source.with_parameters(
+        input_weights=module.input_weights.detach().cpu().double().numpy(),
+        recurrent_weights=module.recurrent_weights.detach().cpu().double().numpy(),
+        output_weights=module.output_weights.detach().cpu().double().numpy(),
+        threshold=np.exp(module.log_threshold.detach().cpu().double().numpy()),
+        tau_mem=np.exp(module.log_tau.detach().cpu().double().numpy()),
         bias=module.bias.detach().cpu().double().numpy(),
         name=name,
     )
@@ -299,7 +437,14 @@ def run_shd_repair(
 ) -> dict[str, Any]:
     import torch
 
-    if method not in {"certificate_directed", "logit_only", "global_threshold"}:
+    supported_methods = {
+        "certificate_directed",
+        "logit_only",
+        "global_threshold",
+        "per_platform_qat",
+        "supervised_target_retraining",
+    }
+    if method not in supported_methods:
         raise ValueError("unsupported repair method")
     conditions = primary_semantic_conditions()
     if condition == "reference" or condition not in conditions:
@@ -334,6 +479,9 @@ def run_shd_repair(
     _seed_everything(seed)
     started = time.perf_counter()
     history: list[dict[str, float]] = []
+    optimization_steps = 0
+    label_budget = 0
+    selection_criterion = "reference prediction disagreement"
 
     if method == "global_threshold":
         best_model = source_model
@@ -361,7 +509,7 @@ def run_shd_repair(
                 best_model = candidate
                 best_scale = float(scale)
         selected = {"global_threshold_scale": best_scale}
-    else:
+    elif method in {"certificate_directed", "logit_only"}:
         teacher = _collect_reference_trace(
             source_model,
             train_store,
@@ -440,6 +588,7 @@ def run_shd_repair(
                     module.parameters(), config.gradient_clip
                 )
                 optimizer.step()
+                optimization_steps += 1
                 total_loss += float(loss.detach()) * len(positions)
                 seen += len(positions)
             module.eval()
@@ -494,6 +643,94 @@ def run_shd_repair(
                 )
             ),
         }
+    else:
+        initialization = "source" if method == "per_platform_qat" else "random"
+        module = build_supervised_target_srnn(
+            source_model, target, initialization=initialization
+        ).to(device)
+        optimizer = torch.optim.AdamW(
+            module.parameters(),
+            lr=config.supervised_learning_rate,
+            weight_decay=config.weight_decay,
+        )
+        rng = np.random.default_rng(seed)
+        label_budget = len(calibration_indices)
+        selection_criterion = "labeled calibration accuracy"
+        best_accuracy = -1.0
+        best_loss = float("inf")
+        best_state = copy.deepcopy(module.state_dict())
+        for epoch in range(config.epochs):
+            order = rng.permutation(calibration_indices)
+            total_loss = 0.0
+            seen = 0
+            for start in range(0, len(order), config.batch_size):
+                sample_indices = order[start : start + config.batch_size]
+                events = torch.as_tensor(
+                    train_store.frames(sample_indices), device=device
+                )
+                targets = torch.as_tensor(
+                    train_store.labels[sample_indices], dtype=torch.long, device=device
+                )
+                optimizer.zero_grad(set_to_none=True)
+                logits, _, _, _ = module(events)
+                loss = torch.nn.functional.cross_entropy(logits, targets)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(
+                    module.parameters(), config.gradient_clip
+                )
+                optimizer.step()
+                optimization_steps += 1
+                total_loss += float(loss.detach()) * len(sample_indices)
+                seen += len(sample_indices)
+            module.eval()
+            calibration_predictions: list[np.ndarray] = []
+            with torch.no_grad():
+                for start in range(0, len(calibration_indices), config.batch_size):
+                    sample_indices = calibration_indices[
+                        start : start + config.batch_size
+                    ]
+                    events = torch.as_tensor(
+                        train_store.frames(sample_indices), device=device
+                    )
+                    logits, _, _, _ = module(events)
+                    calibration_predictions.append(
+                        torch.argmax(logits, dim=1).cpu().numpy()
+                    )
+            calibration_predictions_array = np.concatenate(calibration_predictions)
+            accuracy = float(
+                np.mean(
+                    calibration_predictions_array
+                    == train_store.labels[calibration_indices]
+                )
+            )
+            epoch_loss = total_loss / seen
+            record = {
+                "epoch": epoch + 1,
+                "loss": epoch_loss,
+                "calibration_accuracy": accuracy,
+            }
+            history.append(record)
+            print(
+                f"repair {method} {condition} epoch={epoch + 1}/{config.epochs} "
+                f"loss={epoch_loss:.4f} accuracy={accuracy:.4f}",
+                flush=True,
+            )
+            if accuracy > best_accuracy or (
+                accuracy == best_accuracy and epoch_loss < best_loss
+            ):
+                best_accuracy = accuracy
+                best_loss = epoch_loss
+                best_state = copy.deepcopy(module.state_dict())
+            module.train()
+        module.load_state_dict(best_state)
+        best_model = _export_supervised(
+            module, source_model, f"{source_model.name}-{method}-{condition}"
+        )
+        selected = {
+            "initialization": initialization,
+            "best_calibration_accuracy": best_accuracy,
+            "best_calibration_loss": best_loss,
+        }
 
     best_model.save(model_output_path)
     after = _evaluate_candidate(
@@ -530,8 +767,30 @@ def run_shd_repair(
             audit_indices=audit_indices,
             test_indices=test_indices,
         )
+    if method == "global_threshold":
+        permitted_changes = ["global_threshold_scale"]
+    elif method in {"certificate_directed", "logit_only"}:
+        permitted_changes = [
+            "per_neuron_threshold",
+            "per_neuron_tau_mem",
+            "per_neuron_bias",
+            "per_neuron_incoming_weight_scale",
+            "per_neuron_output_weight_scale",
+        ]
+    else:
+        permitted_changes = [
+            "all_input_weights",
+            "all_recurrent_weights",
+            "all_output_weights",
+            "per_neuron_threshold",
+            "per_neuron_tau_mem",
+            "per_neuron_bias",
+        ]
+    quantization_active = bool(
+        target.state_format.is_fixed or target.weight_format.is_fixed
+    )
     report = {
-        "schema_version": "SHDRepairExperiment/v1",
+        "schema_version": "SHDRepairExperiment/v2",
         "method": method,
         "condition": condition,
         "target_semantics_hash": target.semantics_hash,
@@ -542,7 +801,38 @@ def run_shd_repair(
         "predictions_artifact_hash": sha256_file(predictions_output_path),
         "calibration_samples": len(calibration_indices),
         "audit_samples": len(audit_indices),
-        "label_budget": 0,
+        "label_budget": label_budget,
+        "labels_used": "none" if label_budget == 0 else "repair calibration labels",
+        "selection_criterion": selection_criterion,
+        "test_labels_used_for_selection": False,
+        "permitted_parameter_changes": permitted_changes,
+        "quantization_active": quantization_active,
+        "baseline_definition": (
+            "source-initialized target-semantics supervised fine-tuning with STE; "
+            "a QAT baseline when the target declares fixed-point formats"
+            if method == "per_platform_qat"
+            else "random-initialized target-semantics supervised training"
+            if method == "supervised_target_retraining"
+            else "label-free reference imitation and calibration"
+            if method in {"certificate_directed", "logit_only"}
+            else "label-free hard-semantics grid search"
+        ),
+        "optimization_steps": optimization_steps,
+        "trainable_parameters": int(
+            sum(parameter.numel() for parameter in module.parameters())
+        )
+        if method != "global_threshold"
+        else 1,
+        "random_seed": seed,
+        "calibration_indices_hash": array_hash(calibration_indices),
+        "audit_indices_hash": array_hash(audit_indices),
+        "test_indices_hash": array_hash(test_indices),
+        "train_store_hash": train_store.data_hash,
+        "test_store_hash": test_store.data_hash,
+        "split_indices_artifact_hash": sha256_file(split_indices_path),
+        "semantic_predictions_artifact_hash": sha256_file(
+            semantic_predictions_path
+        ),
         "config": asdict(config),
         "selected": selected,
         "before": {
