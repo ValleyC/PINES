@@ -62,6 +62,26 @@ class FixedTraceAffineResult:
 
 
 @dataclass(frozen=True)
+class PolygonBranchCertificateResult:
+    certified: bool
+    complete: bool
+    reference_prediction: int
+    possible_predictions: tuple[int, ...]
+    final_branch_count: int
+    maximum_active_branches: int
+    total_branch_splits: int
+    maximum_uncertain_neurons_at_step: int
+    first_cap_timestep: int | None
+
+
+@dataclass(frozen=True)
+class _PolygonBranch:
+    voltage: _HybridAffine
+    previous_spikes: np.ndarray
+    logits: np.ndarray
+
+
+@dataclass(frozen=True)
 class _HybridAffine:
     """Affine forms over two shared semantic generators plus box residuals."""
 
@@ -776,6 +796,191 @@ class FixedTraceAffineAnalyzer:
             uncertain_timestep_count=len(uncertain_timesteps),
             first_uncertain_timestep=first_uncertain,
             minimum_signed_guard_margin=float(minimum_signed_margin),
+        )
+
+
+class PolygonBranchCertifier:
+    """Soundly enumerate only guard-uncertain traces inside one polygon."""
+
+    def certify(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        box: SemanticsBox,
+        parameter_vertices: np.ndarray,
+        *,
+        max_branches: int = 1024,
+    ) -> PolygonBranchCertificateResult:
+        events = _validate_inputs(model, inputs)
+        if len(events) != 1:
+            raise ValueError("polygon branch certification accepts one input")
+        if max_branches < 1:
+            raise ValueError("max_branches must be positive")
+        discrete_sizes = (
+            len(box.integration_rules),
+            len(box.threshold_timings),
+            len(box.reset_rules),
+            len(box.synaptic_delays),
+            len(box.output_delays),
+        )
+        if discrete_sizes != (1, 1, 1, 1, 1):
+            raise ValueError("polygon branches require one discrete member")
+        if box.integration_rules[0] is not IntegrationRule.FORWARD_EULER:
+            raise NotImplementedError("polygon branches require forward Euler")
+        if box.base.state_format.is_fixed:
+            raise NotImplementedError("polygon branches require floating state")
+        if box.synaptic_delays[0] or box.output_delays[0]:
+            raise NotImplementedError("polygon branches currently require zero delay")
+        if not box.base.randomness.deterministic:
+            raise NotImplementedError("polygon branches require determinism")
+        vertices = np.asarray(parameter_vertices, dtype=np.float64)
+        if vertices.ndim != 2 or vertices.shape[1] != 2 or len(vertices) < 3:
+            raise ValueError("parameter polygon must have shape [vertices, 2]")
+
+        state = box.base.state_format
+        weight = box.base.weight_format
+        w_in = np.asarray(weight.quantize(model.input_weights), dtype=np.float64)
+        w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
+        w_out = np.asarray(weight.quantize(model.output_weights), dtype=np.float64)
+        bias = np.asarray(state.quantize(model.bias), dtype=np.float64)
+        base_drive = events @ w_in + bias
+        threshold = _HybridAffine.semantic_interval(
+            model.threshold[None, :] * box.threshold_scale_bounds[0],
+            model.threshold[None, :] * box.threshold_scale_bounds[1],
+            1,
+        )
+        timestep = _HybridAffine.semantic_interval(
+            np.full((1, model.hidden_size), box.timestep_bounds[0]),
+            np.full((1, model.hidden_size), box.timestep_bounds[1]),
+            0,
+        )
+        timing = box.threshold_timings[0]
+        reset = box.reset_rules[0]
+        reference_prediction = int(
+            VectorizedEmulator().run(model, events, reference).predictions[0]
+        )
+        branches = [
+            _PolygonBranch(
+                voltage=_HybridAffine.exact(
+                    np.zeros((1, model.hidden_size), dtype=np.float64)
+                ),
+                previous_spikes=np.zeros(model.hidden_size, dtype=np.float64),
+                logits=np.zeros(model.output_size, dtype=np.float64),
+            )
+        ]
+        maximum_active = 1
+        total_splits = 0
+        maximum_uncertain = 0
+
+        for step in range(events.shape[1]):
+            next_branches: list[_PolygonBranch] = []
+            for branch in branches:
+                exact_current = (
+                    base_drive[0, step, :]
+                    + branch.previous_spikes @ w_rec
+                )
+                current = _HybridAffine.exact(
+                    np.asarray(
+                        state.quantize(exact_current), dtype=np.float64
+                    )[None, :]
+                )
+                if timing is ThresholdTiming.PRE_INTEGRATION:
+                    guard_voltage = branch.voltage
+                else:
+                    guard_voltage = AffineGuardFamilyCertifier._integrate(
+                        branch.voltage,
+                        current,
+                        timestep,
+                        model.tau_mem,
+                        vertices,
+                    ).float_quantize(state, vertices)
+                guard = guard_voltage.subtract(threshold)
+                guard_lower, guard_upper = guard.bounds(vertices)
+                definitely_spiking = guard_lower[0] >= 0.0
+                definitely_quiet = guard_upper[0] < 0.0
+                uncertain_indices = np.flatnonzero(
+                    ~(definitely_spiking | definitely_quiet)
+                )
+                maximum_uncertain = max(
+                    maximum_uncertain, len(uncertain_indices)
+                )
+                combination_count = 1 << len(uncertain_indices)
+                if len(next_branches) + combination_count > max_branches:
+                    return PolygonBranchCertificateResult(
+                        certified=False,
+                        complete=False,
+                        reference_prediction=reference_prediction,
+                        possible_predictions=(),
+                        final_branch_count=len(branches),
+                        maximum_active_branches=maximum_active,
+                        total_branch_splits=total_splits,
+                        maximum_uncertain_neurons_at_step=maximum_uncertain,
+                        first_cap_timestep=step,
+                    )
+                total_splits += combination_count - 1
+                for assignment in itertools.product(
+                    (0.0, 1.0), repeat=len(uncertain_indices)
+                ):
+                    spikes_array = definitely_spiking.astype(np.float64)
+                    if len(uncertain_indices):
+                        spikes_array = spikes_array.copy()
+                        spikes_array[uncertain_indices] = assignment
+                    spikes = _HybridAffine.exact(spikes_array[None, :])
+                    if timing is ThresholdTiming.PRE_INTEGRATION:
+                        next_voltage = AffineGuardFamilyCertifier._integrate(
+                            AffineGuardFamilyCertifier._reset(
+                                branch.voltage,
+                                spikes,
+                                threshold,
+                                model.reset_value,
+                                reset,
+                                vertices,
+                            ),
+                            current,
+                            timestep,
+                            model.tau_mem,
+                            vertices,
+                        ).float_quantize(state, vertices)
+                    else:
+                        next_voltage = AffineGuardFamilyCertifier._reset(
+                            guard_voltage,
+                            spikes,
+                            threshold,
+                            model.reset_value,
+                            reset,
+                            vertices,
+                        ).float_quantize(state, vertices)
+                    contribution = np.asarray(
+                        state.quantize(spikes_array @ w_out), dtype=np.float64
+                    )
+                    logits = np.asarray(
+                        state.quantize(branch.logits + contribution),
+                        dtype=np.float64,
+                    )
+                    next_branches.append(
+                        _PolygonBranch(
+                            voltage=next_voltage,
+                            previous_spikes=spikes_array,
+                            logits=logits,
+                        )
+                    )
+            branches = next_branches
+            maximum_active = max(maximum_active, len(branches))
+
+        predictions = tuple(
+            sorted({int(np.argmax(branch.logits)) for branch in branches})
+        )
+        return PolygonBranchCertificateResult(
+            certified=predictions == (reference_prediction,),
+            complete=True,
+            reference_prediction=reference_prediction,
+            possible_predictions=predictions,
+            final_branch_count=len(branches),
+            maximum_active_branches=maximum_active,
+            total_branch_splits=total_splits,
+            maximum_uncertain_neurons_at_step=maximum_uncertain,
+            first_cap_timestep=None,
         )
 
 

@@ -9,6 +9,7 @@ from transportcert.affine import (
     AdaptiveAffineGuardCutCertifier,
     AffineGuardFamilyCertifier,
     FixedTraceAffineAnalyzer,
+    PolygonBranchCertifier,
     _HybridAffine,
     polygon_area,
     split_polygon_guard_band,
@@ -285,3 +286,122 @@ def test_fixed_trace_affine_analyzer_distinguishes_robust_and_switching_trace() 
     assert not switching.trace_robust
     assert switching.uncertain_guard_count == 1
     assert switching.first_uncertain_timestep == 0
+
+
+def test_polygon_branch_certifier_enumerates_prediction_changing_guard() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[1.0]]),
+        recurrent_weights=np.zeros((1, 1)),
+        output_weights=np.asarray([[0.0, 1.0]]),
+        bias=np.zeros(1),
+        threshold=np.ones(1),
+        tau_mem=np.ones(1),
+        reset_value=np.zeros(1),
+    )
+    reference = ExecutionSemantics()
+    target = replace(reference, reset_rule=ResetRule.TO_VALUE)
+    box = SemanticsBox(
+        base=target,
+        timestep_bounds=(0.9, 1.1),
+        threshold_scale_bounds=(0.9, 1.1),
+        integration_rules=(target.integration_rule,),
+        threshold_timings=(target.threshold_timing,),
+        reset_rules=(target.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    result = PolygonBranchCertifier().certify(
+        model,
+        np.ones((1, 1, 1)),
+        reference,
+        box,
+        square,
+        max_branches=4,
+    )
+    assert result.complete
+    assert not result.certified
+    assert result.possible_predictions == (0, 1)
+    assert result.final_branch_count == 2
+
+
+def test_polygon_branch_certifier_proves_all_guard_outcomes_same_class() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[1.0]]),
+        recurrent_weights=np.zeros((1, 1)),
+        output_weights=np.asarray([[1.0, 0.0]]),
+        bias=np.zeros(1),
+        threshold=np.ones(1),
+        tau_mem=np.ones(1),
+        reset_value=np.zeros(1),
+    )
+    reference = ExecutionSemantics()
+    target = replace(reference, reset_rule=ResetRule.TO_VALUE)
+    box = SemanticsBox(
+        base=target,
+        timestep_bounds=(0.9, 1.1),
+        threshold_scale_bounds=(0.9, 1.1),
+        integration_rules=(target.integration_rule,),
+        threshold_timings=(target.threshold_timing,),
+        reset_rules=(target.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    result = PolygonBranchCertifier().certify(
+        model,
+        np.ones((1, 1, 1)),
+        reference,
+        box,
+        square,
+        max_branches=4,
+    )
+    assert result.complete
+    assert result.certified
+    assert result.possible_predictions == (0,)
+
+
+def test_polygon_branch_predictions_cover_sampled_recurrent_execution(
+    small_model, event_batch
+) -> None:
+    reference = ExecutionSemantics()
+    target = replace(reference, reset_rule=ResetRule.TO_VALUE)
+    box = SemanticsBox(
+        base=target,
+        timestep_bounds=(0.99, 1.01),
+        threshold_scale_bounds=(0.99, 1.01),
+        integration_rules=(target.integration_rule,),
+        threshold_timings=(target.threshold_timing,),
+        reset_rules=(target.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    inputs = event_batch[:1, :4]
+    result = PolygonBranchCertifier().certify(
+        small_model,
+        inputs,
+        reference,
+        box,
+        square,
+        max_branches=4096,
+    )
+    assert result.complete
+    sampled_predictions = set()
+    for timestep in np.linspace(0.99, 1.01, 5):
+        semantics = replace(target, timestep=float(timestep))
+        for threshold_scale in np.linspace(0.99, 1.01, 5):
+            candidate = small_model.with_parameters(
+                threshold=small_model.threshold * threshold_scale
+            )
+            prediction = VectorizedEmulator().run(
+                candidate, inputs, semantics
+            ).predictions[0]
+            sampled_predictions.add(int(prediction))
+    assert sampled_predictions.issubset(result.possible_predictions)
