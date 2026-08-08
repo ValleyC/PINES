@@ -20,7 +20,13 @@ from transportcert.emulator import VectorizedEmulator
 from transportcert.models import DenseRecurrentSNN
 
 
-METHODS = ("no_repair", "certificate_directed", "guard_margin", "logit_only")
+METHODS = (
+    "no_repair",
+    "certificate_directed",
+    "guard_margin",
+    "family_margin",
+    "logit_only",
+)
 
 
 def main() -> None:
@@ -35,6 +41,7 @@ def main() -> None:
     parser.add_argument("--artifact-root", default="artifacts/shd_v1_final")
     parser.add_argument("--repair-root", default="artifacts/shd_v3_repairs_matched")
     parser.add_argument("--guard-root", default="artifacts/shd_v15_guard_margin")
+    parser.add_argument("--family-root", default="artifacts/shd_v18_family_margin")
     parser.add_argument("--methods", nargs="+", choices=METHODS, default=METHODS)
     parser.add_argument("--output-root", default="artifacts/shd_v13_repaired_branch_cells")
     args = parser.parse_args()
@@ -47,6 +54,7 @@ def main() -> None:
     seed_dir = root / args.artifact_root / f"seed_{args.seed}"
     repair_seed_dir = root / args.repair_root / f"seed_{args.seed}" / args.condition
     guard_seed_dir = root / args.guard_root / f"seed_{args.seed}" / args.condition
+    family_seed_dir = root / args.family_root / f"seed_{args.seed}" / args.condition
     output_dir = root / args.output_root / f"seed_{args.seed}"
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / f"{args.condition}_branch_cells.json"
@@ -90,6 +98,8 @@ def main() -> None:
             method_dir = (
                 guard_seed_dir / method
                 if method == "guard_margin"
+                else family_seed_dir / method
+                if method == "family_margin"
                 else repair_seed_dir / method
             )
             model_path = method_dir / "repaired_model.npz"

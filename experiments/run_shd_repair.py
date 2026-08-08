@@ -16,6 +16,7 @@ def main() -> None:
         choices=(
             "certificate_directed",
             "guard_margin",
+            "family_margin",
             "logit_only",
             "global_threshold",
             "per_platform_qat",
@@ -26,6 +27,8 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=40)
     parser.add_argument("--guard-weight", type=float, default=0.1)
     parser.add_argument("--guard-target", type=float, default=0.05)
+    parser.add_argument("--family-radius", type=float, default=0.01)
+    parser.add_argument("--family-grid-resolution", type=int, default=2)
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1")
     parser.add_argument(
@@ -35,6 +38,10 @@ def main() -> None:
     args = parser.parse_args()
     if args.guard_weight < 0 or args.guard_target <= 0:
         raise ValueError("guard weight must be nonnegative and target must be positive")
+    if not (0 < args.family_radius < 1):
+        raise ValueError("family radius must be between zero and one")
+    if args.family_grid_resolution < 2:
+        raise ValueError("family grid resolution must be at least two")
     root = Path(__file__).resolve().parents[1]
     seed_dir = root / args.artifact_root / f"seed_{args.seed}"
     semantic_dir = root / args.semantic_root / f"seed_{args.seed}"
@@ -59,6 +66,8 @@ def main() -> None:
             epochs=args.epochs,
             guard_weight=args.guard_weight,
             guard_target=args.guard_target,
+            family_radius=args.family_radius,
+            family_grid_resolution=args.family_grid_resolution,
         ),
         seed=args.seed,
     )

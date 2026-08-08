@@ -23,6 +23,27 @@ def test_repairable_srnn_executes_target_semantics(small_model) -> None:
     assert module.last_guard_trace.shape == (3, 5, 2)
 
 
+def test_repairable_srnn_executes_positive_family_scales(small_model) -> None:
+    target = primary_semantic_conditions()["reset_to_value"]
+    module = build_repairable_srnn(small_model, target)
+    events = torch.ones((2, 5, 2))
+    center = module(events)[0]
+    corner = module(events, timestep_scale=1.01, threshold_scale=0.99)[0]
+    assert center.shape == corner.shape == (2, 2)
+
+
+def test_repairable_srnn_rejects_nonpositive_family_scales(small_model) -> None:
+    target = primary_semantic_conditions()["reset_to_value"]
+    module = build_repairable_srnn(small_model, target)
+    events = torch.zeros((1, 2, 2))
+    try:
+        module(events, timestep_scale=0.0)
+    except ValueError as error:
+        assert "scales" in str(error)
+    else:
+        raise AssertionError("nonpositive family scale was accepted")
+
+
 def test_supervised_target_srnn_source_initialization_round_trips(small_model) -> None:
     target = primary_semantic_conditions()["fixed_q8_weights_q16_state"]
     module = build_supervised_target_srnn(

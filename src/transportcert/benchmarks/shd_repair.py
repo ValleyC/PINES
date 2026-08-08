@@ -29,7 +29,7 @@ from .shd import PackedSHD, _SurrogateSpike
 
 @dataclass(frozen=True)
 class SHDRepairConfig:
-    schema_version: str = "SHDRepair/v3"
+    schema_version: str = "SHDRepair/v5"
     epochs: int = 40
     batch_size: int = 128
     learning_rate: float = 0.02
@@ -44,6 +44,8 @@ class SHDRepairConfig:
     guard_target: float = 0.05
     guard_temperature: float = 0.02
     guard_selection_weight: float = 0.1
+    family_radius: float = 0.01
+    family_grid_resolution: int = 2
 
 
 def _seed_everything(seed: int) -> None:
@@ -124,8 +126,19 @@ def build_repairable_srnn(
             )
             self.last_guard_trace = None
 
-        def forward(self, events):
-            threshold = torch.exp(self.log_threshold).clamp(0.05, 20.0)
+        def forward(
+            self,
+            events,
+            *,
+            timestep_scale: float = 1.0,
+            threshold_scale: float = 1.0,
+        ):
+            if timestep_scale <= 0 or threshold_scale <= 0:
+                raise ValueError("execution-family scales must be positive")
+            threshold = (
+                torch.exp(self.log_threshold).clamp(0.05, 20.0)
+                * threshold_scale
+            )
             tau = torch.exp(self.log_tau).clamp(0.25, 100.0)
             scale = torch.exp(self.log_incoming_scale).clamp(0.25, 4.0)
             output_scale = torch.exp(self.log_output_scale).clamp(0.25, 4.0)
@@ -171,9 +184,10 @@ def build_repairable_srnn(
                     current = current_queue.pop(0)
 
                 def integrate(state):
+                    timestep = semantics.timestep * timestep_scale
                     if semantics.integration_rule is IntegrationRule.FORWARD_EULER:
-                        return state + semantics.timestep * (-state + current) / tau
-                    alpha = torch.exp(-semantics.timestep / tau)
+                        return state + timestep * (-state + current) / tau
+                    alpha = torch.exp(-timestep / tau)
                     return alpha * state + (1.0 - alpha) * current
 
                 def reset(state, emitted):
@@ -450,6 +464,7 @@ def run_shd_repair(
     supported_methods = {
         "certificate_directed",
         "guard_margin",
+        "family_margin",
         "logit_only",
         "global_threshold",
         "per_platform_qat",
@@ -457,6 +472,18 @@ def run_shd_repair(
     }
     if method not in supported_methods:
         raise ValueError("unsupported repair method")
+    if not (0.0 < config.family_radius < 1.0):
+        raise ValueError("family radius must be between zero and one")
+    if config.family_grid_resolution < 2:
+        raise ValueError("family grid resolution must be at least two")
+    family_factors = tuple(
+        float(value)
+        for value in np.linspace(
+            1.0 - config.family_radius,
+            1.0 + config.family_radius,
+            config.family_grid_resolution,
+        )
+    )
     conditions = primary_semantic_conditions()
     if condition == "reference" or condition not in conditions:
         raise ValueError("repair requires a declared non-reference condition")
@@ -520,10 +547,19 @@ def run_shd_repair(
                 best_model = candidate
                 best_scale = float(scale)
         selected = {"global_threshold_scale": best_scale}
-    elif method in {"certificate_directed", "guard_margin", "logit_only"}:
+    elif method in {
+        "certificate_directed",
+        "guard_margin",
+        "family_margin",
+        "logit_only",
+    }:
         if method == "guard_margin":
             selection_criterion = (
                 "reference prediction disagreement plus near-guard penalty"
+            )
+        elif method == "family_margin":
+            selection_criterion = (
+                "reference prediction disagreement at every sampled family point"
             )
         teacher = _collect_reference_trace(
             source_model,
@@ -568,21 +604,58 @@ def run_shd_repair(
                     device=device,
                 )
                 optimizer.zero_grad(set_to_none=True)
-                logits, states, spikes, _ = module(events)
-                guard_trace = module.last_guard_trace
-                assert guard_trace is not None
-                margin_loss = torch.nn.functional.cross_entropy(
-                    logits, teacher_predictions
-                )
-                logit_loss = torch.nn.functional.smooth_l1_loss(
-                    logits, teacher_logits
-                ) / (torch.mean(torch.abs(teacher_logits)) + 1e-6)
+                if method == "family_margin":
+                    corner_logits = []
+                    corner_margin_losses = []
+                    for timestep_scale in family_factors:
+                        for threshold_scale in family_factors:
+                            logits, _, _, _ = module(
+                                events,
+                                timestep_scale=timestep_scale,
+                                threshold_scale=threshold_scale,
+                            )
+                            corner_logits.append(logits)
+                            corner_margin_losses.append(
+                                torch.nn.functional.cross_entropy(
+                                    logits,
+                                    teacher_predictions,
+                                    reduction="none",
+                                )
+                            )
+                    margin_loss = torch.mean(
+                        torch.amax(torch.stack(corner_margin_losses), dim=0)
+                    )
+                    logit_loss = torch.mean(
+                        torch.stack(
+                            [
+                                torch.nn.functional.smooth_l1_loss(
+                                    logits,
+                                    teacher_logits,
+                                )
+                                / (torch.mean(torch.abs(teacher_logits)) + 1e-6)
+                                for logits in corner_logits
+                            ]
+                        )
+                    )
+                    spike_loss = torch.zeros((), device=device)
+                    state_loss = torch.zeros((), device=device)
+                    guard_loss = torch.zeros((), device=device)
+                else:
+                    logits, states, spikes, _ = module(events)
+                    guard_trace = module.last_guard_trace
+                    assert guard_trace is not None
+                    margin_loss = torch.nn.functional.cross_entropy(
+                        logits, teacher_predictions
+                    )
+                    logit_loss = torch.nn.functional.smooth_l1_loss(
+                        logits, teacher_logits
+                    ) / (torch.mean(torch.abs(teacher_logits)) + 1e-6)
                 if method in {"certificate_directed", "guard_margin"}:
                     spike_loss = torch.mean(torch.abs(spikes - teacher_spikes))
                     state_loss = torch.mean(torch.abs(states - teacher_states)) / (
                         torch.mean(torch.abs(teacher_states)) + 1e-6
                     )
-                else:
+                elif method != "family_margin":
                     spike_loss = torch.zeros((), device=device)
                     state_loss = torch.zeros((), device=device)
                 if method == "guard_margin":
@@ -592,7 +665,7 @@ def run_shd_repair(
                             / config.guard_temperature
                         )
                     )
-                else:
+                elif method != "family_margin":
                     guard_loss = torch.zeros((), device=device)
                 regularization = (
                     torch.mean(module.log_threshold**2)
@@ -631,25 +704,58 @@ def run_shd_repair(
                     events = torch.as_tensor(
                         train_store.frames(sample_indices), device=device
                     )
-                    logits, _, _, _ = module(events)
-                    guard_trace = module.last_guard_trace
-                    assert guard_trace is not None
-                    guard_near_count += int(
-                        torch.count_nonzero(
-                            torch.abs(guard_trace) < config.guard_target
-                        ).item()
-                    )
-                    guard_total_count += guard_trace.numel()
-                    calibration_predictions.append(
-                        torch.argmax(logits, dim=1).cpu().numpy()
-                    )
-            calibration_predictions_array = np.concatenate(calibration_predictions)
-            disagreement = int(
-                np.count_nonzero(
-                    calibration_predictions_array != reference_calibration
+                    if method == "family_margin":
+                        batch_predictions = []
+                        for timestep_scale in family_factors:
+                            for threshold_scale in family_factors:
+                                logits, _, _, _ = module(
+                                    events,
+                                    timestep_scale=timestep_scale,
+                                    threshold_scale=threshold_scale,
+                                )
+                                batch_predictions.append(
+                                    torch.argmax(logits, dim=1).cpu().numpy()
+                                )
+                        calibration_predictions.append(
+                            np.stack(batch_predictions, axis=0)
+                        )
+                    else:
+                        logits, _, _, _ = module(events)
+                        guard_trace = module.last_guard_trace
+                        assert guard_trace is not None
+                        guard_near_count += int(
+                            torch.count_nonzero(
+                                torch.abs(guard_trace) < config.guard_target
+                            ).item()
+                        )
+                        guard_total_count += guard_trace.numel()
+                        calibration_predictions.append(
+                            torch.argmax(logits, dim=1).cpu().numpy()
+                        )
+            if method == "family_margin":
+                calibration_predictions_array = np.concatenate(
+                    calibration_predictions, axis=1
                 )
-            )
-            guard_near_fraction = guard_near_count / guard_total_count
+                disagreement = int(
+                    np.count_nonzero(
+                        np.any(
+                            calibration_predictions_array
+                            != reference_calibration[None, :],
+                            axis=0,
+                        )
+                    )
+                )
+                guard_near_fraction = 0.0
+            else:
+                calibration_predictions_array = np.concatenate(
+                    calibration_predictions
+                )
+                disagreement = int(
+                    np.count_nonzero(
+                        calibration_predictions_array != reference_calibration
+                    )
+                )
+                guard_near_fraction = guard_near_count / guard_total_count
             selection_score = float(disagreement)
             if method == "guard_margin":
                 selection_score += (
@@ -691,6 +797,23 @@ def run_shd_repair(
                     np.linalg.norm(best_model.output_weights, axis=1)
                     / (np.linalg.norm(source_model.output_weights, axis=1) + 1e-12)
                 )
+            ),
+            "family_radius": (
+                config.family_radius if method == "family_margin" else None
+            ),
+            "family_grid_resolution": (
+                config.family_grid_resolution
+                if method == "family_margin"
+                else None
+            ),
+            "sampled_family_points": (
+                [
+                    [timestep_scale, threshold_scale]
+                    for timestep_scale in family_factors
+                    for threshold_scale in family_factors
+                ]
+                if method == "family_margin"
+                else None
             ),
         }
     else:
@@ -819,7 +942,12 @@ def run_shd_repair(
         )
     if method == "global_threshold":
         permitted_changes = ["global_threshold_scale"]
-    elif method in {"certificate_directed", "guard_margin", "logit_only"}:
+    elif method in {
+        "certificate_directed",
+        "guard_margin",
+        "family_margin",
+        "logit_only",
+    }:
         permitted_changes = [
             "per_neuron_threshold",
             "per_neuron_tau_mem",
@@ -840,7 +968,7 @@ def run_shd_repair(
         target.state_format.is_fixed or target.weight_format.is_fixed
     )
     report = {
-        "schema_version": "SHDRepairExperiment/v2",
+        "schema_version": "SHDRepairExperiment/v3",
         "method": method,
         "condition": condition,
         "target_semantics_hash": target.semantics_hash,
@@ -865,6 +993,8 @@ def run_shd_repair(
             if method == "supervised_target_retraining"
             else "label-free reference imitation with explicit threshold-guard margin"
             if method == "guard_margin"
+            else "label-free worst-corner reference-class margin optimization"
+            if method == "family_margin"
             else "label-free reference imitation and calibration"
             if method in {"certificate_directed", "logit_only"}
             else "label-free hard-semantics grid search"
