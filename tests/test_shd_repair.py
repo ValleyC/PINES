@@ -19,6 +19,8 @@ def test_repairable_srnn_executes_target_semantics(small_model) -> None:
     assert states.shape == (3, 5, 2)
     assert spikes.shape == (3, 5, 2)
     assert logits_over_time.shape == (3, 5, 2)
+    assert module.last_guard_trace is not None
+    assert module.last_guard_trace.shape == (3, 5, 2)
 
 
 def test_supervised_target_srnn_source_initialization_round_trips(small_model) -> None:

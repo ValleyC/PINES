@@ -29,7 +29,7 @@ from .shd import PackedSHD, _SurrogateSpike
 
 @dataclass(frozen=True)
 class SHDRepairConfig:
-    schema_version: str = "SHDRepair/v2"
+    schema_version: str = "SHDRepair/v3"
     epochs: int = 40
     batch_size: int = 128
     learning_rate: float = 0.02
@@ -40,6 +40,10 @@ class SHDRepairConfig:
     state_weight: float = 0.005
     regularization_weight: float = 1e-4
     supervised_learning_rate: float = 1e-3
+    guard_weight: float = 0.1
+    guard_target: float = 0.05
+    guard_temperature: float = 0.02
+    guard_selection_weight: float = 0.1
 
 
 def _seed_everything(seed: int) -> None:
@@ -118,6 +122,7 @@ def build_repairable_srnn(
             self.log_output_scale = torch.nn.Parameter(
                 torch.zeros(model.hidden_size, dtype=torch.float32)
             )
+            self.last_guard_trace = None
 
         def forward(self, events):
             threshold = torch.exp(self.log_threshold).clamp(0.05, 20.0)
@@ -157,6 +162,7 @@ def build_repairable_srnn(
             state_trace = []
             spike_trace = []
             logit_trace = []
+            guard_trace = []
             for step in range(events.shape[1]):
                 current = events[:, step] @ w_in + spikes @ w_rec + bias
                 current = _quantize_ste(current, semantics.state_format)
@@ -176,11 +182,13 @@ def build_repairable_srnn(
                     return (1.0 - emitted) * state + emitted * self.reset_value
 
                 if semantics.threshold_timing is ThresholdTiming.PRE_INTEGRATION:
-                    spikes = _SurrogateSpike.apply(voltage - threshold)
+                    guard = voltage - threshold
+                    spikes = _SurrogateSpike.apply(guard)
                     voltage = integrate(reset(voltage, spikes))
                 else:
                     voltage = _quantize_ste(integrate(voltage), semantics.state_format)
-                    spikes = _SurrogateSpike.apply(voltage - threshold)
+                    guard = voltage - threshold
+                    spikes = _SurrogateSpike.apply(guard)
                     voltage = reset(voltage, spikes)
                 voltage = _quantize_ste(voltage, semantics.state_format)
                 contribution = _quantize_ste(spikes @ w_out, semantics.state_format)
@@ -191,6 +199,8 @@ def build_repairable_srnn(
                 state_trace.append(voltage)
                 spike_trace.append(spikes)
                 logit_trace.append(logits)
+                guard_trace.append(guard)
+            self.last_guard_trace = torch.stack(guard_trace, dim=1)
             return (
                 logits,
                 torch.stack(state_trace, dim=1),
@@ -439,6 +449,7 @@ def run_shd_repair(
 
     supported_methods = {
         "certificate_directed",
+        "guard_margin",
         "logit_only",
         "global_threshold",
         "per_platform_qat",
@@ -509,7 +520,11 @@ def run_shd_repair(
                 best_model = candidate
                 best_scale = float(scale)
         selected = {"global_threshold_scale": best_scale}
-    elif method in {"certificate_directed", "logit_only"}:
+    elif method in {"certificate_directed", "guard_margin", "logit_only"}:
+        if method == "guard_margin":
+            selection_criterion = (
+                "reference prediction disagreement plus near-guard penalty"
+            )
         teacher = _collect_reference_trace(
             source_model,
             train_store,
@@ -526,6 +541,7 @@ def run_shd_repair(
         )
         rng = np.random.default_rng(seed)
         best_disagreement = len(calibration_indices) + 1
+        best_selection_score = float("inf")
         best_state = copy.deepcopy(module.state_dict())
         for epoch in range(config.epochs):
             order = rng.permutation(len(calibration_indices))
@@ -553,13 +569,15 @@ def run_shd_repair(
                 )
                 optimizer.zero_grad(set_to_none=True)
                 logits, states, spikes, _ = module(events)
+                guard_trace = module.last_guard_trace
+                assert guard_trace is not None
                 margin_loss = torch.nn.functional.cross_entropy(
                     logits, teacher_predictions
                 )
                 logit_loss = torch.nn.functional.smooth_l1_loss(
                     logits, teacher_logits
                 ) / (torch.mean(torch.abs(teacher_logits)) + 1e-6)
-                if method == "certificate_directed":
+                if method in {"certificate_directed", "guard_margin"}:
                     spike_loss = torch.mean(torch.abs(spikes - teacher_spikes))
                     state_loss = torch.mean(torch.abs(states - teacher_states)) / (
                         torch.mean(torch.abs(teacher_states)) + 1e-6
@@ -567,6 +585,15 @@ def run_shd_repair(
                 else:
                     spike_loss = torch.zeros((), device=device)
                     state_loss = torch.zeros((), device=device)
+                if method == "guard_margin":
+                    guard_loss = torch.mean(
+                        torch.nn.functional.softplus(
+                            (config.guard_target - torch.abs(guard_trace))
+                            / config.guard_temperature
+                        )
+                    )
+                else:
+                    guard_loss = torch.zeros((), device=device)
                 regularization = (
                     torch.mean(module.log_threshold**2)
                     + torch.mean((module.log_tau - np.log(5.0)) ** 2)
@@ -582,6 +609,7 @@ def run_shd_repair(
                         + config.spike_weight * spike_loss
                         + config.state_weight * state_loss
                         + config.regularization_weight * regularization
+                        + config.guard_weight * guard_loss
                     )
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(
@@ -593,6 +621,8 @@ def run_shd_repair(
                 seen += len(positions)
             module.eval()
             calibration_predictions: list[np.ndarray] = []
+            guard_near_count = 0
+            guard_total_count = 0
             with torch.no_grad():
                 for start in range(0, len(calibration_indices), config.batch_size):
                     sample_indices = calibration_indices[
@@ -602,6 +632,14 @@ def run_shd_repair(
                         train_store.frames(sample_indices), device=device
                     )
                     logits, _, _, _ = module(events)
+                    guard_trace = module.last_guard_trace
+                    assert guard_trace is not None
+                    guard_near_count += int(
+                        torch.count_nonzero(
+                            torch.abs(guard_trace) < config.guard_target
+                        ).item()
+                    )
+                    guard_total_count += guard_trace.numel()
                     calibration_predictions.append(
                         torch.argmax(logits, dim=1).cpu().numpy()
                     )
@@ -611,10 +649,20 @@ def run_shd_repair(
                     calibration_predictions_array != reference_calibration
                 )
             )
+            guard_near_fraction = guard_near_count / guard_total_count
+            selection_score = float(disagreement)
+            if method == "guard_margin":
+                selection_score += (
+                    config.guard_selection_weight
+                    * len(calibration_indices)
+                    * guard_near_fraction
+                )
             record = {
                 "epoch": epoch + 1,
                 "loss": total_loss / seen,
                 "calibration_disagreements": disagreement,
+                "guard_near_fraction": guard_near_fraction,
+                "selection_score": selection_score,
             }
             history.append(record)
             print(
@@ -622,7 +670,8 @@ def run_shd_repair(
                 f"loss={record['loss']:.4f} disagreements={disagreement}",
                 flush=True,
             )
-            if disagreement < best_disagreement:
+            if selection_score < best_selection_score:
+                best_selection_score = selection_score
                 best_disagreement = disagreement
                 best_state = copy.deepcopy(module.state_dict())
             module.train()
@@ -632,6 +681,7 @@ def run_shd_repair(
         )
         selected = {
             "best_calibration_disagreements": best_disagreement,
+            "best_selection_score": best_selection_score,
             "threshold_ratio_mean": float(
                 np.mean(best_model.threshold / source_model.threshold)
             ),
@@ -769,7 +819,7 @@ def run_shd_repair(
         )
     if method == "global_threshold":
         permitted_changes = ["global_threshold_scale"]
-    elif method in {"certificate_directed", "logit_only"}:
+    elif method in {"certificate_directed", "guard_margin", "logit_only"}:
         permitted_changes = [
             "per_neuron_threshold",
             "per_neuron_tau_mem",
@@ -813,6 +863,8 @@ def run_shd_repair(
             if method == "per_platform_qat"
             else "random-initialized target-semantics supervised training"
             if method == "supervised_target_retraining"
+            else "label-free reference imitation with explicit threshold-guard margin"
+            if method == "guard_margin"
             else "label-free reference imitation and calibration"
             if method in {"certificate_directed", "logit_only"}
             else "label-free hard-semantics grid search"

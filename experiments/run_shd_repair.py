@@ -15,6 +15,7 @@ def main() -> None:
         "--method",
         choices=(
             "certificate_directed",
+            "guard_margin",
             "logit_only",
             "global_threshold",
             "per_platform_qat",
