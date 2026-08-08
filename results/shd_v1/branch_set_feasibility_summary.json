@@ -1,0 +1,609 @@
+{
+  "code_revision": "e67097781d1211f8a6825dad8e5ad954c60bfdd6",
+  "full_cover_attempt_rows": [
+    {
+      "all_cells_complete_inputs": 0,
+      "alternative_prediction_abstract_inputs": 0,
+      "branch_cap_inputs": 16,
+      "certified_fraction": 0.0,
+      "certified_inputs": 0,
+      "max_branches": 4096,
+      "maximum_state_branches_observed": 3881,
+      "mean_evaluated_cells": 1.0,
+      "median_earliest_abort_step": 5.0,
+      "partitions_per_axis": 1,
+      "sample_count": 16,
+      "samples": 16,
+      "seconds": 0.5989836000371724,
+      "subbox_count": 1
+    },
+    {
+      "all_cells_complete_inputs": 0,
+      "alternative_prediction_abstract_inputs": 0,
+      "branch_cap_inputs": 16,
+      "certified_fraction": 0.0,
+      "certified_inputs": 0,
+      "max_branches": 4096,
+      "maximum_state_branches_observed": 3036,
+      "mean_evaluated_cells": 1.0,
+      "median_earliest_abort_step": 6.5,
+      "partitions_per_axis": 2,
+      "sample_count": 16,
+      "samples": 16,
+      "seconds": 0.5839572001714259,
+      "subbox_count": 4
+    },
+    {
+      "all_cells_complete_inputs": 0,
+      "alternative_prediction_abstract_inputs": 0,
+      "branch_cap_inputs": 16,
+      "certified_fraction": 0.0,
+      "certified_inputs": 0,
+      "max_branches": 4096,
+      "maximum_state_branches_observed": 2796,
+      "mean_evaluated_cells": 1.0,
+      "median_earliest_abort_step": 8.0,
+      "partitions_per_axis": 4,
+      "sample_count": 16,
+      "samples": 16,
+      "seconds": 0.7126690000295639,
+      "subbox_count": 16
+    },
+    {
+      "all_cells_complete_inputs": 0,
+      "alternative_prediction_abstract_inputs": 0,
+      "branch_cap_inputs": 8,
+      "certified_fraction": 0.0,
+      "certified_inputs": 0,
+      "max_branches": 16384,
+      "maximum_state_branches_observed": 13564,
+      "mean_evaluated_cells": 1.0,
+      "median_earliest_abort_step": 11.0,
+      "partitions_per_axis": 8,
+      "sample_count": 8,
+      "samples": 8,
+      "seconds": 2.404544400051236,
+      "subbox_count": 64
+    },
+    {
+      "all_cells_complete_inputs": 0,
+      "alternative_prediction_abstract_inputs": 0,
+      "branch_cap_inputs": 8,
+      "certified_fraction": 0.0,
+      "certified_inputs": 0,
+      "max_branches": 16384,
+      "maximum_state_branches_observed": 14545,
+      "mean_evaluated_cells": 1.0,
+      "median_earliest_abort_step": 15.5,
+      "partitions_per_axis": 16,
+      "sample_count": 8,
+      "samples": 8,
+      "seconds": 3.1681347999256104,
+      "subbox_count": 256
+    },
+    {
+      "all_cells_complete_inputs": 0,
+      "alternative_prediction_abstract_inputs": 0,
+      "branch_cap_inputs": 4,
+      "certified_fraction": 0.0,
+      "certified_inputs": 0,
+      "max_branches": 16384,
+      "maximum_state_branches_observed": 10896,
+      "mean_evaluated_cells": 1.0,
+      "median_earliest_abort_step": 20.0,
+      "partitions_per_axis": 32,
+      "sample_count": 4,
+      "samples": 4,
+      "seconds": 1.0923730998765677,
+      "subbox_count": 1024
+    },
+    {
+      "all_cells_complete_inputs": 0,
+      "alternative_prediction_abstract_inputs": 0,
+      "branch_cap_inputs": 4,
+      "certified_fraction": 0.0,
+      "certified_inputs": 0,
+      "max_branches": 16384,
+      "maximum_state_branches_observed": 12777,
+      "mean_evaluated_cells": 1.0,
+      "median_earliest_abort_step": 29.5,
+      "partitions_per_axis": 64,
+      "sample_count": 4,
+      "samples": 4,
+      "seconds": 3.8601780000608414,
+      "subbox_count": 4096
+    },
+    {
+      "all_cells_complete_inputs": 0,
+      "alternative_prediction_abstract_inputs": 0,
+      "branch_cap_inputs": 1,
+      "certified_fraction": 0.0,
+      "certified_inputs": 0,
+      "max_branches": 16384,
+      "maximum_state_branches_observed": 484,
+      "mean_evaluated_cells": 1.0,
+      "median_earliest_abort_step": 42.0,
+      "partitions_per_axis": 128,
+      "sample_count": 1,
+      "samples": 1,
+      "seconds": 0.10326780006289482,
+      "subbox_count": 16384
+    }
+  ],
+  "horizon": 50,
+  "input_report_hashes": {
+    "artifacts\\shd_v10_branch_set_cells\\seed_1701\\branch_set_cells_merged.json": "300b089c2543efadbd580ff2deb7a946de23943e674cf49a7b8c2c88970954b0",
+    "artifacts\\shd_v10_branch_set_cells\\seed_1701\\branch_set_cells_unmerged.json": "34f80829cff0b564fd8749be1fe03ec16e336076789d5bc878e291124640da33",
+    "artifacts\\shd_v6_branch_set_partition\\seed_1701\\branch_set_partition.json": "3a7b59caf86a9dad1d1416333c742469cd72b05623935080da21f8aad5428d4e",
+    "artifacts\\shd_v7_branch_set_partition\\seed_1701\\branch_set_partition.json": "76356f4d6d5ad48370bf76cd56b984a562eb9e337f5805b64f1bdb786987c2c7",
+    "artifacts\\shd_v8_branch_set_partition\\seed_1701\\branch_set_partition.json": "b2aa6d75a2772e70f037d0f19ed6cbef96a16a6965ce888a7a11eff679467152",
+    "artifacts\\shd_v9_branch_set_partition\\seed_1701\\branch_set_partition.json": "ad55ba522ce79119e358950a368547f674a85a87ed1b28c6dd0194d3f177bce5"
+  },
+  "interpretation": "Separating spike-vector branches is sound but not computationally viable in this implementation. Finer parameter cells delay the state explosion, yet neither conservative merging nor retaining every state completes representative 50-step cells with a 65,536-state cap. A successful analyzer needs stronger correlation or symbolic guard compression, not a larger explicit branch list.",
+  "relative_radius": 0.01,
+  "representative_cell_aggregate": [
+    {
+      "complete_cell_input_fraction": 0.0,
+      "maximum_state_branches_observed": 47135,
+      "median_of_cell_median_abort_steps": 21.0,
+      "mode": "merged",
+      "partitions_per_axis": 32,
+      "representative_cells": 3,
+      "samples_per_cell": 4
+    },
+    {
+      "complete_cell_input_fraction": 0.0,
+      "maximum_state_branches_observed": 39026,
+      "median_of_cell_median_abort_steps": 31.0,
+      "mode": "merged",
+      "partitions_per_axis": 64,
+      "representative_cells": 3,
+      "samples_per_cell": 4
+    },
+    {
+      "complete_cell_input_fraction": 0.0,
+      "maximum_state_branches_observed": 33989,
+      "median_of_cell_median_abort_steps": 41.0,
+      "mode": "merged",
+      "partitions_per_axis": 128,
+      "representative_cells": 3,
+      "samples_per_cell": 4
+    },
+    {
+      "complete_cell_input_fraction": 0.0,
+      "maximum_state_branches_observed": 65024,
+      "median_of_cell_median_abort_steps": 21.0,
+      "mode": "unmerged",
+      "partitions_per_axis": 32,
+      "representative_cells": 3,
+      "samples_per_cell": 4
+    },
+    {
+      "complete_cell_input_fraction": 0.0,
+      "maximum_state_branches_observed": 55010,
+      "median_of_cell_median_abort_steps": 31.5,
+      "mode": "unmerged",
+      "partitions_per_axis": 64,
+      "representative_cells": 3,
+      "samples_per_cell": 4
+    },
+    {
+      "complete_cell_input_fraction": 0.0,
+      "maximum_state_branches_observed": 53546,
+      "median_of_cell_median_abort_steps": 41.0,
+      "mode": "unmerged",
+      "partitions_per_axis": 128,
+      "representative_cells": 3,
+      "samples_per_cell": 4
+    }
+  ],
+  "representative_cell_rows": [
+    {
+      "cell": "lower_left",
+      "cell_index": 0,
+      "cell_threshold_bounds": [
+        0.99,
+        0.990625
+      ],
+      "cell_timestep_bounds": [
+        0.99,
+        0.990625
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 47135,
+      "median_abort_step": 21.0,
+      "mode": "merged",
+      "partitions_per_axis": 32,
+      "samples": 4,
+      "seconds": 2.86621560016647,
+      "subbox_count_for_full_cover": 1024
+    },
+    {
+      "cell": "near_reference_lower",
+      "cell_index": 495,
+      "cell_threshold_bounds": [
+        0.999375,
+        1.0
+      ],
+      "cell_timestep_bounds": [
+        0.999375,
+        1.0
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 26715,
+      "median_abort_step": 21.0,
+      "mode": "merged",
+      "partitions_per_axis": 32,
+      "samples": 4,
+      "seconds": 2.1017269999720156,
+      "subbox_count_for_full_cover": 1024
+    },
+    {
+      "cell": "near_reference_upper",
+      "cell_index": 528,
+      "cell_threshold_bounds": [
+        1.0,
+        1.000625
+      ],
+      "cell_timestep_bounds": [
+        1.0,
+        1.000625
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 41165,
+      "median_abort_step": 21.0,
+      "mode": "merged",
+      "partitions_per_axis": 32,
+      "samples": 4,
+      "seconds": 3.8807951000053436,
+      "subbox_count_for_full_cover": 1024
+    },
+    {
+      "cell": "lower_left",
+      "cell_index": 0,
+      "cell_threshold_bounds": [
+        0.99,
+        0.9903125
+      ],
+      "cell_timestep_bounds": [
+        0.99,
+        0.9903125
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 39026,
+      "median_abort_step": 36.5,
+      "mode": "merged",
+      "partitions_per_axis": 64,
+      "samples": 4,
+      "seconds": 20.804268299834803,
+      "subbox_count_for_full_cover": 4096
+    },
+    {
+      "cell": "near_reference_lower",
+      "cell_index": 2015,
+      "cell_threshold_bounds": [
+        0.9996875,
+        1.0
+      ],
+      "cell_timestep_bounds": [
+        0.9996875,
+        1.0
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 34173,
+      "median_abort_step": 31.0,
+      "mode": "merged",
+      "partitions_per_axis": 64,
+      "samples": 4,
+      "seconds": 6.788060500053689,
+      "subbox_count_for_full_cover": 4096
+    },
+    {
+      "cell": "near_reference_upper",
+      "cell_index": 2080,
+      "cell_threshold_bounds": [
+        1.0,
+        1.0003125
+      ],
+      "cell_timestep_bounds": [
+        1.0,
+        1.0003125
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 32639,
+      "median_abort_step": 31.0,
+      "mode": "merged",
+      "partitions_per_axis": 64,
+      "samples": 4,
+      "seconds": 6.838470000075176,
+      "subbox_count_for_full_cover": 4096
+    },
+    {
+      "cell": "lower_left",
+      "cell_index": 0,
+      "cell_threshold_bounds": [
+        0.99,
+        0.99015625
+      ],
+      "cell_timestep_bounds": [
+        0.99,
+        0.99015625
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 33989,
+      "median_abort_step": 41.5,
+      "mode": "merged",
+      "partitions_per_axis": 128,
+      "samples": 4,
+      "seconds": 2.1306989998556674,
+      "subbox_count_for_full_cover": 16384
+    },
+    {
+      "cell": "near_reference_lower",
+      "cell_index": 8127,
+      "cell_threshold_bounds": [
+        0.99984375,
+        1.0
+      ],
+      "cell_timestep_bounds": [
+        0.99984375,
+        1.0
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 20508,
+      "median_abort_step": 41.0,
+      "mode": "merged",
+      "partitions_per_axis": 128,
+      "samples": 4,
+      "seconds": 1.2540130999404937,
+      "subbox_count_for_full_cover": 16384
+    },
+    {
+      "cell": "near_reference_upper",
+      "cell_index": 8256,
+      "cell_threshold_bounds": [
+        1.0,
+        1.00015625
+      ],
+      "cell_timestep_bounds": [
+        1.0,
+        1.00015625
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 20513,
+      "median_abort_step": 41.0,
+      "mode": "merged",
+      "partitions_per_axis": 128,
+      "samples": 4,
+      "seconds": 1.2390628000721335,
+      "subbox_count_for_full_cover": 16384
+    },
+    {
+      "cell": "lower_left",
+      "cell_index": 0,
+      "cell_threshold_bounds": [
+        0.99,
+        0.990625
+      ],
+      "cell_timestep_bounds": [
+        0.99,
+        0.990625
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 47188,
+      "median_abort_step": 21.0,
+      "mode": "unmerged",
+      "partitions_per_axis": 32,
+      "samples": 4,
+      "seconds": 1.8085755000356585,
+      "subbox_count_for_full_cover": 1024
+    },
+    {
+      "cell": "near_reference_lower",
+      "cell_index": 495,
+      "cell_threshold_bounds": [
+        0.999375,
+        1.0
+      ],
+      "cell_timestep_bounds": [
+        0.999375,
+        1.0
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 26757,
+      "median_abort_step": 21.0,
+      "mode": "unmerged",
+      "partitions_per_axis": 32,
+      "samples": 4,
+      "seconds": 1.3499816001858562,
+      "subbox_count_for_full_cover": 1024
+    },
+    {
+      "cell": "near_reference_upper",
+      "cell_index": 528,
+      "cell_threshold_bounds": [
+        1.0,
+        1.000625
+      ],
+      "cell_timestep_bounds": [
+        1.0,
+        1.000625
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 65024,
+      "median_abort_step": 21.0,
+      "mode": "unmerged",
+      "partitions_per_axis": 32,
+      "samples": 4,
+      "seconds": 2.557251400081441,
+      "subbox_count_for_full_cover": 1024
+    },
+    {
+      "cell": "lower_left",
+      "cell_index": 0,
+      "cell_threshold_bounds": [
+        0.99,
+        0.9903125
+      ],
+      "cell_timestep_bounds": [
+        0.99,
+        0.9903125
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 55010,
+      "median_abort_step": 36.5,
+      "mode": "unmerged",
+      "partitions_per_axis": 64,
+      "samples": 4,
+      "seconds": 12.311240599956363,
+      "subbox_count_for_full_cover": 4096
+    },
+    {
+      "cell": "near_reference_lower",
+      "cell_index": 2015,
+      "cell_threshold_bounds": [
+        0.9996875,
+        1.0
+      ],
+      "cell_timestep_bounds": [
+        0.9996875,
+        1.0
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 39747,
+      "median_abort_step": 31.5,
+      "mode": "unmerged",
+      "partitions_per_axis": 64,
+      "samples": 4,
+      "seconds": 4.824008000083268,
+      "subbox_count_for_full_cover": 4096
+    },
+    {
+      "cell": "near_reference_upper",
+      "cell_index": 2080,
+      "cell_threshold_bounds": [
+        1.0,
+        1.0003125
+      ],
+      "cell_timestep_bounds": [
+        1.0,
+        1.0003125
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 40595,
+      "median_abort_step": 31.5,
+      "mode": "unmerged",
+      "partitions_per_axis": 64,
+      "samples": 4,
+      "seconds": 4.782801199937239,
+      "subbox_count_for_full_cover": 4096
+    },
+    {
+      "cell": "lower_left",
+      "cell_index": 0,
+      "cell_threshold_bounds": [
+        0.99,
+        0.99015625
+      ],
+      "cell_timestep_bounds": [
+        0.99,
+        0.99015625
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 53546,
+      "median_abort_step": 41.5,
+      "mode": "unmerged",
+      "partitions_per_axis": 128,
+      "samples": 4,
+      "seconds": 1.777316200081259,
+      "subbox_count_for_full_cover": 16384
+    },
+    {
+      "cell": "near_reference_lower",
+      "cell_index": 8127,
+      "cell_threshold_bounds": [
+        0.99984375,
+        1.0
+      ],
+      "cell_timestep_bounds": [
+        0.99984375,
+        1.0
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 53171,
+      "median_abort_step": 41.0,
+      "mode": "unmerged",
+      "partitions_per_axis": 128,
+      "samples": 4,
+      "seconds": 2.2850776999257505,
+      "subbox_count_for_full_cover": 16384
+    },
+    {
+      "cell": "near_reference_upper",
+      "cell_index": 8256,
+      "cell_threshold_bounds": [
+        1.0,
+        1.00015625
+      ],
+      "cell_timestep_bounds": [
+        1.0,
+        1.00015625
+      ],
+      "certified_inputs": 0,
+      "complete_fraction": 0.0,
+      "complete_inputs": 0,
+      "maximum_state_branches_observed": 53413,
+      "median_abort_step": 41.0,
+      "mode": "unmerged",
+      "partitions_per_axis": 128,
+      "samples": 4,
+      "seconds": 2.3169581000693142,
+      "subbox_count_for_full_cover": 16384
+    }
+  ],
+  "route_assessment": {
+    "any_complete_full_cover_input": false,
+    "any_complete_representative_cell_input_at_cap_65536": false,
+    "best_median_abort_step": 41.5,
+    "largest_branch_cap_tested": 65536,
+    "largest_partition_tested": 128,
+    "subboxes_at_largest_partition": 16384
+  },
+  "schema_version": "SHDBranchSetFeasibilityAggregate/v1",
+  "seed": 1701,
+  "status": "single-seed staged kill diagnostic; every reported certificate coverage is sound, while cap-limited runs are inconclusive"
+}

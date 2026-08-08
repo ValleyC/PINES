@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 70
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 76
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -61,6 +61,20 @@
   while one-percent corner prediction identity remains 89.36%. A fixed-center-
   branch affine analyzer may help at tiny radii but has no coverage headroom for
   the intended plus/minus 1% box.
+- Five-seed branch-complexity diagnostic: at a 17-by-17 reference-member grid,
+  inputs exhibit 81.67 distinct spike traces on average and none retains a
+  single trace, yet 80.94% retain one prediction and only 4.35% of grid-center
+  pairs disagree. Internal branch proliferation is much stronger than decision
+  instability.
+- Five-seed full-family falsification grid: a 9-by-9 continuous grid times all
+  16 discrete members retains 31.09% prediction identity on deterministic
+  128-input subsets, with every seed above the 20% target. A better sound
+  abstraction therefore has only about eleven points of sampled mean headroom,
+  but is not ruled out by true instability.
+- Sound explicit branch-set kill test: separating every possible spike vector
+  fails to complete representative 50-step cells even with a 65,536-state cap
+  and 128-by-128 parameter partitioning. Merging equivalent spike/logit states
+  and retaining all states fail at essentially the same timestep.
 - Sample-complexity analysis: under ten-way simultaneous 95% confidence, zero
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the
@@ -88,15 +102,19 @@ must therefore specify and validate such an assumption rather than presenting
 raw label-free disagreement as both universal and operationally tight.
 
 The NeurIPS framing remains conditional on a materially tighter recurrence-aware
-sound abstraction and prospective physical conformance. If that does not reverse
-the continuous-family gate, the project follows the declared pivot to a narrower
-finite-family or systems/risk-ranking contribution.
+sound abstraction and prospective physical conformance. The sampled full-family
+ceiling leaves enough room to pass the 20% gate, but interval merging, one fixed
+trace, and explicit spike-vector lists have now all failed. The remaining method
+must compress symbolic guards or retain decision-relevant correlations without
+enumerating paths. If that does not reverse the continuous-family gate, the
+project follows the declared pivot to a narrower finite-family or
+systems/risk-ranking contribution.
 
 ## Open experimental milestones
 
-- Branch-switch-aware recurrence analysis, such as correlated branch sets,
-  zonotopes with guarded splits, or a hybrid exact/abstract domain. The simpler
-  single-fixed-branch route is now empirically ruled out at plus/minus 1%.
+- Symbolic guard compression or a decision-level correlated domain. Interval
+  merging, a single fixed branch, uniform partitioning, and explicit branch
+  lists are now empirically ruled out at plus/minus 1%.
 - Full-training-set supervised retraining as a separately budgeted oracle; the
   completed matched baseline intentionally uses only 800 labels and 280 updates.
 - Fresh sequestered DVS Gesture replication.

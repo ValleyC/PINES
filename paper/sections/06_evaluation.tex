@@ -154,6 +154,71 @@ shows the divergence between internal trajectories and decisions.
   \label{fig:branch-stability}
 \end{figure*}
 
+We next sample the interior rather than only endpoints. On deterministic
+128-input subsets, a nested $17\times17$ grid over the reference member contains
+$81.67\pm5.44$ distinct spike traces per input on average; the mean seed-level
+90th percentile is 120.56, and no input retains a single trace. Nevertheless,
+$80.94\pm2.68\%$ of inputs retain one prediction over all 289 points, and only
+$4.35\pm0.72\%$ of grid--center pairs disagree. Sampled trace growth is
+sublinear in grid size (log--log slope 0.64), but these counts are lower bounds
+on the continuous branch count. The result rejects single-trajectory reasoning
+while explaining why a correlated decision abstraction may still succeed.
+Figure~\ref{fig:branch-complexity} reports the separation.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/shd_branch_complexity.pdf}
+  \caption{Five-seed reference-member diagnostic at $\pm1\%$ joint timestep
+  and threshold uncertainty. Sampled trajectories proliferate while decisions
+  remain comparatively stable. Neither sampled branch counts nor prediction
+  identity constitute a continuous-family proof.}
+  \label{fig:branch-complexity}
+\end{figure*}
+
+True instability also limits the attainable coverage. We combine a $9\times9$
+interior grid with every member of the 16-way discrete family, for 1,296 sampled
+semantics per input. Full-family prediction identity is
+$31.09\pm2.78\%$ on the same deterministic 128-input subsets, with every seed
+between 28.12\% and 35.16\%. The reference discrete member alone retains
+$82.19\pm2.78\%$. Thus a perfect analyzer has only 11.09 points of mean sampled
+headroom above the 20\% gate. The sampled quantity is an upper bound on possible
+certificate coverage, not a lower bound: additional interior counterexamples
+can only reduce it. Figure~\ref{fig:full-family-grid} shows that pre-integration
+timing, reset-to-value, delay, and exponential integration compound rather than
+contribute interchangeable perturbations.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/shd_full_family_grid.pdf}
+  \caption{Five-seed sampled feasibility ceiling for the intended $\pm1\%$
+  continuous family. The full family remains above the 20\% gate, so true
+  instability does not make that target impossible, but the available headroom
+  is narrow. The heat map reports per-member identity at the $9\times9$ grid.}
+  \label{fig:full-family-grid}
+\end{figure*}
+
+We then test the most direct correlated alternative: soundly retain each
+possible spike vector as a separate abstract state, merging only states with
+identical current spikes and accumulated logits. This prototype is safely
+inconclusive when a state cap is exceeded. On seed 1701, no input completes even
+the first required cell in staged full-cover tests. With a 65,536-state cap,
+neither merged nor unmerged analysis completes any of 72 representative
+cell--input runs spanning $32\times32$, $64\times64$, and $128\times128$
+partitions; median abort moves only from timestep 21 to 41 of 50. The finest
+partition implies 16,384 cells per input before including the other 15 discrete
+members. Figure~\ref{fig:branch-set-feasibility} therefore rejects explicit
+branch lists as the missing full-model method. Symbolic guard compression or a
+decision-level correlated relaxation is required.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/shd_branch_set_feasibility.pdf}
+  \caption{Single-seed branch-set kill diagnostic on representative parameter
+  cells. Finer cells delay but do not prevent state-cap exhaustion. All failures
+  are inconclusive; no unsound certificate is emitted.}
+  \label{fig:branch-set-feasibility}
+\end{figure}
+
 The five frozen convolutional/recurrent DVS Gesture models reach
 $84.85\pm1.76\%$ reference test accuracy. Floor-rounded fixed point loses 36.6
 points on average, whereas exponential integration loses 3.7 points and

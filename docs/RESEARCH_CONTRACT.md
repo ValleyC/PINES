@@ -31,8 +31,9 @@ per sample. Repeats characterize nondeterminism but are secondary.
 
 1. Structural identity or a proved closed-form mapping.
 2. Static per-input family certification by sound interval propagation with
-   reset branch splitting/merging, or exhaustive finite-state checking on tiny
-   systems.
+   reset branch splitting/merging, a cap-limited path-separated diagnostic, or
+   exhaustive finite-state checking on tiny systems. A cap-limited run is
+   inconclusive, never certified.
 3. Exact Clopper--Pearson disagreement limits on an untouched unlabeled audit
    split, corrected simultaneously across target family members.
 4. The physical conformance term from a manifest-bound canary capture.
@@ -50,4 +51,3 @@ parameters.
 
 Excluded: analog mismatch, continual learning, safety-critical control, and
 energy-efficiency claims.
-

@@ -45,9 +45,12 @@ and convolutional/recurrent DVS Gesture. A sound interval analysis certifies
 38.7\% of SHD inputs over a finite 16-member family, exactly matching enumerated
 agreement after mutually exclusive semantics are checked separately; feedforward
 N-MNIST reaches 98.6\%. However, adding only $\pm1\%$ continuous timestep and
-threshold uncertainty makes the SHD interval certificate vacuous on every input,
-even though 36.9\% agree on all tested box corners. Thus finite-family transport
-is supported, but the intended bounded-family claim is not. Moreover,
+threshold uncertainty makes the SHD interval certificate vacuous on every input.
+A denser $9\times9$ grid across all 16 discrete members retains only 31.1\%
+prediction identity, still above the 20\% coverage gate, but explicit sound
+branch sets fail to finish 50 steps even with 65,536 states and $128\times128$
+parameter partitioning. Thus finite-family transport is supported, but the
+intended bounded-family claim is not yet. Moreover,
 adversarial-label witnesses attain the disagreement accuracy bound in both
 directions for all 150 stored prediction pairs, so uniformly tighter label-free
 accuracy guarantees require additional assumptions. Label-free calibration

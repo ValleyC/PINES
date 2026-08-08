@@ -151,6 +151,42 @@ python experiments/run_shd_branch_stability.py --seed 1701
 python experiments/aggregate_shd_branch_stability.py
 ```
 
+### Branch complexity and full-family feasibility ceiling
+
+The canonical finite-grid diagnostics are `branch_complexity_summary.json` and
+`full_family_grid_summary.json`. At a 17-by-17 reference-member grid, the mean
+input has 81.67 sampled spike traces, while 80.94% of inputs retain a single
+prediction. A 9-by-9 grid across all 16 discrete members retains 31.09% full-
+family prediction identity (28.12% to 35.16% by seed). The latter is an empirical
+upper bound on achievable unchanged-argmax certificate coverage and remains
+above the 20% gate, but only narrowly. Neither finite grid is a proof over the
+continuous interior.
+
+```powershell
+python experiments/run_shd_branch_complexity.py --seed 1701
+python experiments/aggregate_shd_branch_complexity.py
+python experiments/run_shd_full_family_grid.py --seed 1701
+python experiments/aggregate_shd_full_family_grid.py
+```
+
+### Explicit branch-set kill diagnostic
+
+`branch_set_feasibility_summary.json` records a sound, single-seed feasibility
+test of explicit spike-vector separation. No staged full-cover input completes.
+At a 65,536-state cap, neither merged nor unmerged analysis completes any tested
+representative cell at 32, 64, or 128 partitions per axis. Finer cells delay the
+median abort from timestep 21 to 41 but imply 16,384 cells per input at the
+finest setting. Cap exhaustion is inconclusive, never a certificate failure.
+The result rejects explicit branch lists as a practical full-model solution and
+points to symbolic guard compression or decision-level correlated bounds.
+
+```powershell
+python experiments/run_shd_branch_set_partition.py --seed 1701
+python experiments/run_shd_branch_set_cell_sweep.py --seed 1701 --partitions 32 64 128 --max-branches 65536
+python experiments/run_shd_branch_set_cell_sweep.py --seed 1701 --partitions 32 64 128 --max-branches 65536 --merge
+python experiments/aggregate_shd_branch_set_feasibility.py
+```
+
 ### Horizon diagnostic
 
 On deterministic 256-input audit subsets, trained recurrent finite-family static
