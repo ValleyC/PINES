@@ -65,6 +65,9 @@ class DVSGestureTrainConfig:
     threshold: float = 1.0
     recurrent_scale: float = 0.2
     dropout: float = 0.0
+    spatial_jitter: int = 0
+    event_dropout: float = 0.0
+    aggregation_temperature: float = 0.0
     gradient_clip: float = 1.0
 
 
@@ -341,6 +344,7 @@ def build_dvs_conv_srnn(
             torch.nn.init.xavier_uniform_(self.readout.weight)
             with torch.no_grad():
                 self.recurrent.weight.mul_(config.recurrent_scale)
+            self.aggregation_temperature = config.aggregation_temperature
 
         def forward(self, events, semantics: ExecutionSemantics | None = None):
             training_surrogate = semantics is None
@@ -522,8 +526,13 @@ def evaluate_dvs_model(
                 windows.reshape(batch * window_count, *windows.shape[2:]),
                 device=device,
             )
-            window_logits = model(events, semantics)
-            batch_logits = window_logits.reshape(batch, window_count, -1).mean(dim=1)
+            window_logits = model(events, semantics).reshape(batch, window_count, -1)
+            if model.aggregation_temperature > 0:
+                batch_logits = torch.softmax(
+                    window_logits / model.aggregation_temperature, dim=2
+                ).mean(dim=1)
+            else:
+                batch_logits = window_logits.mean(dim=1)
             logits.append(batch_logits.cpu().numpy())
             predictions.append(torch.argmax(batch_logits, dim=1).cpu().numpy())
     all_predictions = np.concatenate(predictions)
@@ -595,6 +604,26 @@ def train_dvs_gesture_seed(
             events = torch.as_tensor(
                 train_store.frames(batch_indices, window_indices), device=device
             )
+            if config.spatial_jitter:
+                shift_y = int(
+                    generator.integers(-config.spatial_jitter, config.spatial_jitter + 1)
+                )
+                shift_x = int(
+                    generator.integers(-config.spatial_jitter, config.spatial_jitter + 1)
+                )
+                events = torch.roll(events, shifts=(shift_y, shift_x), dims=(-2, -1))
+                if shift_y > 0:
+                    events[..., :shift_y, :] = 0
+                elif shift_y < 0:
+                    events[..., shift_y:, :] = 0
+                if shift_x > 0:
+                    events[..., :, :shift_x] = 0
+                elif shift_x < 0:
+                    events[..., :, shift_x:] = 0
+            if config.event_dropout:
+                events = events * (
+                    torch.rand_like(events) >= config.event_dropout
+                ).to(events.dtype)
             targets = torch.as_tensor(
                 train_store.labels[batch_indices], dtype=torch.long, device=device
             )
