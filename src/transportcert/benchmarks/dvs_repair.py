@@ -24,7 +24,7 @@ from .shd import _seed_everything
 
 @dataclass(frozen=True)
 class DVSGestureRepairConfig:
-    schema_version: str = "DVSGestureRepair/v1"
+    schema_version: str = "DVSGestureRepair/v2"
     epochs: int = 40
     batch_size: int = 16
     learning_rate: float = 0.02
@@ -459,7 +459,12 @@ def run_dvs_repair(
                 logits = _train_batch_logits(
                     model, train_store, sample_indices, target, device
                 )
-                loss = torch.nn.functional.cross_entropy(logits, targets)
+                if model.aggregation_temperature > 0:
+                    loss = torch.nn.functional.nll_loss(
+                        torch.log(logits.clamp_min(1e-8)), targets
+                    )
+                else:
+                    loss = torch.nn.functional.cross_entropy(logits, targets)
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(
                     model.parameters(), config.gradient_clip
@@ -600,7 +605,8 @@ def run_dvs_repair(
             ]
         ),
         "baseline_definition": (
-            "source-initialized supervised target-semantics QAT"
+            "source-initialized supervised target-semantics QAT with NLL on "
+            "aggregated window probabilities"
             if method == "per_platform_qat"
             else "label-free hard-semantics global threshold search"
             if method == "global_threshold"
