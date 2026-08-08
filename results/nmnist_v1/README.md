@@ -15,8 +15,8 @@ Reproduce the aggregate from the raw artifacts with:
 ```text
 python experiments/aggregate_nmnist.py
 python experiments/correct_software_aggregate_float32.py --result-root results/nmnist_v1 --semantic-root artifacts/nmnist_v1_semantics --benchmark N-MNIST
-python experiments/run_nmnist_static_family.py --seed 1701 --max-samples 128
-python experiments/aggregate_nmnist_static_family.py
+python experiments/run_nmnist_static_family.py --seed 1701 --max-samples 128 --output-root artifacts/nmnist_v2_memberwise_static_family
+python experiments/aggregate_nmnist_static_family.py --input-root artifacts/nmnist_v2_memberwise_static_family --suffix memberwise --figure-stem architecture_static_family_memberwise --shd-summary results/shd_v1/static_family_memberwise_summary.json
 ```
 
 Key results across 50 seed-condition cells:
@@ -29,9 +29,10 @@ Key results across 50 seed-condition cells:
   both pass.
 - Disagreement ranks absolute accuracy change with Pearson r = 0.986.
 - On deterministic 128-input subsets of each frozen audit split, the sound
-  interval certificate covers 96.72% of inputs for the full 16-member semantic
-  family. Exact family agreement is 98.59%, leaving only a 1.88-point relaxation
-  gap. This diagnostic subset is not a replacement for the full audit.
+  member-wise certificate covers 98.59% of inputs for the full 16-member semantic
+  family, exactly matching finite-family agreement. This diagnostic subset is
+  not a replacement for the full audit. The preserved 96.72% predecessor used a
+  superseded cross-member logit merge.
 
 These are emulator results, not physical certificates. Together with the SHD
 matrix, they show that the distribution-free bound can be tight for a robust

@@ -50,55 +50,66 @@ python experiments/aggregate_shd_repairs.py
 
 ## Static family certificate
 
-The sound interval certifier was run on all 861 audit inputs for every seed.
-Single-axis families certify 49.8% of inputs for reset, 76.0% for integration,
-and 75.7% for timing or delay. Nearest fixed point certifies 95.0%.
+The canonical finite-family aggregate is `static_family_memberwise_summary.json`.
+It checks the argmax within each mutually exclusive discrete semantics member
+before taking the family conjunction. Across all 861 audit inputs per seed,
+single-axis coverage is 76.19% for reset, 84.81% for integration, and 83.00% for
+timing or delay. The 16-member family covers 38.72% and exactly matches enumerated
+agreement for unquantized point semantics, so every seed passes the 20% gate.
 
-The preregistered 16-member high-risk family certifies only 18.79% on average
-(17.77--19.40% by seed), leaving 81.21% vacuous. Exact enumeration agrees across
-the same family on 38.72%, so the mean interval-relaxation gap is 19.93 points.
-No static certificate contradicts exact execution. Because every seed is
-vacuous on more than 80% of inputs, this experiment triggers the plan's explicit
-stop/pivot rule unless a substantially tighter sound abstraction reverses it.
+The preserved `static_family_summary.json` is sound but superseded for this
+claim. It merged logits across mutually exclusive semantics and covered only
+18.79%, creating an avoidable 19.93-point cross-member relaxation gap.
 
 Regenerate with:
 
 ```powershell
-python experiments/run_shd_static_family.py --seed 1701
-python experiments/aggregate_shd_static_family.py
+python experiments/run_shd_static_family.py --seed 1701 --output-root artifacts/shd_v2_memberwise_static_family
+python experiments/aggregate_shd_memberwise_static_family.py
+```
+
+### Continuous bounded family
+
+Joint timestep and threshold uncertainty of only plus/minus 1%, 2%, or 5% is
+fully vacuous under the current sound interval domain: every seed certifies zero
+of 861 SHD inputs at every radius. Endpoint-grid agreement on fixed 64-input
+subsets remains 36.9%, 32.5%, and 24.7%, respectively, with no counterexample to
+a static certificate. Endpoint agreement is diagnostic, not a proof over the
+continuous interior. This continuous result—not finite enumeration—triggers the
+declared pivot gate.
+
+```powershell
+python experiments/run_shd_continuous_family.py --seed 1701 --validation-samples 64
+python experiments/aggregate_shd_continuous_family.py
 ```
 
 ### Recurrence intervention
 
 Zeroing only the trained recurrent matrix, while retaining the same SHD inputs
-and every other parameter, raises full-family static coverage to 67.20% and exact
-family agreement to 89.31%. The increases over the trained recurrent models are
-48.41 and 50.59 points, respectively, with no observed static soundness failure.
-This establishes recurrent feedback as a major mechanism behind the failure,
-but it is not an accuracy-matched comparison because predictions and margins also
-change. The remaining interval-relaxation gap is 22.11 points.
+and every other parameter, raises both finite-family static coverage and exact
+agreement from 38.72% to 89.31%, with no observed soundness failure. This
+establishes recurrent feedback as a major mechanism behind true semantic
+instability, but it is not an accuracy-matched comparison and does not repair the
+continuous-box abstraction.
 
 Regenerate with:
 
 ```powershell
-python experiments/run_shd_static_family.py --seed 1701 --output-root artifacts/shd_v1_static_family_zero_recurrence --families full --zero-recurrence
-python experiments/aggregate_shd_recurrence_ablation.py
+python experiments/run_shd_static_family.py --seed 1701 --output-root artifacts/shd_v2_memberwise_zero_recurrence --families full --zero-recurrence
+python experiments/aggregate_shd_recurrence_ablation.py --input-root artifacts/shd_v2_memberwise_zero_recurrence --suffix memberwise --figure-stem recurrence_ablation_memberwise --trained-summary results/shd_v1/static_family_memberwise_summary.json --feedforward-summary results/nmnist_v1/static_family_memberwise_summary.json
 ```
 
 ### Horizon diagnostic
 
-On deterministic 256-input audit subsets, trained recurrent static coverage
-rises from 12.58% at 10 bins to 17.19% at 50 bins; exact family agreement rises
-from 31.02% to 36.17%. The zero-recurrence intervention rises from 38.98% to
-64.06% static coverage and from 66.80% to 88.98% exact agreement. Coverage does
-not monotonically decay with time because reference margins accumulate, but the
-trained recurrent model remains below the 20% gate at every horizon. A tighter
-method must target recurrent-transition and threshold-branch dependence rather
-than merely shorten the unroll.
+On deterministic 256-input audit subsets, trained recurrent finite-family static
+coverage rises from 30.94% at 10 bins to 36.17% at 50 bins and tracks exact
+agreement. The zero-recurrence trajectory rises from 66.72% to 88.98%. Agreement
+does not monotonically decay with time because reference margins accumulate.
+Shortening the unroll therefore does not address the continuous-box failure.
 
 Regenerate with:
 
 ```powershell
-python experiments/run_shd_horizon_diagnostic.py --seed 1701 --max-samples 256
-python experiments/aggregate_shd_horizon_diagnostic.py
+python experiments/run_shd_horizon_diagnostic.py --seed 1701 --max-samples 256 --output-root artifacts/shd_v2_memberwise_horizon
+python experiments/aggregate_shd_horizon_diagnostic.py --input-root artifacts/shd_v2_memberwise_horizon --suffix memberwise_v2 --figure-stem shd_horizon_memberwise_v2
 ```

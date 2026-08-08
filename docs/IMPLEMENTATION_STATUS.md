@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 63
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 64
   passing software tests.
 
 ## Completed software evidence
@@ -26,16 +26,21 @@
 - Five-seed SHD reset-to-value repair study. Certificate-directed repair recovers
   77.2% of lost accuracy, but its mean post-repair bound is 15.1 points and does
   not accept any seed at a five-point budget.
-- Full-audit SHD static-family analysis: 18.79% mean coverage over the 16-member
-  family and 81.21% vacuity, which fails the declared recurrent-task gate.
-- N-MNIST static diagnostic on deterministic 128-input subsets: 96.72% mean
-  coverage and 98.59% exact family agreement.
+- Full-audit SHD finite-family analysis: 38.72% mean member-wise coverage over
+  the 16-member family, exactly matching enumerated agreement and passing the
+  declared 20% gate. The preserved 18.79% predecessor merged logits across
+  mutually exclusive semantics and is superseded for the finite-family claim.
+- N-MNIST static diagnostic on deterministic 128-input subsets: 98.59% mean
+  member-wise coverage, equal to exact finite-family agreement.
 - Within-SHD recurrence intervention: zeroing only recurrent feedback raises
-  static coverage from 18.79% to 67.20% and exact agreement from 38.72% to
-  89.31%. This is a mechanism diagnostic, not an accuracy-matched comparison.
-- Five-seed horizon diagnostic: trained recurrent coverage stays below 20% from
-  10 through 50 bins and increases slightly as margins accumulate. Shortening
-  the unroll therefore does not rescue the recurrent certificate.
+  both static coverage and exact agreement from 38.72% to 89.31%. This is a
+  mechanism diagnostic, not an accuracy-matched comparison.
+- Five-seed horizon diagnostic: trained recurrent finite-family coverage rises
+  from 30.94% at 10 bins to 36.17% at 50 and tracks exact agreement. Semantic
+  instability does not monotonically worsen with unroll length.
+- Full-audit continuous-family analysis: joint timestep and threshold uncertainty
+  of only plus/minus 1% yields zero soundly certified inputs for every SHD seed.
+  Endpoint-grid agreement remains 36.9%, demonstrating severe abstraction slack.
 - Sample-complexity analysis: under ten-way simultaneous 95% confidence, zero
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the
@@ -44,16 +49,17 @@
 ## Current scientific verdict
 
 The evidence supports execution-semantic transport as a real recurrent-SNN
-problem, disagreement as a strong label-free ranking signal, and label-free
-repair as an accuracy-recovery mechanism. It does not support the intended broad,
-tight recurrent-family certificate with the current interval abstraction.
-Recurrence causes much of the true family instability, while abstract relaxation
-and decision-identity loss remain substantial after intervention and repair.
+problem, disagreement as a strong label-free ranking signal, label-free repair
+as an accuracy-recovery mechanism, and prospective certification of a finite
+enumerated execution family. It does not support the intended continuous bounded-
+family claim with the current interval abstraction. Recurrence causes much of
+the true finite-family instability, while continuous interval relaxation and
+decision-identity loss remain substantial.
 
 The NeurIPS framing remains conditional on a materially tighter recurrence-aware
 sound abstraction and prospective physical conformance. If that does not reverse
-the recurrent primary-task gate, the project follows the declared pivot to a
-narrower per-axis or systems/risk-ranking contribution.
+the continuous-family gate, the project follows the declared pivot to a narrower
+finite-family or systems/risk-ranking contribution.
 
 ## Open experimental milestones
 

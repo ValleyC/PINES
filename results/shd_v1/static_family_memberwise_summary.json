@@ -1,0 +1,122 @@
+{
+  "audit_samples_per_seed": 861,
+  "code_revision": "33043d0dcc76eba847830d4e2b40aa4c87358747",
+  "formulation_assessment": "The declared 20-percent static-coverage gate passes for the finite 16-member discrete SHD family once mutually exclusive semantics are certified separately. This reverses the earlier interval-gate failure, which was caused by cross-member logit mixing. It does not resolve the loose distribution certificate, continuous semantic ranges, or physical emulator-to-hardware conformance.",
+  "full_family_per_seed_certified_fraction": {
+    "1701": 0.38443670150987225,
+    "2718": 0.3426248548199768,
+    "3141": 0.38443670150987225,
+    "5772": 0.40069686411149824,
+    "8119": 0.42392566782810687
+  },
+  "gate_assessment": {
+    "every_seed_certifies_at_least_20_percent": true,
+    "full_family_vacuous_on_more_than_80_percent": false,
+    "no_observed_static_unsoundness": true
+  },
+  "input_report_hashes": {
+    "seed_1701": "dcac991f1c45c7c9a2e99fabdf2357f35aeb75c5f06b7e11b45303f57f2c6da8",
+    "seed_2718": "5f12edd928d43d82f266eec3d15b97add8923b2ec6ef6bbbd6b9a47e6fbed45f",
+    "seed_3141": "5246a658f3385e6d33b4429c536411435ceacc10c7e1119144a7f1281a8f34b5",
+    "seed_5772": "9d6d86c31ce9ebb66a2d2439410eb11fa105564c898195517a535e461f15d08c",
+    "seed_8119": "cb660ea761fbe75d3cf569b85b98fabda58270dedde3a6f2405c649f61e08a54"
+  },
+  "legacy_joint_merge_summary_hash": "63b7d930095340a9dd8a88f79ccffbad054f5fb8b36ce11aa01f97084b0c37b1",
+  "method": "continuous uncertainty is merged within each discrete member; argmax is checked per member before conjunction across the family",
+  "per_family": [
+    {
+      "coverage_gain_over_joint_merge": 0.2643437862950059,
+      "exact_family_agreement_mean": 0.761904761904762,
+      "exact_family_agreement_std": 0.02872070387660449,
+      "family": "reset",
+      "legacy_joint_merge_mean": 0.4975609756097561,
+      "memberwise_static_mean": 0.761904761904762,
+      "memberwise_static_std": 0.02872070387660449,
+      "memberwise_vacuous_mean": 0.23809523809523803,
+      "observed_unsound_certificates": 0,
+      "remaining_relaxation_gap_mean": 0.0
+    },
+    {
+      "coverage_gain_over_joint_merge": 0.08780487804878045,
+      "exact_family_agreement_mean": 0.8480836236933798,
+      "exact_family_agreement_std": 0.024492347536525207,
+      "family": "integration",
+      "legacy_joint_merge_mean": 0.7602787456445993,
+      "memberwise_static_mean": 0.8480836236933798,
+      "memberwise_static_std": 0.024492347536525207,
+      "memberwise_vacuous_mean": 0.15191637630662025,
+      "observed_unsound_certificates": 0,
+      "remaining_relaxation_gap_mean": 0.0
+    },
+    {
+      "coverage_gain_over_joint_merge": 0.07340301974448304,
+      "exact_family_agreement_mean": 0.8299651567944251,
+      "exact_family_agreement_std": 0.02851566279103163,
+      "family": "timing",
+      "legacy_joint_merge_mean": 0.756562137049942,
+      "memberwise_static_mean": 0.8299651567944251,
+      "memberwise_static_std": 0.02851566279103163,
+      "memberwise_vacuous_mean": 0.17003484320557494,
+      "observed_unsound_certificates": 0,
+      "remaining_relaxation_gap_mean": 0.0
+    },
+    {
+      "coverage_gain_over_joint_merge": 0.07340301974448304,
+      "exact_family_agreement_mean": 0.8299651567944251,
+      "exact_family_agreement_std": 0.02851566279103163,
+      "family": "delay",
+      "legacy_joint_merge_mean": 0.756562137049942,
+      "memberwise_static_mean": 0.8299651567944251,
+      "memberwise_static_std": 0.02851566279103163,
+      "memberwise_vacuous_mean": 0.17003484320557494,
+      "observed_unsound_certificates": 0,
+      "remaining_relaxation_gap_mean": 0.0
+    },
+    {
+      "coverage_gain_over_joint_merge": 0.19930313588850176,
+      "exact_family_agreement_mean": 0.3872241579558653,
+      "exact_family_agreement_std": 0.02972016279035903,
+      "family": "full",
+      "legacy_joint_merge_mean": 0.18792102206736352,
+      "memberwise_static_mean": 0.3872241579558653,
+      "memberwise_static_std": 0.02972016279035903,
+      "memberwise_vacuous_mean": 0.6127758420441347,
+      "observed_unsound_certificates": 0,
+      "remaining_relaxation_gap_mean": 0.0
+    },
+    {
+      "coverage_gain_over_joint_merge": 0.0,
+      "exact_family_agreement_mean": 0.9500580720092915,
+      "exact_family_agreement_std": 0.006254546814325773,
+      "family": "fixed_nearest",
+      "legacy_joint_merge_mean": 0.9495934959349593,
+      "memberwise_static_mean": 0.9495934959349593,
+      "memberwise_static_std": 0.005841940227623352,
+      "memberwise_vacuous_mean": 0.05040650406504066,
+      "observed_unsound_certificates": 0,
+      "remaining_relaxation_gap_mean": 0.0004645760743321681
+    },
+    {
+      "coverage_gain_over_joint_merge": 0.0,
+      "exact_family_agreement_mean": 0.1997677119628339,
+      "exact_family_agreement_std": 0.04054241504229283,
+      "family": "fixed_floor",
+      "legacy_joint_merge_mean": 0.19930313588850174,
+      "memberwise_static_mean": 0.19930313588850174,
+      "memberwise_static_std": 0.04049747239689565,
+      "memberwise_vacuous_mean": 0.8006968641114982,
+      "observed_unsound_certificates": 0,
+      "remaining_relaxation_gap_mean": 0.0004645760743321681
+    }
+  ],
+  "rows_csv_hash": "665c4a386eafbfbebbb1404029ee0423fbc40db977e728c3842a7c2b6ab2dce2",
+  "schema_version": "SHDMemberwiseStaticFamilyAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed software certificate evidence for a finite discrete family; not a continuous-range or physical certificate"
+}

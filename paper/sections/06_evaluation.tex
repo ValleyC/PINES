@@ -72,31 +72,53 @@ disagreement itself substantially exceeds net accuracy change.
   \label{fig:shd-software-pilot}
 \end{figure}
 
-The sound per-input interval analysis makes the formulation failure more
-specific. Across all 861 audit inputs and five seeds, single-axis families
-certify 49.8\% for reset, 76.0\% for integration, and 75.7\% for either timing
-or delay; nearest fixed point certifies 95.0\%. In contrast, the preregistered
-16-member high-risk family certifies only 18.79\% on average, ranging from
-17.77\% to 19.40\% by seed. Thus every seed is vacuous on more than 80\% of
-inputs. Exact execution agrees across the same family on 38.72\%, leaving a
-19.93-point mean relaxation gap. No interval-certified input violates exact
-family agreement.
+The sound per-input analysis exposes an important distinction between discrete
+and continuous families. An initial implementation merged output intervals from
+mutually exclusive discrete semantics before testing the argmax. That operation
+is sound but unnecessarily compares, for example, the reference-class logit from
+one reset rule with a competitor from another. It certified only 18.79\% of SHD
+inputs. We preserve that result but supersede it with member-wise checking:
+continuous uncertainty is merged within each discrete member, the argmax is
+proved there, and the family certificate is the conjunction of member results.
+
+Across all 861 audit inputs and five seeds, this correction certifies 76.19\% for
+reset, 84.81\% for integration, 83.00\% for timing or delay, and 94.96\% for
+nearest fixed point. The finite 16-member high-risk family certifies 38.72\%,
+ranging from 34.26\% to 42.39\% by seed. For unquantized point semantics it
+matches exact family agreement, as it should. No static certificate contradicts
+exact enumeration. The finite-family static gate therefore passes; the earlier
+failure was an avoidable cross-member relaxation artifact.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/shd_static_family.pdf}
-  \caption{Five-seed SHD per-input certificates. Single-axis families remain
-  useful, but the broad high-risk family falls below the preregistered 20\%
-  certified-input gate. Exact family agreement separates true semantic
-  instability from interval relaxation.}
+  \includegraphics[width=\linewidth]{figures/shd_static_family_memberwise.pdf}
+  \caption{Five-seed SHD finite-family certificates. Checking mutually exclusive
+  semantics separately removes cross-member logit mixing and reverses the 20\%
+  gate. The member-wise certificate equals exact agreement for unquantized point
+  semantics; small residual gaps occur only for fixed-point interval arithmetic.}
   \label{fig:shd-static-family}
 \end{figure}
 
-This result triggers the declared stop rule for the broad NeurIPS guarantee
-framing on the recurrent primary task. Continuing that framing now requires a
-substantially tighter recurrence-aware sound abstraction to reverse the gate;
-otherwise the evidence supports a narrower per-axis certificate or a
-systems/risk-ranking paper.
+The bounded-family result is different. We jointly vary timestep and neuron
+threshold by only $\pm1\%$, $\pm2\%$, or $\pm5\%$ inside every one of the 16
+discrete members. The sound interval domain certifies zero SHD inputs at every
+radius for every seed. On fixed 64-input validation subsets, all tested box
+corners preserve the reference prediction on 36.9\%, 32.5\%, and 24.7\% of
+inputs, respectively, with no counterexample to a static certificate. Corner
+agreement is diagnostic rather than a proof over the interior, but its separation
+from zero sound coverage quantifies the abstraction failure. Figure~\ref{fig:shd-continuous}
+shows that the declared stop rule still triggers for the manuscript's promised
+continuous bounded-family claim, not for finite enumeration.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/shd_continuous_family.pdf}
+  \caption{Five-seed SHD bounded-family experiment. Even $\pm1\%$ joint timestep
+  and threshold uncertainty makes the current sound interval abstraction fully
+  vacuous. Endpoint-grid agreement remains substantial but is diagnostic only;
+  error bars are one sample standard deviation across seeds.}
+  \label{fig:shd-continuous}
+\end{figure}
 
 The five frozen convolutional/recurrent DVS Gesture models reach
 $84.85\pm1.76\%$ reference test accuracy. Floor-rounded fixed point loses 36.6
@@ -137,55 +159,51 @@ uniformly tight across architectures and semantic regimes.
 
 The static analysis yields the same model-class contrast. On deterministic
 128-input subsets from each frozen N-MNIST audit split, the full 16-member family
-is soundly certified on $96.72\pm1.02\%$ of inputs, compared with $18.79\pm0.62\%$
-for all 861 SHD audit inputs per seed. Exact N-MNIST family agreement is 98.59\%,
-so the mean interval-relaxation gap is only 1.88 points. Every N-MNIST single-axis
-family certifies at least 98.4\%, and no static certificate contradicts exact
-enumeration. This cross-dataset subset result is diagnostic rather than causal or
-a primary full-audit estimate.
+is soundly certified on $98.59\pm0.65\%$ of inputs, compared with
+$38.72\pm3.00\%$ for all 861 SHD audit inputs per seed. Both equal exact finite-
+family agreement. Every N-MNIST single-axis family certifies at least 99.5\% on
+average, and no static certificate contradicts exact enumeration. This cross-
+dataset subset result is diagnostic rather than causal or a primary full-audit
+estimate.
 
 A within-SHD intervention isolates the feedback mechanism more directly. We zero
 only each trained model's recurrent matrix, retaining its inputs, audit split, and
-all other parameters. Full-family static coverage rises by 48.41 points to
-$67.20\pm5.21\%$, while exact family agreement rises by 50.59 points to
-$89.31\pm0.85\%$. No static certificate contradicts exact enumeration. Because
+all other parameters. Full-family static coverage and exact agreement both rise
+by 50.59 points to $89.31\pm0.85\%$. No static certificate contradicts exact
+enumeration. Because
 this intervention changes predictions and margins, it is not an accuracy-matched
 architecture comparison. It nevertheless establishes that recurrent feedback is
-a major cause of the true semantic instability as well as the failed coverage
-gate. The remaining 22.11-point relaxation gap motivates recurrence-aware
-abstractions rather than a claim that removing recurrence solves certification.
-Figure~\ref{fig:recurrence-ablation-static} summarizes the result.
+a major cause of true finite-family semantic instability. It does not explain or
+repair the continuous-box abstraction failure. Figure~\ref{fig:recurrence-ablation-static}
+summarizes the result.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/recurrence_ablation_static.pdf}
+  \includegraphics[width=\linewidth]{figures/recurrence_ablation_memberwise.pdf}
   \caption{Five-seed full-family diagnostic. Zeroing only recurrent feedback in
-  each trained SHD model reverses the 20\% coverage failure and substantially
-  increases exact semantic agreement. N-MNIST uses deterministic 128-input audit
-  subsets; both SHD conditions use all 861 inputs per seed. The ablation is not
-  accuracy-matched.}
+  each trained SHD model substantially increases finite-family agreement.
+  Member-wise sound coverage equals exact agreement. N-MNIST uses deterministic
+  128-input audit subsets; both SHD conditions use all 861 inputs per seed. The
+  ablation is not accuracy-matched.}
   \label{fig:recurrence-ablation-static}
 \end{figure}
 
-Shortening the unroll does not rescue the recurrent certificate. On fixed
-256-input subsets, mean trained-model static coverage rises from 12.58\% at ten
-time bins to 17.19\% at 50, while exact agreement rises from 31.02\% to 36.17\%.
-The corresponding zero-recurrence trajectories rise from 38.98\% to 64.06\%
-and from 66.80\% to 88.98\%. The upward trend follows accumulating reference
-margin; recurrent semantic instability is already present at the earliest
-measured horizon and remains below the coverage gate. Thus shorter horizons are
-not the missing method. A tighter analysis must preserve dependence through the
-recurrent transition and threshold branches. Figure~\ref{fig:shd-horizon}
+Across fixed 256-input subsets, mean trained-model finite-family coverage rises
+from 30.94\% at ten time bins to 36.17\% at 50 and matches exact agreement to
+within 0.08 points throughout. The corresponding zero-recurrence trajectory rises
+from 66.72\% to 88.98\%. The upward trend follows accumulating reference margin;
+recurrent semantic instability is already present at the earliest measured
+horizon but does not monotonically worsen with depth. Shorter unrolls are not the
+missing method for the continuous-box failure. Figure~\ref{fig:shd-horizon}
 reports the complete five-seed trajectories.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/shd_horizon_diagnostic.pdf}
+  \includegraphics[width=\linewidth]{figures/shd_horizon_memberwise_v2.pdf}
   \caption{Five-seed horizon diagnostic on deterministic 256-input SHD audit
-  subsets. Margin accumulation improves both quantities rather than causing
-  monotonic temporal decay, but trained recurrence remains below the static
-  coverage gate at every measured horizon. Shading is one sample standard
-  deviation across seeds.}
+  subsets. Member-wise sound coverage tracks exact finite-family agreement, and
+  margin accumulation improves both rather than causing monotonic temporal decay.
+  Shading is one sample standard deviation across seeds.}
   \label{fig:shd-horizon}
 \end{figure}
 
@@ -236,8 +254,9 @@ two criteria explicit.
 
 Repair can therefore restore aggregate accuracy without restoring decision
 identity. The current evidence supports the semantic transport problem, repair
-opportunity, and usefulness of static certification on feedforward transport. It
-does \emph{not} support the intended broad tight-certificate claim for recurrent
-models. The next formulation must introduce and validate a tighter
-recurrence-aware abstraction, target a narrower certifiable quantity, or accept
-a systems/risk-ranking contribution.
+opportunity, and exact prospective certification of finite enumerated execution
+families. It does \emph{not} support the intended sound bounded-family claim or a
+tight recurrent distribution certificate. The next method must preserve
+timestep/threshold dependence through recurrent threshold branches; absent that
+advance and physical validation, the honest contribution is a narrower finite-
+family or systems/risk-ranking paper rather than the intended NeurIPS claim.

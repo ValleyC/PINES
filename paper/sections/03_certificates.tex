@@ -14,17 +14,20 @@ that may cross the representable range expands to the full numeric domain.
 Delays are queues of abstract states. At a threshold discontinuity, the analyzer
 splits quiet and spiking branches, applies the appropriate reset, and conservatively
 merges them. Discrete semantic variants are analyzed separately and their output
-sets are joined.
+sets are not mixed before testing the decision. Continuous uncertainty within a
+single discrete member is conservatively merged.
 
-For reference prediction $c_0$ and target logit intervals
-$[\ell_c(x),u_c(x)]$, input $x$ is certified if
+For reference prediction $c_0$ and member-specific target logit intervals
+$[\ell_{c,s}(x),u_{c,s}(x)]$, input $x$ is certified if
 \begin{equation}
-  \ell_{c_0}(x) > \max_{c\ne c_0} u_c(x).
+  \ell_{c_0,s}(x) > \max_{c\ne c_0} u_{c,s}(x)
+  \qquad \text{for every discrete member }s.
 \end{equation}
 The condition proves an unchanged argmax for every semantics member represented
-by the abstract family. Exact enumeration is also available when the declared
-family itself is finite; a MILP checker is planned as a tighter small-network
-oracle.
+by the abstract family. Checking the inequality after globally joining mutually
+exclusive members is sound but unnecessarily stronger and is not used by the
+canonical engine. Exact enumeration is also available when the declared family
+itself is finite; a MILP checker is planned as a tighter small-network oracle.
 
 \subsection{Distribution certificate}
 
