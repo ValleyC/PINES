@@ -29,6 +29,7 @@ def _stats(values: list[float]) -> dict[str, float]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--include-qat", action="store_true")
+    parser.add_argument("--qat-root")
     parser.add_argument("--suffix", default="")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
@@ -49,8 +50,13 @@ def main() -> None:
     report_hashes: dict[str, str] = {}
     for seed in SEEDS:
         for method in methods:
+            method_artifact_root = (
+                root / args.qat_root
+                if method == "per_platform_qat" and args.qat_root
+                else artifact_root
+            )
             path = (
-                artifact_root
+                method_artifact_root
                 / f"seed_{seed}"
                 / CONDITION
                 / method
@@ -175,6 +181,7 @@ def main() -> None:
             "gradient_epochs": 40,
             "gradient_steps": 280,
             "simultaneous_alpha_per_report": 0.005,
+            "qat_artifact_root": args.qat_root,
             "selection_uses_test_labels": False,
             "calibration_audit_disjoint": True,
         },
