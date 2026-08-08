@@ -72,6 +72,31 @@ disagreement itself substantially exceeds net accuracy change.
   \label{fig:shd-software-pilot}
 \end{figure}
 
+The sound per-input interval analysis makes the formulation failure more
+specific. Across all 861 audit inputs and five seeds, single-axis families
+certify 49.8\% for reset, 76.0\% for integration, and 75.7\% for either timing
+or delay; nearest fixed point certifies 95.0\%. In contrast, the preregistered
+16-member high-risk family certifies only 18.79\% on average, ranging from
+17.77\% to 19.40\% by seed. Thus every seed is vacuous on more than 80\% of
+inputs. Exact execution agrees across the same family on 38.72\%, leaving a
+19.93-point mean relaxation gap. No interval-certified input violates exact
+family agreement.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/shd_static_family.pdf}
+  \caption{Five-seed SHD per-input certificates. Single-axis families remain
+  useful, but the broad high-risk family falls below the preregistered 20\%
+  certified-input gate. Exact family agreement separates true semantic
+  instability from interval relaxation.}
+  \label{fig:shd-static-family}
+\end{figure}
+
+This result triggers the declared stop rule for the broad NeurIPS guarantee
+framing. Continuing that framing now requires a substantially tighter sound
+abstraction to reverse the gate; otherwise the evidence supports a narrower
+per-axis certificate or a systems/risk-ranking paper.
+
 The five frozen convolutional/recurrent DVS Gesture models reach
 $84.85\pm1.76\%$ reference test accuracy. Floor-rounded fixed point loses 36.6
 points on average, whereas exponential integration loses 3.7 points and

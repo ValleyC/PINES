@@ -47,3 +47,23 @@ Regenerate the repair aggregate from the ignored raw reports with:
 ```powershell
 python experiments/aggregate_shd_repairs.py
 ```
+
+## Static family certificate
+
+The sound interval certifier was run on all 861 audit inputs for every seed.
+Single-axis families certify 49.8% of inputs for reset, 76.0% for integration,
+and 75.7% for timing or delay. Nearest fixed point certifies 95.0%.
+
+The preregistered 16-member high-risk family certifies only 18.79% on average
+(17.77–19.40% by seed), leaving 81.21% vacuous. Exact enumeration agrees across
+the same family on 38.72%, so the mean interval-relaxation gap is 19.93 points.
+No static certificate contradicts exact execution. Because every seed is
+vacuous on more than 80% of inputs, this experiment triggers the plan's explicit
+stop/pivot rule unless a substantially tighter sound abstraction reverses it.
+
+Regenerate with:
+
+```powershell
+python experiments/run_shd_static_family.py --seed 1701
+python experiments/aggregate_shd_static_family.py
+```

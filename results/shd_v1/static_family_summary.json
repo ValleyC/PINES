@@ -1,0 +1,113 @@
+{
+  "audit_samples_per_seed": 861,
+  "code_revision": "e15a4a8ac5b40e83df1a1167827855c84c837733",
+  "formulation_assessment": "The sound interval engine is useful for single semantic axes and nearest fixed point, but the preregistered 16-member high-risk family is vacuous on more than 80 percent of inputs for every seed. This triggers the planned stop/pivot rule unless a substantially tighter sound abstraction reverses the result.",
+  "full_family_per_seed_certified_fraction": {
+    "1701": 0.19396051103368175,
+    "2718": 0.18815331010452963,
+    "3141": 0.1916376306620209,
+    "5772": 0.17770034843205576,
+    "8119": 0.18815331010452963
+  },
+  "gate_assessment": {
+    "every_seed_vacuous_on_more_than_80_percent": true,
+    "full_family_vacuous_on_more_than_80_percent": true,
+    "no_observed_static_unsoundness": true
+  },
+  "input_report_hashes": {
+    "seed_1701": "4f79bc60ac205d32eafd5316e7684f5456e9157663eebe8f90e90012215cc3d4",
+    "seed_2718": "5c926a63303808e0badafacdb02f353aefffb26b617810e7c6695c1ae00c6175",
+    "seed_3141": "d93df165d3c1e162d53fb5b7b2c6668b05006ac484c5d2315f612fbce7ba8fe3",
+    "seed_5772": "d5cc0774297597fb6a861c3a7c8e82dde876bcfc06650ef9163078dc190bee8b",
+    "seed_8119": "88e218f61540e6a017bc8782435a90c01c8ab862a6f1c5731df0d87d921b4318"
+  },
+  "per_family": [
+    {
+      "exact_family_agreement_mean": 0.761904761904762,
+      "exact_family_agreement_std": 0.02872070387660449,
+      "family": "reset",
+      "mean_static_seconds": 1.1728682200890035,
+      "observed_unsound_certificates": 0,
+      "relaxation_gap_mean": 0.2643437862950058,
+      "static_certified_mean": 0.4975609756097561,
+      "static_certified_std": 0.028337712498053957,
+      "static_vacuous_mean": 0.5024390243902439
+    },
+    {
+      "exact_family_agreement_mean": 0.8480836236933798,
+      "exact_family_agreement_std": 0.024492347536525207,
+      "family": "integration",
+      "mean_static_seconds": 0.9459593600127846,
+      "observed_unsound_certificates": 0,
+      "relaxation_gap_mean": 0.0878048780487805,
+      "static_certified_mean": 0.7602787456445993,
+      "static_certified_std": 0.014612930069734353,
+      "static_vacuous_mean": 0.2397212543554007
+    },
+    {
+      "exact_family_agreement_mean": 0.8299651567944251,
+      "exact_family_agreement_std": 0.02851566279103163,
+      "family": "timing",
+      "mean_static_seconds": 0.7689761200454086,
+      "observed_unsound_certificates": 0,
+      "relaxation_gap_mean": 0.07340301974448311,
+      "static_certified_mean": 0.756562137049942,
+      "static_certified_std": 0.026198136455046116,
+      "static_vacuous_mean": 0.24343786295005798
+    },
+    {
+      "exact_family_agreement_mean": 0.8299651567944251,
+      "exact_family_agreement_std": 0.02851566279103163,
+      "family": "delay",
+      "mean_static_seconds": 0.7642164000310003,
+      "observed_unsound_certificates": 0,
+      "relaxation_gap_mean": 0.07340301974448311,
+      "static_certified_mean": 0.756562137049942,
+      "static_certified_std": 0.026198136455046116,
+      "static_vacuous_mean": 0.24343786295005798
+    },
+    {
+      "exact_family_agreement_mean": 0.3872241579558653,
+      "exact_family_agreement_std": 0.02972016279035903,
+      "family": "full",
+      "mean_static_seconds": 4.17462446000427,
+      "observed_unsound_certificates": 0,
+      "relaxation_gap_mean": 0.19930313588850174,
+      "static_certified_mean": 0.18792102206736352,
+      "static_certified_std": 0.006222111607887972,
+      "static_vacuous_mean": 0.8120789779326365
+    },
+    {
+      "exact_family_agreement_mean": 0.9500580720092915,
+      "exact_family_agreement_std": 0.006254546814325773,
+      "family": "fixed_nearest",
+      "mean_static_seconds": 0.6078739999327809,
+      "observed_unsound_certificates": 0,
+      "relaxation_gap_mean": 0.0004645760743321681,
+      "static_certified_mean": 0.9495934959349593,
+      "static_certified_std": 0.005841940227623352,
+      "static_vacuous_mean": 0.05040650406504066
+    },
+    {
+      "exact_family_agreement_mean": 0.1997677119628339,
+      "exact_family_agreement_std": 0.04054241504229283,
+      "family": "fixed_floor",
+      "mean_static_seconds": 0.6016814200207591,
+      "observed_unsound_certificates": 0,
+      "relaxation_gap_mean": 0.0004645760743321681,
+      "static_certified_mean": 0.19930313588850174,
+      "static_certified_std": 0.04049747239689565,
+      "static_vacuous_mean": 0.8006968641114982
+    }
+  ],
+  "rows_csv_hash": "04e99a764a374a3b61dc4ab3c690fdc318639049fd6ae36d1b69700aa407bbeb",
+  "schema_version": "SHDStaticFamilyAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed software interval-family evidence; not physical evidence"
+}
