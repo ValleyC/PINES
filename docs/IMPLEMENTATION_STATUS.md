@@ -34,7 +34,7 @@
 - Five-seed DVS Gesture floor-rounded repair development study. Restricted
   certificate-directed calibration recovers 91.1% of lost accuracy with every
   seed above 79.5%, versus 89.3% for logit-only, 74.8% for global scaling, and
-  98.7% for 97-label QAT. It beats logit-only in only three paired seeds and its
+  99.6% for 97-label QAT. It beats logit-only in only three paired seeds and its
   21.5-point mean bound is substantially looser than logit-only's 15.1 points.
 - Full-audit SHD finite-family analysis: 38.72% mean member-wise coverage over
   the 16-member family, exactly matching enumerated agreement and passing the

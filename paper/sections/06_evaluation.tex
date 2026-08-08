@@ -166,10 +166,10 @@ $\alpha=0.005$ Clopper--Pearson limit.
 Certificate-directed repair recovers $91.1\pm7.8\%$ of the 36.6-point mean
 fixed-point loss and clears 70\% for every seed. Logit-only recovers
 $89.3\pm8.4\%$, global threshold scaling $74.8\pm8.6\%$, and labeled QAT
-$98.7\pm9.9\%$. The proposed objective beats logit-only in only three of five
+$99.6\pm10.8\%$. The proposed objective beats logit-only in only three of five
 paired seeds; one seed ties global scaling. Mean remaining accuracy loss is 3.11
 points for the proposed repair and 0.76 points for QAT. Yet their mean bounds
-are nearly identical and loose---21.49 and 21.07 points---while logit-only is
+are nearly identical and loose---21.49 and 22.31 points---while logit-only is
 tighter at 15.11 points. No repaired seed certifies a five-point budget. Thus
 the cross-task result supports restricted label-free repair, but not objective
 superiority or certificate restoration. Figure~\ref{fig:dvs-repair} summarizes
@@ -177,7 +177,7 @@ the separation. It inherits the development-only limitation above.
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/dvs_repair_floor_matched_v2.pdf}
+  \includegraphics[width=\textwidth]{figures/dvs_repair_floor_matched_v3.pdf}
   \caption{Five-seed DVS Gesture development repair on floor-rounded fixed
   point. Error bars show sample standard deviations; dashed lines mark the
   70\% recovery and five-point certificate gates. QAT uses 97 labels and the
