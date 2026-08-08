@@ -151,7 +151,7 @@ def main() -> None:
     }
     write_json_immutable(summary_path, summary)
 
-    fig, axes = plt.subplots(1, 2, figsize=(8.2, 3.5), constrained_layout=True)
+    fig, axes = plt.subplots(1, 2, figsize=(8.2, 3.8))
     colors = {"trained_recurrent": "#d95f02", "zero_recurrence": "#1b9e77"}
     labels = {"trained_recurrent": "Trained recurrent", "zero_recurrence": "Zero recurrence"}
     for model_condition in model_conditions:
@@ -187,9 +187,22 @@ def main() -> None:
             axis.grid(alpha=0.2)
     axes[0].set_ylabel("Audit inputs (%)")
     axes[1].axhline(20, color="black", linestyle="--", linewidth=1, label="20% gate")
-    handles, legend_labels = axes[1].get_legend_handles_labels()
-    fig.legend(handles, legend_labels, loc="upper center", ncol=3, frameon=False)
-    fig.suptitle("Shortening the unroll does not rescue recurrent SHD certification", y=0.99)
+    model_handles, model_labels = axes[0].get_legend_handles_labels()
+    gate_handles, gate_labels = axes[1].get_legend_handles_labels()
+    fig.legend(
+        model_handles + gate_handles[-1:],
+        model_labels + gate_labels[-1:],
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.93),
+        ncol=3,
+        frameon=False,
+    )
+    fig.suptitle(
+        "Shortening the unroll does not rescue recurrent SHD certification",
+        y=0.995,
+        fontsize=12,
+    )
+    fig.tight_layout(rect=(0, 0, 1, 0.82))
     fig.savefig(figure_pdf, bbox_inches="tight")
     fig.savefig(figure_png, dpi=200, bbox_inches="tight")
     plt.close(fig)
