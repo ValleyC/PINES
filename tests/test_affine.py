@@ -57,6 +57,25 @@ def test_hybrid_affine_product_residual_contains_shared_samples() -> None:
         )
 
 
+def test_hybrid_affine_float_quantization_encloses_rounding() -> None:
+    from transportcert.semantics import NumericFormat
+
+    affine = _HybridAffine(
+        center=np.asarray([[1.0]]),
+        generators=np.asarray([[[0.1, -0.2]]]),
+        radius=np.asarray([[1e-6]]),
+    )
+    rounded = affine.float_quantize(NumericFormat("float32"))
+    rng = np.random.default_rng(19)
+    for _ in range(1000):
+        epsilon = rng.uniform(-1.0, 1.0, size=2)
+        residual = rng.uniform(-affine.radius, affine.radius)
+        value = affine.center + affine.generators @ epsilon + residual
+        quantized = value.astype(np.float32).astype(np.float64)
+        approximation = rounded.center + rounded.generators @ epsilon
+        assert np.all(np.abs(quantized - approximation) <= rounded.radius)
+
+
 def test_affine_guard_domain_preserves_shared_output_spikes() -> None:
     model = DenseRecurrentSNN(
         input_weights=np.asarray([[2.0, 1.0]]),

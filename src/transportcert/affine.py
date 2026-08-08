@@ -9,7 +9,13 @@ import numpy as np
 from .abstract import SemanticsBox
 from .emulator import VectorizedEmulator, _validate_inputs
 from .models import DenseRecurrentSNN
-from .semantics import ExecutionSemantics, IntegrationRule, ResetRule, ThresholdTiming
+from .semantics import (
+    ExecutionSemantics,
+    IntegrationRule,
+    NumericFormat,
+    ResetRule,
+    ThresholdTiming,
+)
 
 
 @dataclass(frozen=True)
@@ -193,6 +199,40 @@ class _HybridAffine:
             + self.radius * other.radius
         )
         return _HybridAffine(center, generators, radius)
+
+    def float_quantize(
+        self,
+        numeric_format: NumericFormat,
+        parameter_vertices: np.ndarray | None = None,
+    ) -> "_HybridAffine":
+        """Add a conservative envelope for a declared floating conversion."""
+
+        if numeric_format.is_fixed:
+            raise NotImplementedError("hybrid affine fixed-point transitions")
+        lower, upper = self.bounds(parameter_vertices)
+        rounding_radius = _floating_rounding_radius(
+            numeric_format, lower, upper
+        )
+        return _HybridAffine(
+            self.center,
+            self.generators,
+            self.radius + rounding_radius,
+        )
+
+
+def _floating_rounding_radius(
+    numeric_format: NumericFormat,
+    lower: np.ndarray,
+    upper: np.ndarray,
+) -> np.ndarray:
+    if numeric_format.is_fixed:
+        raise NotImplementedError("floating rounding radius requires float format")
+    dtype = np.float32 if numeric_format.kind == "float32" else np.float64
+    maximum_magnitude = np.maximum(np.abs(lower), np.abs(upper))
+    if np.any(maximum_magnitude > np.finfo(dtype).max):
+        raise OverflowError("floating affine enclosure exceeds numeric range")
+    minimum_subnormal = float(np.nextafter(dtype(0.0), dtype(1.0)))
+    return np.finfo(dtype).eps * maximum_magnitude + minimum_subnormal
 
 
 def _spike_relaxation(
@@ -390,14 +430,19 @@ class AffineGuardFamilyCertifier:
         np.ndarray,
     ]:
         weight = box.base.weight_format
+        state = box.base.state_format
         w_in = np.asarray(weight.quantize(model.input_weights), dtype=np.float64)
         w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
         w_out = np.asarray(weight.quantize(model.output_weights), dtype=np.float64)
         batch, horizon, _ = events.shape
-        base_drive = events @ w_in + model.bias
+        bias = np.asarray(state.quantize(model.bias), dtype=np.float64)
+        base_drive = events @ w_in + bias
         voltage = _HybridAffine.exact(np.zeros((batch, model.hidden_size)))
         spikes = _HybridAffine.exact(np.zeros_like(voltage.center))
         margins = _HybridAffine.exact(np.zeros((batch, model.output_size)))
+        class_logits = _HybridAffine.exact(
+            np.zeros((batch, model.output_size))
+        )
         threshold = _HybridAffine.semantic_interval(
             np.broadcast_to(
                 model.threshold * box.threshold_scale_bounds[0],
@@ -418,8 +463,12 @@ class AffineGuardFamilyCertifier:
             _HybridAffine.exact(np.zeros_like(voltage.center))
             for _ in range(synaptic_delay)
         ]
-        output_queue = [
+        margin_output_queue = [
             _HybridAffine.exact(np.zeros_like(margins.center))
+            for _ in range(output_delay)
+        ]
+        class_output_queue = [
+            _HybridAffine.exact(np.zeros_like(class_logits.center))
             for _ in range(output_delay)
         ]
         chosen_weights = w_out[:, reference_predictions].T
@@ -471,7 +520,7 @@ class AffineGuardFamilyCertifier:
         for step in range(horizon):
             current = _HybridAffine.exact(base_drive[:, step, :]).add(
                 spikes.linear(w_rec)
-            )
+            ).float_quantize(state, vertices)
             if current_queue:
                 current_queue.append(current)
                 current = current_queue.pop(0)
@@ -490,7 +539,7 @@ class AffineGuardFamilyCertifier:
                     timestep,
                     model.tau_mem,
                     vertices,
-                )
+                ).float_quantize(state, vertices)
             else:
                 voltage = self._integrate(
                     voltage,
@@ -498,7 +547,7 @@ class AffineGuardFamilyCertifier:
                     timestep,
                     model.tau_mem,
                     vertices,
-                )
+                ).float_quantize(state, vertices)
                 spikes = relax_guard(voltage.subtract(threshold))
                 voltage = self._reset(
                     voltage,
@@ -507,12 +556,46 @@ class AffineGuardFamilyCertifier:
                     model.reset_value,
                     reset,
                     vertices,
-                )
-            contribution = spikes.batch_linear(margin_weights)
-            if output_queue:
-                output_queue.append(contribution)
-                contribution = output_queue.pop(0)
-            margins = margins.add(contribution)
+                ).float_quantize(state, vertices)
+            raw_class_contribution = spikes.linear(w_out)
+            class_lower, class_upper = raw_class_contribution.bounds(vertices)
+            class_contribution_error = _floating_rounding_radius(
+                state, class_lower, class_upper
+            )
+            class_contribution = raw_class_contribution.float_quantize(
+                state, vertices
+            )
+            margin_contribution = spikes.batch_linear(margin_weights)
+            chosen_error = class_contribution_error[
+                np.arange(batch), reference_predictions, None
+            ]
+            margin_contribution = _HybridAffine(
+                margin_contribution.center,
+                margin_contribution.generators,
+                margin_contribution.radius
+                + chosen_error
+                + class_contribution_error,
+            )
+            if margin_output_queue:
+                margin_output_queue.append(margin_contribution)
+                margin_contribution = margin_output_queue.pop(0)
+                class_output_queue.append(class_contribution)
+                class_contribution = class_output_queue.pop(0)
+            raw_class_logits = class_logits.add(class_contribution)
+            logit_lower, logit_upper = raw_class_logits.bounds(vertices)
+            logit_error = _floating_rounding_radius(
+                state, logit_lower, logit_upper
+            )
+            class_logits = raw_class_logits.float_quantize(state, vertices)
+            chosen_logit_error = logit_error[
+                np.arange(batch), reference_predictions, None
+            ]
+            raw_margins = margins.add(margin_contribution)
+            margins = _HybridAffine(
+                raw_margins.center,
+                raw_margins.generators,
+                raw_margins.radius + chosen_logit_error + logit_error,
+            )
         margin_lower, margin_upper = margins.bounds(vertices)
         return (
             margin_lower,
