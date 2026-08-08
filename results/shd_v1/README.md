@@ -31,7 +31,29 @@ python experiments/aggregate_shd.py
 python experiments/correct_software_aggregate_float32.py --result-root results/shd_v1 --semantic-root artifacts/shd_v1_semantics_final --benchmark SHD
 ```
 
-## Five-seed reset repair
+## Five-seed matched repair
+
+The canonical repair aggregate is `repair_matched_v2_summary.json`. It covers
+reset-to-value and floor-rounded fixed-point execution with five methods, five
+seeds, identical 800-input calibration splits, and 280 updates for every
+gradient method. Label-free methods use zero labels; source-initialized target
+fine-tuning/QAT and random-initialized target retraining use all 800 labels.
+
+Certificate-directed repair recovers 77.2% of reset loss and 87.8% of floor-
+rounding loss. Every one of its ten cells clears 70% recovery and beats both
+unrepaired deployment and global threshold scaling. It slightly beats logit-only
+on reset but loses to it on floor rounding; labeled QAT recovers 101.5% on the
+fixed-point condition. No method, seed, or condition certifies a five-point
+budget, although none of the 50 bounds is violated.
+
+The earlier `repair_reset_summary.json` is preserved but superseded for baseline
+coverage. Regenerate the canonical aggregate from the ignored raw reports with:
+
+```powershell
+python experiments/aggregate_shd_repairs_matched.py
+```
+
+### Earlier reset-only aggregate
 
 On reset-to-value, certificate-directed repair recovers 77.2% of lost test
 accuracy on average, compared with 74.2% for pure logit distillation and 40.1%
@@ -42,7 +64,7 @@ is 15.1 points, no seed is accepted at a five-point budget, and the bound is
 1.85 points looser on average than logit-only distillation. Repair therefore
 restores aggregate accuracy without restoring reference decision identity.
 
-Regenerate the repair aggregate from the ignored raw reports with:
+Regenerate the earlier repair aggregate from the ignored raw reports with:
 
 ```powershell
 python experiments/aggregate_shd_repairs.py

@@ -253,30 +253,59 @@ assumptions or use labels.
   \label{fig:recurrent-vs-feedforward}
 \end{figure}
 
-Across five reset-to-value seeds, certificate-directed repair recovers
-$77.2\pm4.5\%$ of lost test accuracy, compared with $74.2\pm3.8\%$ for pure
-logit distillation and $40.1\pm11.6\%$ for global threshold scaling. It clears
-the 70\% recovery target for every seed. This favorable accuracy result does not
-yield a deployable certificate: its mean post-repair upper bound is 15.1 points,
-no seed is accepted at a five-point budget, and the bound is 1.85 points looser
-than logit-only distillation on average. Figure~\ref{fig:shd-repair} makes the
-two criteria explicit.
+We next compare repair on reset-to-value and floor-rounded Q8-weight/Q16-state
+execution. Every gradient method uses the same 800 calibration inputs, 40
+epochs, 280 optimizer updates, and GPU. Certificate-directed and logit-only
+calibration use no labels and expose 640 parameters. The source-initialized
+labeled target fine-tune---the QAT baseline when fixed point is active---and
+random-initialized target retraining use all 800 labels and expose 108,928
+parameters. Model selection uses calibration behavior only; the 861-input audit
+and labeled test sets remain untouched until the selected model is frozen.
 
-\begin{figure}[t]
+On reset-to-value, certificate-directed repair recovers $77.2\pm4.5\%$ of lost
+test accuracy, compared with $74.2\pm3.8\%$ for logit-only calibration,
+$40.1\pm11.6\%$ for global threshold scaling, and $73.5\pm17.8\%$ for the
+labeled source-initialized fine-tune. The proposed method clears 70\% recovery
+for every seed and leaves a mean 2.23-point accuracy loss. Yet its mean
+post-repair upper bound is 15.1 points, 1.85 points looser than logit-only, and
+no seed is accepted at a five-point budget.
+
+Floor rounding is the genuine QAT comparison and begins with a 53.62-point mean
+loss. Certificate-directed repair recovers $87.8\pm5.1\%$ and beats unrepaired
+PTQ and global threshold scaling in every seed. However, logit-only recovers
+$90.1\pm2.8\%$, while 800-label QAT recovers $101.5\pm3.4\%$ and slightly
+exceeds reference accuracy. The proposed method leaves a 6.48-point mean loss
+and a 19.1-point mean certificate; QAT's certificate is still 16.0 points.
+Matched-budget from-scratch retraining is much weaker: it recovers 58.4\% on
+floor rounding and increases the reset loss. This is a constrained baseline,
+not an estimate of retraining with the full labeled training set.
+
+Across all ten certificate-directed seed/condition cells, recovery exceeds 70\%
+and beats both no repair and global scaling, but the proposed objective is not
+uniformly better than logit-only. None of the 50 method/seed/condition cells
+certifies a five-point budget; no observed accuracy change violates its 95\%
+bound. Figure~\ref{fig:shd-repair} separates accuracy restoration from restored
+decision identity.
+
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=\linewidth]{figures/shd_repair_comparison.pdf}
-  \caption{Five-seed, label-free repair of reset-to-value semantics. The
-  proposed objective recovers the most accuracy on average, but no method
-  restores sufficient decision identity to certify a five-point budget on the
-  untouched audit split. Dashed lines are the preregistered targets.}
+  \includegraphics[width=\textwidth]{figures/shd_repair_matched_v2.pdf}
+  \caption{Five-seed matched-sample repair comparison. QAT denotes the
+  source-initialized 800-label target-semantics fine-tune and is genuinely
+  quantization-aware only in the fixed-point column; Scratch uses the same
+  labels and updates from random weights. Error bars show sample standard
+  deviations. Dashed lines are the 70\% recovery and five-point certificate
+  gates. Strong accuracy recovery does not restore reference decision identity.}
   \label{fig:shd-repair}
-\end{figure}
+\end{figure*}
 
 Repair can therefore restore aggregate accuracy without restoring decision
-identity. The current evidence supports the semantic transport problem, repair
-opportunity, and exact prospective certification of finite enumerated execution
-families. It does \emph{not} support the intended sound bounded-family claim or a
-tight recurrent distribution certificate. The next method must preserve
-timestep/threshold dependence through recurrent threshold branches; absent that
-advance and physical validation, the honest contribution is a narrower finite-
-family or systems/risk-ranking paper rather than the intended NeurIPS claim.
+identity. The current evidence supports the semantic transport problem, a
+substantial label-free repair opportunity, and exact prospective certification
+of finite enumerated execution families. It does \emph{not} establish a unique
+advantage for the certificate-directed objective over simpler logit imitation,
+nor support the intended sound bounded-family claim or a tight recurrent
+distribution certificate. The next method must preserve timestep/threshold
+dependence through recurrent threshold branches; absent that advance and
+physical validation, the honest contribution is a narrower finite-family or
+systems/risk-ranking paper rather than the intended NeurIPS claim.

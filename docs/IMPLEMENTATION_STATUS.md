@@ -14,8 +14,10 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 64
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 68
   passing software tests.
+- Matched repair baselines with explicit label, sample, optimizer-step,
+  trainable-parameter, runtime, selection, split, and artifact provenance.
 
 ## Completed software evidence
 
@@ -23,9 +25,12 @@
   semantic targets. The DVS result still requires a fresh external sequestered
   replication because its reference pipeline was selected using official test
   accuracy before semantic targets were run.
-- Five-seed SHD reset-to-value repair study. Certificate-directed repair recovers
-  77.2% of lost accuracy, but its mean post-repair bound is 15.1 points and does
-  not accept any seed at a five-point budget.
+- Five-seed SHD matched repair study on reset-to-value and floor-rounded
+  fixed-point execution. Certificate-directed repair recovers 77.2% and 87.8%
+  of lost accuracy, respectively, and every one of its ten cells clears 70%.
+  It beats no repair and global scaling in every cell, but loses to logit-only
+  on floor rounding and to labeled QAT on the genuine fixed-point comparison.
+  No repaired method/seed/condition cell accepts a five-point budget.
 - Full-audit SHD finite-family analysis: 38.72% mean member-wise coverage over
   the 16-member family, exactly matching enumerated agreement and passing the
   declared 20% gate. The preserved 18.79% predecessor merged logits across
@@ -60,10 +65,12 @@
 The evidence supports execution-semantic transport as a real recurrent-SNN
 problem, disagreement as a strong label-free ranking signal, label-free repair
 as an accuracy-recovery mechanism, and prospective certification of a finite
-enumerated execution family. It does not support the intended continuous bounded-
-family claim with the current interval abstraction. Recurrence causes much of
-the true finite-family instability, while continuous interval relaxation and
-decision-identity loss remain substantial.
+enumerated execution family. The proposed repair objective is not uniformly
+better than logit-only imitation, and repair does not make the distribution
+certificate operationally tight. The evidence also does not support the intended
+continuous bounded-family claim with the current interval abstraction.
+Recurrence causes much of the true finite-family instability, while continuous
+interval relaxation and decision-identity loss remain substantial.
 
 The distribution certificate is mathematically valid but cannot be made
 uniformly tighter without adding information or assumptions. A top-venue claim
@@ -79,8 +86,8 @@ finite-family or systems/risk-ranking contribution.
 
 - Tighter recurrence-aware analysis, such as branch budgeting, zonotopes, or a
   hybrid exact/abstract domain, evaluated against the existing exact-family gap.
-- Per-platform QAT and fully supervised target-retraining baselines at matched
-  sample, optimization, and compute budgets.
+- Full-training-set supervised retraining as a separately budgeted oracle; the
+  completed matched baseline intentionally uses only 800 labels and 280 updates.
 - Fresh sequestered DVS Gesture replication.
 - Cocotb/formal execution in an installed HDL toolchain and board synthesis.
 - Actual SpiNNaker2 and Virtex-7 canary captures and repeated-run analysis.
