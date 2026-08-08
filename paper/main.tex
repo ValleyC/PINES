@@ -51,11 +51,10 @@ prediction identity, still above the 20\% coverage gate, but explicit sound
 branch sets fail to finish 50 steps even with 65,536 states and $128\times128$
 parameter partitioning. Thus finite-family transport is supported, but the
 intended bounded-family claim is not yet. A relational affine domain with
-polygonal recurrent guard cuts nevertheless certifies 99.9477\% of the
-continuous parameter area for one finite-grid-stable SHD input at 16,384
-leaves, about 84 times less unresolved area than axis-aligned refinement, but
-does not close the final guard-boundary residue and therefore emits no
-certificate. Exact enumeration of every binary64 threshold scale at 257 fixed
+explicit float32 roundoff and polygonal recurrent guard cuts nevertheless
+certifies 99.8331\% of the continuous parameter area for one finite-grid-stable
+SHD input at 16,384 leaves, but leaves 0.1669\% unresolved and therefore emits
+no certificate. Exact enumeration of every binary64 threshold scale at 257 fixed
 timestep slices preserves the class, but is not a proof between slices.
 Targeted one-axis families retain at
 least 60.3\% mean sampled identity, and label-free repair raises the reset-family

@@ -262,14 +262,14 @@ raises matched 4,096-leaf coverage only from 85.72\% to 86.35\% (and is slightly
 worse at 256 leaves). We therefore stop axis-policy tuning; the next step must
 represent non-axis-aligned guard constraints.
 
-Polygonal guard bands provide the strongest result. At 1,024 total leaves,
-allowing 0, 8, 32, and 128 robust guard cuts yields 62.99\%, 64.58\%, 67.88\%,
-and 93.57\% certified area. Freezing the scale-invariant rule that guard cuts
-may consume at most one eighth of the leaves gives 99.68\% at 4,096 leaves and
-99.9477\% after 31,725 polygon analyses at 16,384 leaves. The latter leaves
-6,625 tiny polygons and 0.0523\% area unresolved, about 84 times less than
-matched axis-aligned affine refinement. We stop leaf escalation and issue no
-certificate: a joint timestep--threshold boundary oracle is still required.
+Polygonal guard bands provide the strongest result after explicit float32
+roundoff accounting. A fixed 128-cut cap gives 82.26\% certified area at 1,024
+leaves and 94.13\% at 4,096. Under the scale-invariant one-cut-per-eight-leaves
+rule, coverage reaches 99.7557\% at 4,096 and 99.8331\% after 31,060 polygon
+analyses at 16,384 leaves. The latter leaves 13,158 tiny polygons and 0.1669\%
+area unresolved. Four times the leaves improve coverage by only 0.077 points,
+so we stop leaf escalation and issue no certificate: a joint
+timestep--threshold boundary oracle is still required.
 
 The exact threshold oracle then exhausts every binary64 threshold scale in the
 same plus/minus 1\% range at 257 fixed timestep slices. All 257 slices preserve

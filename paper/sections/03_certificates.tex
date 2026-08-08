@@ -49,6 +49,12 @@ are accumulated in the same relational domain. This implementation is sound for
 deterministic floating-point forward Euler; other integration and numeric rules
 remain delegated to the interval engine.
 
+Every declared float32 conversion of current, state, output contribution, and
+accumulated logit adds the conservative radius
+$\epsilon\max(|\ell|,|u|)+\eta_{\min}$. Output and accumulator roundoff are
+charged to direct pairwise margins rather than formed by subtracting independent
+logit boxes; this preserves cancellation of shared spike terms.
+
 For an unresolved affine leaf, we expose a recurrent guard enclosure
 $c+g^\top\epsilon\pm r$. Convex polygon clipping partitions the semantic domain
 into robust quiet, residual-band, and spiking regions. Affine bounds and product

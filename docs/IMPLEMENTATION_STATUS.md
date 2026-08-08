@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 94
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 95
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -95,13 +95,14 @@
   certified volume from 61.47% to 62.84% at 1,024 leaves and from 85.72% to
   86.35% at 4,096, but is slightly worse at 256. The small, non-monotone gain
   rejects further axis-policy tuning and supports non-axis-aligned constraints.
-- Sound polygonal recurrent-guard advance: convex guard cuts followed by
-  width-scaled axis refinement certify 99.9477% of the continuous parameter
-  area for one finite-grid-stable SHD input at 16,384 leaves. The remaining
-  0.0523% is about 84 times smaller than with matched axis-aligned affine
-  refinement, but 6,625 tiny polygons remain unresolved. No full certificate is
-  issued, further leaf escalation is stopped, and five-seed expansion remains
-  gated on a joint guard-boundary oracle.
+- Sound polygonal recurrent-guard advance with explicit float32 roundoff:
+  current, state, output, and logit conversions receive conservative rounding
+  envelopes while direct margins retain shared-spike cancellation. Staged guard
+  cuts certify 82.26% at 1,024 leaves, 99.7557% at 4,096, and 99.8331% at 16,384
+  for one finite-grid-stable SHD input. The largest run leaves 0.1669% area in
+  13,158 polygons. Four times the final leaf budget improves coverage by only
+  0.077 points, so no certificate is issued and leaf escalation stops. The
+  earlier 99.9477% arithmetic-idealized summary is superseded.
 - Exact threshold-boundary slice oracle: for reset-to-value at fixed timestep,
   it exhausts every representable binary64 threshold scale using contiguous
   spike-trace cells and the emulator's actual comparisons. All 257 timestep
@@ -161,8 +162,8 @@ must therefore specify and validate such an assumption rather than presenting
 raw label-free disagreement as both universal and operationally tight.
 
 The NeurIPS framing remains conditional on a full recurrence-aware certificate
-and prospective physical conformance. Polygonal recurrent guard cuts now cover
-99.9477% of one grid-stable SHD input's parameter box, leaving only 0.0523%
+and prospective physical conformance. Corrected polygonal recurrent guard cuts
+now cover 99.8331% of one grid-stable SHD input's parameter box, leaving 0.1669%
 unresolved, but they still fail the actual per-input gate because every region
 must be proved. Exact threshold enumeration closes every binary64 threshold
 scale at 257 fixed timestep slices, but not the regions between slices. Further
@@ -175,7 +176,7 @@ systems/risk-ranking contribution.
 ## Open experimental milestones
 
 - Joint timestep--threshold guard-boundary oracle for the residual polygon
-  cover. Polygonal cuts reduce unresolved area to 0.0523%, and the exact
+  cover. Roundoff-aware polygonal cuts reduce unresolved area to 0.1669%, and the exact
   threshold oracle closes 257 fixed-timestep slices, but neither proves the open
   regions between slices. Further leaf/grid escalation is stopped and five-seed
   expansion remains gated.
