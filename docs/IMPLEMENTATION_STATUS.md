@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 86
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 90
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -95,6 +95,13 @@
   certified volume from 61.47% to 62.84% at 1,024 leaves and from 85.72% to
   86.35% at 4,096, but is slightly worse at 256. The small, non-monotone gain
   rejects further axis-policy tuning and supports non-axis-aligned constraints.
+- Sound polygonal recurrent-guard advance: convex guard cuts followed by
+  width-scaled axis refinement certify 99.9477% of the continuous parameter
+  area for one finite-grid-stable SHD input at 16,384 leaves. The remaining
+  0.0523% is about 84 times smaller than with matched axis-aligned affine
+  refinement, but 6,625 tiny polygons remain unresolved. No full certificate is
+  issued, further leaf escalation is stopped, and five-seed expansion remains
+  gated on an exact guard-boundary oracle.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
@@ -148,20 +155,20 @@ must therefore specify and validate such an assumption rather than presenting
 raw label-free disagreement as both universal and operationally tight.
 
 The NeurIPS framing remains conditional on a full recurrence-aware certificate
-and prospective physical conformance. Relational affine guards now prove local
-SHD regions and cover 95.61% of one grid-stable input's parameter box, so the
-continuous-family route is no longer stalled at zero. It still fails the actual
-per-input gate: unresolved cells track recurrent guard surfaces. The next method
-must add symbolic half-space cuts or constrained-zonotope guards and produce full
-certificates before expansion to five seeds. If that fails, the project follows
-the declared pivot to a narrower finite-family or systems/risk-ranking
-contribution.
+and prospective physical conformance. Polygonal recurrent guard cuts now cover
+99.9477% of one grid-stable SHD input's parameter box, leaving only 0.0523%
+unresolved, but they still fail the actual per-input gate because every region
+must be proved. Further leaf escalation is rejected; the next method is an exact
+guard-boundary oracle for the residual polygons. Five-seed expansion remains
+gated on at least one complete continuous-family certificate. If that fails, the
+project follows the declared pivot to a narrower finite-family or
+systems/risk-ranking contribution.
 
 ## Open experimental milestones
 
-- Symbolic guard-surface cuts or a constrained-zonotope extension to the affine
-  recurrent domain. Axis-aligned affine leaves reach 95.61% parameter coverage
-  but no full input certificate; five-seed expansion remains gated on completion.
+- Exact guard-boundary oracle for the residual polygon cover. Polygonal cuts
+  reduce unresolved area to 0.0523% but do not complete a full certificate;
+  further leaf escalation is stopped and five-seed expansion remains gated.
 - Multi-step family-verified repair margins. A pointwise center-execution guard
   penalty and worst-loss objectives over sparse execution grids are now
   empirically ruled out as certificate-restoring objectives.

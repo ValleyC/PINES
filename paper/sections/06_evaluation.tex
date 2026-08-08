@@ -262,6 +262,15 @@ raises matched 4,096-leaf coverage only from 85.72\% to 86.35\% (and is slightly
 worse at 256 leaves). We therefore stop axis-policy tuning; the next step must
 represent non-axis-aligned guard constraints.
 
+Polygonal guard bands provide the strongest result. At 1,024 total leaves,
+allowing 0, 8, 32, and 128 robust guard cuts yields 62.99\%, 64.58\%, 67.88\%,
+and 93.57\% certified area. Freezing the scale-invariant rule that guard cuts
+may consume at most one eighth of the leaves gives 99.68\% at 4,096 leaves and
+99.9477\% after 31,725 polygon analyses at 16,384 leaves. The latter leaves
+6,625 tiny polygons and 0.0523\% area unresolved, about 84 times less than
+matched axis-aligned affine refinement. We stop leaf escalation and issue no
+certificate: an exact boundary oracle is still required.
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/shd_branch_set_feasibility.pdf}

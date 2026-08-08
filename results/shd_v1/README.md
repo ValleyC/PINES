@@ -263,6 +263,30 @@ python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --domain a
 python experiments/aggregate_shd_guard_guided_affine.py
 ```
 
+### Polygonal recurrent guard cuts
+
+`polygonal_guard_cut_summary.json` records the strongest sound continuous-domain
+result so far. Convex half-space clipping follows recurrent guard surfaces before
+width-scaled axis refinement. At 1,024 leaves, increasing the guard-cut budget
+from 0 to 8, 32, and 128 raises certified parameter area from 62.99% to 64.58%,
+67.88%, and 93.57%. With the preregistered scale-invariant budget of at most one
+guard cut per eight leaves, coverage reaches 99.68% at 4,096 leaves and 99.9477%
+at 16,384 leaves. The largest run analyzes 31,725 polygons and leaves 6,625 tiny
+polygons covering 0.0523% of the original rectangle unresolved, about 84 times
+less unresolved area than matched axis-aligned affine refinement.
+
+This is diagnostic parameter area, not a probability over semantics. Because a
+per-input family certificate requires every positive-area region to be proved,
+the result remains inconclusive and emits no certificate. More leaf escalation
+is stopped; the next gate is an exact guard-boundary oracle.
+
+```powershell
+python experiments/run_shd_guard_cut_certificate.py --seed 1701 --max-leaves 1024 --max-guard-band-splits 128 --output-root artifacts/shd_v40_staged_guard_cap128
+python experiments/run_shd_guard_cut_certificate.py --seed 1701 --max-leaves 4096 --max-guard-band-splits 512 --output-root artifacts/shd_v42_staged_guard_cap512_p4096
+python experiments/run_shd_guard_cut_certificate.py --seed 1701 --max-leaves 16384 --max-guard-band-splits 2048 --output-root artifacts/shd_v43_staged_guard_cap2048_p16384
+python experiments/aggregate_shd_polygonal_guard_cuts.py
+```
+
 ### Post-repair bounded-family headroom
 
 `repair_family_grid_summary.json` compares selected reset-target models against

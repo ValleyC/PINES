@@ -49,6 +49,14 @@ are accumulated in the same relational domain. This implementation is sound for
 deterministic floating-point forward Euler; other integration and numeric rules
 remain delegated to the interval engine.
 
+For an unresolved affine leaf, we expose a recurrent guard enclosure
+$c+g^\top\epsilon\pm r$. Convex polygon clipping partitions the semantic domain
+into robust quiet, residual-band, and spiking regions. Affine bounds and product
+remainders are recentered and recomputed over each polygon; the remaining region
+uses width-scaled axis refinement after a declared guard-cut budget. Polygon
+areas are checked to cover the parent exactly, and only zero unresolved area
+produces a certificate.
+
 We also implement a path-separated diagnostic domain for a single zero-delay
 member. It enumerates possible spike vectors, propagates a separate interval
 state for each path, and merges only paths with identical current spikes and
