@@ -280,10 +280,11 @@ run analyzes 31,060 polygons and leaves 13,158 tiny polygons covering 0.1669%
 of the original rectangle unresolved. Moving from 4,096 to 16,384 leaves gains
 only 0.077 percentage points, so further leaf scaling is stopped.
 
-This is diagnostic parameter area, not a probability over semantics. Because a
-per-input family certificate requires every positive-area region to be proved,
-the result remains inconclusive and emits no certificate. The next gate is a
-joint timestep--threshold boundary oracle.
+This is diagnostic parameter area, not a probability over semantics. By itself,
+the cover is inconclusive because a per-input family certificate requires every
+positive-area region to be proved. The residual was subsequently closed by the
+sound local branch oracle described below; the polygon-only artifact remains an
+auditable intermediate result.
 
 ```powershell
 python experiments/run_shd_guard_cut_certificate.py --seed 1701 --max-leaves 1024 4096 --max-guard-band-splits 128 --output-root artifacts/shd_v47_rounding_guard_cap128
@@ -306,8 +307,8 @@ plus/minus 1% preserve the reference class. The run exhausts 2,716 exact cells
 in 12.1 seconds; individual slices need 6--17 cells. This rules out
 threshold-only boundary relaxation at those slices. It is not a joint
 continuous certificate because the open timestep regions between slices remain
-unproved. More timestep-grid densification is stopped in favor of a joint
-timestep--threshold oracle.
+unproved. More timestep-grid densification was stopped; the later local branch
+oracle closes the joint residual directly.
 
 ```powershell
 python experiments/run_shd_exact_threshold_slices.py --seed 1701 --output-root artifacts/shd_v45_exact_threshold_slices
@@ -316,13 +317,13 @@ python experiments/aggregate_shd_exact_threshold_slices.py
 
 ### Residual polygon geometry
 
-`guard_residual_geometry_summary.json` characterizes the exact input to the next
-joint solver. The corrected 4,096-leaf run exports 3,365 unresolved convex
+`guard_residual_geometry_summary.json` characterizes the exact input passed to
+the later local branch solver. The corrected 4,096-leaf run exports 3,365 unresolved convex
 polygons to a hashed 111-KB archive. Their median actual timestep-factor width is
 4.19e-5, below the 7.8125e-5 spacing of the 257 exact slices, and 1,271 polygons
 fall entirely between slice locations. Although individually small, their
 projections collectively span both complete parameter axes. This rejects more
-uniform slice densification: the next oracle must reason within the polygon
+uniform slice densification and motivated reasoning within the polygon
 constraints.
 
 ```powershell
@@ -339,12 +340,48 @@ random convex combinations per polygon. Across 128,460 unique parameter points,
 every execution retains class 2 and the minimum reference-class margin is 1.033.
 
 This is strong evidence that the residual reflects abstraction slack, but it is
-not a certificate and does not cover unsampled points. More random search is
-stopped; the result advances only to a sound joint polygon oracle.
+not a certificate and does not cover unsampled points. More random search was
+stopped in favor of the sound local polygon branch oracle.
 
 ```powershell
 python experiments/run_shd_residual_counterexample_search.py --seed 1701 --random-points-per-polygon 32 --output-root artifacts/shd_v52_residual_counterexample_search_dense
 python experiments/aggregate_shd_residual_counterexample_search.py
+```
+
+### Sound local branch closure and frozen screen
+
+`polygon_branch_certificate_summary.json` records the first complete per-input
+joint continuous-family certificate. The local oracle enumerates both outcomes
+of every guard that remains uncertain inside a residual polygon, deliberately
+retaining infeasible branches. All 3,365 residual polygons complete; every
+retained trace predicts class 2, with median peak branch count 2, 99th
+percentile 3, and maximum 14. Combining this closure with the 99.7557% affine
+cover reaches total area one within 6.8e-12. The input was used during method
+development, so this result is not population evidence.
+
+The method budgets were then frozen at 64 polygon leaves, 64 branches, and eight
+guard cuts. `hybrid_family_audit_summary.json` aggregates the first 32 untouched
+certificate-audit inputs from each of five seeds. No labels, predictions,
+margins, or grid behavior were used for selection. The full joint reset-to-value
+box is certified for 58/160 inputs (36.25%, exact two-sided 95% binomial interval
+28.81--44.21%), with 31.25--43.75% coverage by seed. Mean certified parameter
+volume is 63.78%, and the area cover closes on every input. The frozen 20%
+advance gate passes.
+
+An independent 9-by-9 grid over the same continuous box finds no mismatch for
+any certified input. It is stable on 112/160 inputs and finds concrete
+prediction changes on 48; all 48 are left uncertified. The remaining 54
+grid-stable but inconclusive inputs quantify proof- or budget-conservatism. This
+grid is a falsification diagnostic, not part of the proof. The screen triggered
+the separately frozen all-input audit over 4,305 certificate-split inputs.
+
+```powershell
+python experiments/run_shd_residual_polygon_branch_certificate.py --seed 1701 --output-root artifacts/shd_v56_residual_polygon_branches_all
+python experiments/aggregate_shd_polygon_branch_certificate.py
+python experiments/run_shd_hybrid_family_audit.py
+python experiments/validate_shd_hybrid_audit_grid.py
+python experiments/aggregate_shd_hybrid_audit.py
+python experiments/run_shd_hybrid_family_full_audit.py
 ```
 
 ### Post-repair bounded-family headroom

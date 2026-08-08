@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from dataclasses import replace
 
 import numpy as np
@@ -17,7 +18,13 @@ from transportcert.affine import (
 )
 from transportcert.emulator import VectorizedEmulator
 from transportcert.models import DenseRecurrentSNN
-from transportcert.semantics import ExecutionSemantics, IntegrationRule, ResetRule
+from transportcert.semantics import (
+    ExecutionSemantics,
+    IntegrationRule,
+    ResetRule,
+    ThresholdTiming,
+    UpdateOrdering,
+)
 
 
 def test_hybrid_affine_product_residual_contains_shared_samples() -> None:
@@ -57,6 +64,26 @@ def test_hybrid_affine_product_residual_contains_shared_samples() -> None:
         assert np.all(
             np.abs(left_value * right_value - affine_value)
             <= polygon_product.radius
+        )
+
+
+def test_hybrid_affine_exponential_encloses_shared_samples() -> None:
+    affine = _HybridAffine(
+        center=np.asarray([[0.8, 1.1]]),
+        generators=np.asarray([[[0.12, -0.04], [-0.08, 0.07]]]),
+        radius=np.asarray([[0.015, 0.025]]),
+    )
+    triangle = np.asarray([[-0.8, -0.6], [0.9, -0.4], [0.4, 0.95]])
+    exponential = affine.exp_negative(triangle)
+    rng = np.random.default_rng(1301)
+    for _ in range(2000):
+        epsilon = rng.dirichlet(np.ones(3)) @ triangle
+        residual = rng.uniform(-affine.radius, affine.radius)
+        value = affine.center + affine.generators @ epsilon + residual
+        exact = np.exp(-value)
+        approximation = exponential.center + exponential.generators @ epsilon
+        assert np.all(
+            np.abs(exact - approximation) <= exponential.radius + 1e-15
         )
 
 
@@ -216,7 +243,7 @@ def test_adaptive_guard_cut_retires_spiking_polygon() -> None:
         np.ones((1, 1, 1)),
         reference,
         box,
-        max_leaves=3,
+        max_leaves=5,
         retain_unresolved_polygons=True,
     )
     assert not result.certified
@@ -462,6 +489,183 @@ def test_polygon_branch_randomized_differential_soundness() -> None:
         assert sampled_predictions.issubset(result.possible_predictions)
 
 
+def test_polygon_branch_predictions_cover_delayed_execution(
+    small_model, event_batch
+) -> None:
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    inputs = event_batch[:1, :4]
+    reference = ExecutionSemantics()
+    for synaptic_delay, output_delay in ((1, 0), (0, 1), (1, 1)):
+        target = replace(
+            reference,
+            reset_rule=ResetRule.TO_VALUE,
+            synaptic_delay_steps=synaptic_delay,
+            output_delay_steps=output_delay,
+        )
+        box = SemanticsBox(
+            base=target,
+            timestep_bounds=(0.95, 1.05),
+            threshold_scale_bounds=(0.95, 1.05),
+            integration_rules=(target.integration_rule,),
+            threshold_timings=(target.threshold_timing,),
+            reset_rules=(target.reset_rule,),
+            synaptic_delays=(synaptic_delay,),
+            output_delays=(output_delay,),
+        )
+        result = PolygonBranchCertifier().certify(
+            small_model,
+            inputs,
+            reference,
+            box,
+            square,
+            max_branches=65536,
+        )
+        assert result.complete
+        sampled_predictions = set()
+        for timestep in np.linspace(0.95, 1.05, 5):
+            semantics = replace(target, timestep=float(timestep))
+            for threshold_scale in np.linspace(0.95, 1.05, 5):
+                candidate = small_model.with_parameters(
+                    threshold=small_model.threshold * threshold_scale
+                )
+                sampled_predictions.add(
+                    int(
+                        VectorizedEmulator()
+                        .run(candidate, inputs, semantics)
+                        .predictions[0]
+                    )
+                )
+        assert sampled_predictions.issubset(result.possible_predictions)
+
+
+def test_polygon_branch_predictions_cover_exponential_euler() -> None:
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    for seed in range(8):
+        rng = np.random.default_rng(3000 + seed)
+        model = DenseRecurrentSNN(
+            input_weights=rng.normal(0.8, 0.3, size=(2, 2)),
+            recurrent_weights=rng.normal(0.0, 0.25, size=(2, 2)),
+            output_weights=rng.normal(0.0, 1.0, size=(2, 3)),
+            bias=rng.normal(0.0, 0.05, size=2),
+            threshold=rng.uniform(0.65, 1.05, size=2),
+            tau_mem=rng.uniform(1.5, 3.0, size=2),
+            reset_value=np.zeros(2),
+        )
+        inputs = (rng.random((1, 4, 2)) < 0.4).astype(np.float64)
+        reference = ExecutionSemantics()
+        target = replace(
+            reference, integration_rule=IntegrationRule.EXPONENTIAL_EULER
+        )
+        box = SemanticsBox(
+            base=target,
+            timestep_bounds=(0.95, 1.05),
+            threshold_scale_bounds=(0.95, 1.05),
+            integration_rules=(target.integration_rule,),
+            threshold_timings=(target.threshold_timing,),
+            reset_rules=(target.reset_rule,),
+            synaptic_delays=(0,),
+            output_delays=(0,),
+        )
+        result = PolygonBranchCertifier().certify(
+            model,
+            inputs,
+            reference,
+            box,
+            square,
+            max_branches=65536,
+        )
+        assert result.complete
+        sampled_predictions = set()
+        for timestep in np.linspace(0.95, 1.05, 7):
+            semantics = replace(target, timestep=float(timestep))
+            for threshold_scale in np.linspace(0.95, 1.05, 7):
+                candidate = model.with_parameters(
+                    threshold=model.threshold * threshold_scale
+                )
+                sampled_predictions.add(
+                    int(
+                        VectorizedEmulator()
+                        .run(candidate, inputs, semantics)
+                        .predictions[0]
+                    )
+                )
+        assert sampled_predictions.issubset(result.possible_predictions)
+
+
+def test_polygon_branch_predictions_cover_discrete_member_family(
+    small_model, event_batch
+) -> None:
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    inputs = event_batch[:1, :4]
+    reference = ExecutionSemantics()
+    integrations = (
+        IntegrationRule.FORWARD_EULER,
+        IntegrationRule.EXPONENTIAL_EULER,
+    )
+    timings = (
+        ThresholdTiming.POST_INTEGRATION,
+        ThresholdTiming.PRE_INTEGRATION,
+    )
+    resets = (ResetRule.SUBTRACTIVE, ResetRule.TO_VALUE)
+    box = SemanticsBox(
+        base=reference,
+        timestep_bounds=(0.97, 1.03),
+        threshold_scale_bounds=(0.97, 1.03),
+        integration_rules=integrations,
+        threshold_timings=timings,
+        reset_rules=resets,
+        synaptic_delays=(0, 1),
+        output_delays=(0, 1),
+        name="randomized-discrete-family",
+    )
+    result = PolygonBranchCertifier().certify(
+        small_model,
+        inputs,
+        reference,
+        box,
+        square,
+        max_branches=65536,
+    )
+    assert result.complete
+    sampled_predictions = set()
+    for integration, timing, reset, synaptic_delay, output_delay in itertools.product(
+        integrations, timings, resets, (0, 1), (0, 1)
+    ):
+        for timestep in np.linspace(0.97, 1.03, 3):
+            semantics = replace(
+                reference,
+                integration_rule=integration,
+                threshold_timing=timing,
+                update_ordering=(
+                    UpdateOrdering.THRESHOLD_RESET_INTEGRATE
+                    if timing is ThresholdTiming.PRE_INTEGRATION
+                    else UpdateOrdering.INTEGRATE_THRESHOLD_RESET
+                ),
+                reset_rule=reset,
+                synaptic_delay_steps=synaptic_delay,
+                output_delay_steps=output_delay,
+                timestep=float(timestep),
+            )
+            for threshold_scale in np.linspace(0.97, 1.03, 3):
+                candidate = small_model.with_parameters(
+                    threshold=small_model.threshold * threshold_scale
+                )
+                sampled_predictions.add(
+                    int(
+                        VectorizedEmulator()
+                        .run(candidate, inputs, semantics)
+                        .predictions[0]
+                    )
+                )
+    assert sampled_predictions.issubset(result.possible_predictions)
+
+
 def test_polygon_branch_cap_is_inconclusive(small_model, event_batch) -> None:
     reference = ExecutionSemantics()
     target = replace(reference, reset_rule=ResetRule.TO_VALUE)
@@ -512,6 +716,43 @@ def test_adaptive_hybrid_closes_prediction_invariant_root() -> None:
         reset_rules=(target.reset_rule,),
         synaptic_delays=(0,),
         output_delays=(0,),
+    )
+    result = AdaptiveHybridPolygonCertifier(max_branches=4).certify(
+        model,
+        np.ones((1, 1, 1)),
+        reference,
+        box,
+        max_leaves=1,
+    )
+    assert result.certified
+    assert result.branch_certified_leaves == 1
+    assert result.final_leaves == 1
+
+
+def test_adaptive_hybrid_closes_discrete_prediction_invariant_family() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[1.0]]),
+        recurrent_weights=np.zeros((1, 1)),
+        output_weights=np.asarray([[1.0, 0.0]]),
+        bias=np.zeros(1),
+        threshold=np.ones(1),
+        tau_mem=np.ones(1),
+        reset_value=np.zeros(1),
+    )
+    reference = ExecutionSemantics()
+    box = SemanticsBox(
+        base=reference,
+        timestep_bounds=(0.9, 1.1),
+        threshold_scale_bounds=(0.9, 1.1),
+        integration_rules=(
+            IntegrationRule.FORWARD_EULER,
+            IntegrationRule.EXPONENTIAL_EULER,
+        ),
+        threshold_timings=(reference.threshold_timing,),
+        reset_rules=(ResetRule.SUBTRACTIVE, ResetRule.TO_VALUE),
+        synaptic_delays=(0, 1),
+        output_delays=(0,),
+        name="prediction-invariant-family",
     )
     result = AdaptiveHybridPolygonCertifier(max_branches=4).certify(
         model,

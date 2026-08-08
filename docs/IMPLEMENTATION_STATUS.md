@@ -121,6 +121,22 @@
   retain class 2 and the minimum reference-class margin is 1.033. This supports
   abstraction slack but is explicitly not used as a certificate; further random
   search is stopped in favor of the sound joint oracle.
+- Sound local polygon branch closure: conditional affine propagation enumerates
+  both outcomes of every guard that remains uncertain, retaining even infeasible
+  assignments. All 3,365 residual polygons complete and predict only class 2;
+  median peak branch count is 2, the 99th percentile is 3, and the maximum is
+  14. Together with the affine cover, total parameter area is one within 6.8e-12,
+  yielding the first complete per-input joint continuous-family certificate.
+- Frozen five-seed hybrid screen: with 64 leaves, 64 local branches, and eight
+  guard cuts fixed before opening the screen, 58/160 untouched SHD audit inputs
+  are fully certified (36.25%, exact 95% interval 28.81--44.21%), and every seed
+  is nonzero. An independent 9-by-9 grid contradicts none of the 58 certificates,
+  finds concrete flips for 48 inputs, and is stable but inconclusive for 54. The
+  declared 20% advancement gate passes and triggers the all-input audit.
+- Broader family engine: the local oracle now carries explicit synaptic/output
+  queues, encloses exponential Euler with a second-order remainder, and conjoins
+  mutually exclusive discrete members. Randomized recurrent differential tests
+  cover these additions; fixed-point local branching remains open.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
@@ -154,13 +170,19 @@
 
 The evidence supports execution-semantic transport as a real recurrent-SNN
 problem, disagreement as a strong label-free ranking signal, label-free repair
-as an accuracy-recovery mechanism, and prospective certification of a finite
-enumerated execution family. The proposed repair objective is not uniformly
-better than logit-only imitation, and repair does not make the distribution
-certificate operationally tight. The evidence also does not support the intended
-continuous bounded-family claim with the current interval abstraction.
-Recurrence causes much of the true finite-family instability, while continuous
-interval relaxation and decision-identity loss remain substantial.
+as an accuracy-recovery mechanism, and sound prospective certification of both
+finite enumerated families and a targeted joint continuous family. The local
+branch result removes the previous central scientific blocker: a complete
+continuous certificate now exists, and frozen five-seed screening exceeds the
+20% tractability gate without input filtering. The full 4,305-input audit is the
+next authority for a population-level SHD coverage claim.
+
+This advance is narrower than the complete manuscript contract. The certified
+screen covers reset-to-value with joint plus/minus 1% timestep and threshold
+uncertainty, forward Euler, float32 state arithmetic, and zero delay. The new
+engine can represent exponential integration and delivery queues, but those
+axes have not yet passed frozen full-model audits; fixed-point local branching,
+DVS family certification, and both physical conformance terms remain open.
 
 Targeted bounded-axis contracts remain scientifically viable: their sampled
 ceilings are 60--69%, and repair can add roughly ten points of reset-family
@@ -173,26 +195,23 @@ uniformly tighter without adding information or assumptions. A top-venue claim
 must therefore specify and validate such an assumption rather than presenting
 raw label-free disagreement as both universal and operationally tight.
 
-The NeurIPS framing remains conditional on a full recurrence-aware certificate
-and prospective physical conformance. Corrected polygonal recurrent guard cuts
-now cover 99.8331% of one grid-stable SHD input's parameter box, leaving 0.1669%
-unresolved, but they still fail the actual per-input gate because every region
-must be proved. Exact threshold enumeration closes every binary64 threshold
-scale at 257 fixed timestep slices, but not the regions between slices. Further
-grid escalation is rejected; the next method is a joint timestep--threshold
-guard-boundary oracle for the residual polygons. Five-seed expansion remains
-gated on at least one complete continuous-family certificate. If that fails, the
-project follows the declared pivot to a narrower finite-family or
-systems/risk-ranking contribution.
+The NeurIPS framing therefore advances from ``missing certificate method'' to
+``incomplete breadth and physical validation.'' It remains conditional on the
+all-input SHD audit, at least one sound bounded family on DVS Gesture, two
+physical backends, emulator--hardware conformance, and certificate-directed
+repair that improves post-repair certified risk rather than only accuracy. The
+distribution certificate also remains mathematically sharp but operationally
+loose without additional assumptions.
 
 ## Open experimental milestones
 
-- Joint timestep--threshold guard-boundary oracle for the residual polygon
-  cover. Roundoff-aware polygonal cuts reduce unresolved area to 0.1669%, and
-  the exact threshold oracle closes 257 fixed-timestep slices, but neither proves the open
-  regions between slices. A hashed 3,365-polygon residue is now available for
-  direct solver input. Further leaf/grid escalation is stopped and five-seed
-  expansion remains gated.
+- Complete and aggregate the frozen 4,305-input SHD hybrid audit, then run an
+  independent full-audit parameter grid as a falsification check.
+- Freeze and execute continuous-family screens for integration, threshold timing,
+  and delay, followed by the preregistered 16-member Cartesian family if the
+  targeted screens remain tractable.
+- Extend the sound hybrid domain to the DVS convolutional/recurrent model or
+  define and preregister an equivalently faithful reduced abstract interface.
 - Multi-step family-verified repair margins. A pointwise center-execution guard
   penalty and worst-loss objectives over sparse execution grids are now
   empirically ruled out as certificate-restoring objectives.

@@ -18,6 +18,24 @@ from .semantics import (
 )
 
 
+_ANALYSIS_EPSILON = np.finfo(np.float64).eps
+_ANALYSIS_MINIMUM = float(np.nextafter(0.0, 1.0))
+
+
+def _analysis_gamma(operation_count: int) -> float:
+    product = operation_count * _ANALYSIS_EPSILON
+    if operation_count < 1 or product >= 1.0:
+        raise ValueError("invalid binary64 error operation count")
+    return product / (1.0 - product)
+
+
+def _outward_radius(radius: np.ndarray, error: np.ndarray) -> np.ndarray:
+    inflated = np.asarray(radius, dtype=np.float64) + np.asarray(
+        error, dtype=np.float64
+    )
+    return np.nextafter(inflated + _ANALYSIS_MINIMUM, np.inf)
+
+
 @dataclass(frozen=True)
 class AffineGuardCertificateResult:
     certified: np.ndarray
@@ -97,6 +115,8 @@ class _PolygonBranch:
     voltage: _HybridAffine
     previous_spikes: np.ndarray
     logits: np.ndarray
+    current_queue: tuple[_HybridAffine, ...]
+    output_queue: tuple[np.ndarray, ...]
 
 
 @dataclass(frozen=True)
@@ -136,31 +156,90 @@ class _HybridAffine:
         center = (lower_values + upper_values) / 2.0
         generators = np.zeros((*center.shape, 2), dtype=np.float64)
         generators[..., generator_index] = (upper_values - lower_values) / 2.0
-        return cls(center, generators, np.zeros_like(center))
+        construction_scale = np.abs(lower_values) + np.abs(upper_values)
+        radius = _outward_radius(
+            np.zeros_like(center),
+            _analysis_gamma(8) * construction_scale,
+        )
+        return cls(center, generators, radius)
 
     def bounds(
         self, parameter_vertices: np.ndarray | None = None
     ) -> tuple[np.ndarray, np.ndarray]:
         if parameter_vertices is None:
             shared_radius = np.sum(np.abs(self.generators), axis=-1)
+            magnitude = np.abs(self.center) + shared_radius + self.radius
+            evaluation_error = _analysis_gamma(8) * magnitude
             return (
-                self.center - shared_radius - self.radius,
-                self.center + shared_radius + self.radius,
+                np.nextafter(
+                    self.center
+                    - shared_radius
+                    - self.radius
+                    - evaluation_error,
+                    -np.inf,
+                ),
+                np.nextafter(
+                    self.center
+                    + shared_radius
+                    + self.radius
+                    + evaluation_error,
+                    np.inf,
+                ),
             )
         vertices = np.asarray(parameter_vertices, dtype=np.float64)
         if vertices.ndim != 2 or vertices.shape[1] != 2 or len(vertices) < 1:
             raise ValueError("parameter vertices must have shape [vertices, 2]")
         shared_values = np.einsum("bfi,vi->bfv", self.generators, vertices)
+        shared_magnitude = np.einsum(
+            "bfi,vi->bfv", np.abs(self.generators), np.abs(vertices)
+        )
+        evaluation_error = _analysis_gamma(8) * (
+            np.abs(self.center)[..., None]
+            + shared_magnitude
+            + self.radius[..., None]
+        )
         return (
-            self.center + np.min(shared_values, axis=-1) - self.radius,
-            self.center + np.max(shared_values, axis=-1) + self.radius,
+            np.nextafter(
+                np.min(
+                    self.center[..., None]
+                    + shared_values
+                    - self.radius[..., None]
+                    - evaluation_error,
+                    axis=-1,
+                ),
+                -np.inf,
+            ),
+            np.nextafter(
+                np.max(
+                    self.center[..., None]
+                    + shared_values
+                    + self.radius[..., None]
+                    + evaluation_error,
+                    axis=-1,
+                ),
+                np.inf,
+            ),
         )
 
     def add(self, other: "_HybridAffine") -> "_HybridAffine":
+        center = self.center + other.center
+        generators = self.generators + other.generators
+        radius = self.radius + other.radius
+        operation_scale = (
+            np.abs(self.center)
+            + np.abs(other.center)
+            + np.sum(
+                np.abs(self.generators) + np.abs(other.generators), axis=-1
+            )
+            + self.radius
+            + other.radius
+        )
         return _HybridAffine(
-            self.center + other.center,
-            self.generators + other.generators,
-            self.radius + other.radius,
+            center,
+            generators,
+            _outward_radius(
+                radius, _analysis_gamma(8) * operation_scale
+            ),
         )
 
     def negate(self) -> "_HybridAffine":
@@ -171,26 +250,66 @@ class _HybridAffine:
 
     def scale(self, values: np.ndarray) -> "_HybridAffine":
         scale = np.asarray(values, dtype=np.float64)
+        center = self.center * scale
+        generators = self.generators * scale[..., None]
+        radius = self.radius * np.abs(scale)
+        operation_scale = (
+            np.abs(center) + np.sum(np.abs(generators), axis=-1) + radius
+        )
         return _HybridAffine(
-            self.center * scale,
-            self.generators * scale[..., None],
-            self.radius * np.abs(scale),
+            center,
+            generators,
+            _outward_radius(
+                radius, _analysis_gamma(8) * operation_scale
+            ),
         )
 
     def linear(self, weights: np.ndarray) -> "_HybridAffine":
         matrix = np.asarray(weights, dtype=np.float64)
+        center = self.center @ matrix
+        generators = np.einsum("bfi,fo->boi", self.generators, matrix)
+        radius = self.radius @ np.abs(matrix)
+        absolute_center = np.abs(self.center) @ np.abs(matrix)
+        absolute_generators = np.einsum(
+            "bfi,fo->boi", np.abs(self.generators), np.abs(matrix)
+        )
+        operation_scale = (
+            absolute_center
+            + np.sum(absolute_generators, axis=-1)
+            + radius
+        )
         return _HybridAffine(
-            self.center @ matrix,
-            np.einsum("bfi,fo->boi", self.generators, matrix),
-            self.radius @ np.abs(matrix),
+            center,
+            generators,
+            _outward_radius(
+                radius,
+                _analysis_gamma(2 * matrix.shape[0] + 8) * operation_scale,
+            ),
         )
 
     def batch_linear(self, weights: np.ndarray) -> "_HybridAffine":
         matrix = np.asarray(weights, dtype=np.float64)
+        center = np.einsum("bf,bfo->bo", self.center, matrix)
+        generators = np.einsum("bfi,bfo->boi", self.generators, matrix)
+        radius = np.einsum("bf,bfo->bo", self.radius, np.abs(matrix))
+        absolute_center = np.einsum(
+            "bf,bfo->bo", np.abs(self.center), np.abs(matrix)
+        )
+        absolute_generators = np.einsum(
+            "bfi,bfo->boi", np.abs(self.generators), np.abs(matrix)
+        )
+        operation_scale = (
+            absolute_center
+            + np.sum(absolute_generators, axis=-1)
+            + radius
+        )
         return _HybridAffine(
-            np.einsum("bf,bfo->bo", self.center, matrix),
-            np.einsum("bfi,bfo->boi", self.generators, matrix),
-            np.einsum("bf,bfo->bo", self.radius, np.abs(matrix)),
+            center,
+            generators,
+            _outward_radius(
+                radius,
+                _analysis_gamma(2 * matrix.shape[1] + 8) * operation_scale,
+            ),
         )
 
     def product(
@@ -250,7 +369,22 @@ class _HybridAffine:
             + right_shared_radius * self.radius
             + self.radius * other.radius
         )
-        return _HybridAffine(center, generators, radius)
+        product_scale = (
+            np.abs(left_expansion_center)
+            + left_shared_radius
+            + self.radius
+        ) * (
+            np.abs(right_expansion_center)
+            + right_shared_radius
+            + other.radius
+        )
+        return _HybridAffine(
+            center,
+            generators,
+            _outward_radius(
+                radius, _analysis_gamma(256) * product_scale
+            ),
+        )
 
     def float_quantize(
         self,
@@ -265,10 +399,62 @@ class _HybridAffine:
         rounding_radius = _floating_rounding_radius(
             numeric_format, lower, upper
         )
+        radius = self.radius + rounding_radius
         return _HybridAffine(
             self.center,
             self.generators,
-            self.radius + rounding_radius,
+            _outward_radius(
+                radius,
+                _analysis_gamma(8) * (self.radius + rounding_radius),
+            ),
+        )
+
+    def exp_negative(
+        self, parameter_vertices: np.ndarray | None = None
+    ) -> "_HybridAffine":
+        """Sound first-order enclosure of ``exp(-self)`` on the domain."""
+
+        if parameter_vertices is None:
+            domain_center = np.zeros(2, dtype=np.float64)
+            shared_deviation = np.sum(np.abs(self.generators), axis=-1)
+        else:
+            vertices = np.asarray(parameter_vertices, dtype=np.float64)
+            if vertices.ndim != 2 or vertices.shape[1] != 2 or len(vertices) < 1:
+                raise ValueError("parameter vertices must have shape [vertices, 2]")
+            domain_center = np.mean(vertices, axis=0)
+            centered_vertices = vertices - domain_center[None, :]
+            shared_deviation = np.max(
+                np.abs(
+                    np.einsum(
+                        "bfi,vi->bfv", self.generators, centered_vertices
+                    )
+                ),
+                axis=-1,
+            )
+        expansion_center = self.center + np.einsum(
+            "bfi,i->bf", self.generators, domain_center
+        )
+        value = np.exp(-expansion_center)
+        derivative = -value
+        generators = derivative[..., None] * self.generators
+        center = value - np.einsum("bfi,i->bf", generators, domain_center)
+        total_deviation = shared_deviation + self.radius
+        maximum_second_derivative = np.exp(
+            -expansion_center + total_deviation
+        )
+        radius = (
+            np.abs(derivative) * self.radius
+            + 0.5 * maximum_second_derivative * total_deviation**2
+        )
+        exponential_scale = np.exp(
+            -expansion_center + total_deviation
+        )
+        return _HybridAffine(
+            center,
+            generators,
+            _outward_radius(
+                radius, _analysis_gamma(256) * exponential_scale
+            ),
         )
 
 
@@ -284,7 +470,11 @@ def _floating_rounding_radius(
     if np.any(maximum_magnitude > np.finfo(dtype).max):
         raise OverflowError("floating affine enclosure exceeds numeric range")
     minimum_subnormal = float(np.nextafter(dtype(0.0), dtype(1.0)))
-    return np.finfo(dtype).eps * maximum_magnitude + minimum_subnormal
+    radius = np.finfo(dtype).eps * maximum_magnitude + minimum_subnormal
+    return np.nextafter(
+        radius + _analysis_gamma(8) * radius + _ANALYSIS_MINIMUM,
+        np.inf,
+    )
 
 
 def _spike_relaxation(
@@ -309,7 +499,7 @@ class AffineGuardFamilyCertifier:
     The domain retains affine dependence on timestep and threshold scale. Each
     nonlinear product is enclosed with an independent residual, and each
     threshold-uncertain spike is relaxed to ``[0,1]``. It currently supports
-    deterministic forward-Euler execution with floating-point states.
+    deterministic forward or exponential Euler with floating-point states.
     """
 
     def certify(
@@ -375,10 +565,6 @@ class AffineGuardFamilyCertifier:
             box.synaptic_delays,
             box.output_delays,
         ):
-            if integration is not IntegrationRule.FORWARD_EULER:
-                raise NotImplementedError(
-                    "affine guards currently support forward Euler only"
-                )
             (
                 member_lower,
                 member_upper,
@@ -393,6 +579,7 @@ class AffineGuardFamilyCertifier:
                 events,
                 prediction,
                 box,
+                integration,
                 timing,
                 reset,
                 synaptic_delay,
@@ -456,7 +643,13 @@ class AffineGuardFamilyCertifier:
         timestep: _HybridAffine,
         tau: np.ndarray,
         parameter_vertices: np.ndarray | None,
+        integration: IntegrationRule = IntegrationRule.FORWARD_EULER,
     ) -> _HybridAffine:
+        if integration is IntegrationRule.EXPONENTIAL_EULER:
+            alpha = timestep.scale(1.0 / tau).exp_negative(parameter_vertices)
+            return current.add(
+                alpha.product(voltage.subtract(current), parameter_vertices)
+            )
         derivative = current.subtract(voltage).scale(1.0 / tau)
         return voltage.add(timestep.product(derivative, parameter_vertices))
 
@@ -466,6 +659,7 @@ class AffineGuardFamilyCertifier:
         events: np.ndarray,
         reference_predictions: np.ndarray,
         box: SemanticsBox,
+        integration: IntegrationRule,
         timing: ThresholdTiming,
         reset: ResetRule,
         synaptic_delay: int,
@@ -591,6 +785,7 @@ class AffineGuardFamilyCertifier:
                     timestep,
                     model.tau_mem,
                     vertices,
+                    integration,
                 ).float_quantize(state, vertices)
             else:
                 voltage = self._integrate(
@@ -599,6 +794,7 @@ class AffineGuardFamilyCertifier:
                     timestep,
                     model.tau_mem,
                     vertices,
+                    integration,
                 ).float_quantize(state, vertices)
                 spikes = relax_guard(voltage.subtract(threshold))
                 voltage = self._reset(
@@ -624,9 +820,17 @@ class AffineGuardFamilyCertifier:
             margin_contribution = _HybridAffine(
                 margin_contribution.center,
                 margin_contribution.generators,
-                margin_contribution.radius
-                + chosen_error
-                + class_contribution_error,
+                _outward_radius(
+                    margin_contribution.radius
+                    + chosen_error
+                    + class_contribution_error,
+                    _analysis_gamma(8)
+                    * (
+                        margin_contribution.radius
+                        + chosen_error
+                        + class_contribution_error
+                    ),
+                ),
             )
             if margin_output_queue:
                 margin_output_queue.append(margin_contribution)
@@ -646,7 +850,15 @@ class AffineGuardFamilyCertifier:
             margins = _HybridAffine(
                 raw_margins.center,
                 raw_margins.generators,
-                raw_margins.radius + chosen_logit_error + logit_error,
+                _outward_radius(
+                    raw_margins.radius + chosen_logit_error + logit_error,
+                    _analysis_gamma(8)
+                    * (
+                        raw_margins.radius
+                        + chosen_logit_error
+                        + logit_error
+                    ),
+                ),
             )
         margin_lower, margin_upper = margins.bounds(vertices)
         return (
@@ -686,8 +898,6 @@ class FixedTraceAffineAnalyzer:
             raise ValueError("fixed-trace analysis requires one discrete member")
         if box.base.state_format.is_fixed:
             raise NotImplementedError("fixed-trace affine analysis requires float state")
-        if box.integration_rules[0] is not IntegrationRule.FORWARD_EULER:
-            raise NotImplementedError("fixed-trace analysis requires forward Euler")
         vertices = np.asarray(parameter_vertices, dtype=np.float64)
         if vertices.ndim != 2 or vertices.shape[1] != 2 or len(vertices) < 3:
             raise ValueError("parameter polygon must have shape [vertices, 2]")
@@ -785,6 +995,7 @@ class FixedTraceAffineAnalyzer:
                     timestep,
                     model.tau_mem,
                     vertices,
+                    box.integration_rules[0],
                 ).float_quantize(state, vertices)
             else:
                 voltage = AffineGuardFamilyCertifier._integrate(
@@ -793,6 +1004,7 @@ class FixedTraceAffineAnalyzer:
                     timestep,
                     model.tau_mem,
                     vertices,
+                    box.integration_rules[0],
                 ).float_quantize(state, vertices)
                 inspect_guard(step, voltage.subtract(threshold), spikes_array)
                 voltage = AffineGuardFamilyCertifier._reset(
@@ -845,13 +1057,82 @@ class PolygonBranchCertifier:
             len(box.output_delays),
         )
         if discrete_sizes != (1, 1, 1, 1, 1):
-            raise ValueError("polygon branches require one discrete member")
-        if box.integration_rules[0] is not IntegrationRule.FORWARD_EULER:
-            raise NotImplementedError("polygon branches require forward Euler")
+            member_results = []
+            for integration, timing, reset, synaptic_delay, output_delay in (
+                itertools.product(
+                    box.integration_rules,
+                    box.threshold_timings,
+                    box.reset_rules,
+                    box.synaptic_delays,
+                    box.output_delays,
+                )
+            ):
+                member_box = replace(
+                    box,
+                    integration_rules=(integration,),
+                    threshold_timings=(timing,),
+                    reset_rules=(reset,),
+                    synaptic_delays=(synaptic_delay,),
+                    output_delays=(output_delay,),
+                    name=(
+                        f"{box.name}:{integration.value}:{timing.value}:"
+                        f"{reset.value}:sd{synaptic_delay}:od{output_delay}"
+                    ),
+                )
+                member_result = self.certify(
+                    model,
+                    events,
+                    reference,
+                    member_box,
+                    parameter_vertices,
+                    max_branches=max_branches,
+                )
+                member_results.append(member_result)
+                if not member_result.complete:
+                    break
+            complete = all(result.complete for result in member_results)
+            possible_predictions = tuple(
+                sorted(
+                    {
+                        prediction
+                        for result in member_results
+                        for prediction in result.possible_predictions
+                    }
+                )
+            )
+            reference_prediction = member_results[0].reference_prediction
+            first_cap = next(
+                (
+                    result.first_cap_timestep
+                    for result in member_results
+                    if not result.complete
+                ),
+                None,
+            )
+            return PolygonBranchCertificateResult(
+                certified=(
+                    complete and possible_predictions == (reference_prediction,)
+                ),
+                complete=complete,
+                reference_prediction=reference_prediction,
+                possible_predictions=possible_predictions,
+                final_branch_count=sum(
+                    result.final_branch_count for result in member_results
+                ),
+                maximum_active_branches=max(
+                    result.maximum_active_branches for result in member_results
+                ),
+                total_branch_splits=sum(
+                    result.total_branch_splits for result in member_results
+                ),
+                maximum_uncertain_neurons_at_step=max(
+                    result.maximum_uncertain_neurons_at_step
+                    for result in member_results
+                ),
+                first_cap_timestep=first_cap,
+            )
         if box.base.state_format.is_fixed:
             raise NotImplementedError("polygon branches require floating state")
-        if box.synaptic_delays[0] or box.output_delays[0]:
-            raise NotImplementedError("polygon branches currently require zero delay")
         if not box.base.randomness.deterministic:
             raise NotImplementedError("polygon branches require determinism")
         vertices = np.asarray(parameter_vertices, dtype=np.float64)
@@ -887,6 +1168,16 @@ class PolygonBranchCertifier:
                 ),
                 previous_spikes=np.zeros(model.hidden_size, dtype=np.float64),
                 logits=np.zeros(model.output_size, dtype=np.float64),
+                current_queue=tuple(
+                    _HybridAffine.exact(
+                        np.zeros((1, model.hidden_size), dtype=np.float64)
+                    )
+                    for _ in range(box.synaptic_delays[0])
+                ),
+                output_queue=tuple(
+                    np.zeros(model.output_size, dtype=np.float64)
+                    for _ in range(box.output_delays[0])
+                ),
             )
         ]
         maximum_active = 1
@@ -901,11 +1192,20 @@ class PolygonBranchCertifier:
                     + branch.previous_spikes @ w_rec
                     + bias
                 )
-                current = _HybridAffine.exact(
+                raw_current = _HybridAffine.exact(
                     np.asarray(
                         state.quantize(exact_current), dtype=np.float64
                     )[None, :]
                 )
+                if branch.current_queue:
+                    current = branch.current_queue[0]
+                    next_current_queue = (
+                        *branch.current_queue[1:],
+                        raw_current,
+                    )
+                else:
+                    current = raw_current
+                    next_current_queue = ()
                 if timing is ThresholdTiming.PRE_INTEGRATION:
                     guard_voltage = branch.voltage
                 else:
@@ -915,6 +1215,7 @@ class PolygonBranchCertifier:
                         timestep,
                         model.tau_mem,
                         vertices,
+                        box.integration_rules[0],
                     ).float_quantize(state, vertices)
                 guard = guard_voltage.subtract(threshold)
                 guard_lower, guard_upper = guard.bounds(vertices)
@@ -962,6 +1263,7 @@ class PolygonBranchCertifier:
                             timestep,
                             model.tau_mem,
                             vertices,
+                            box.integration_rules[0],
                         ).float_quantize(state, vertices)
                     else:
                         next_voltage = AffineGuardFamilyCertifier._reset(
@@ -975,8 +1277,17 @@ class PolygonBranchCertifier:
                     contribution = np.asarray(
                         state.quantize(spikes_array @ w_out), dtype=np.float64
                     )
+                    if branch.output_queue:
+                        delivered = branch.output_queue[0]
+                        next_output_queue = (
+                            *branch.output_queue[1:],
+                            contribution,
+                        )
+                    else:
+                        delivered = contribution
+                        next_output_queue = ()
                     logits = np.asarray(
-                        state.quantize(branch.logits + contribution),
+                        state.quantize(branch.logits + delivered),
                         dtype=np.float64,
                     )
                     next_branches.append(
@@ -984,6 +1295,8 @@ class PolygonBranchCertifier:
                             voltage=next_voltage,
                             previous_spikes=spikes_array,
                             logits=logits,
+                            current_queue=next_current_queue,
+                            output_queue=next_output_queue,
                         )
                     )
             branches = next_branches

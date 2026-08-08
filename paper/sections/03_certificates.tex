@@ -45,15 +45,20 @@ two shared generators---timestep and threshold scale---plus an independent box
 residual. Linear recurrence preserves the generators exactly. Forward-Euler
 products retain their first-order shared terms and add a proved remainder bound;
 only threshold-uncertain spikes are relaxed to $[0,1]$. Pairwise output margins
-are accumulated in the same relational domain. This implementation is sound for
-deterministic floating-point forward Euler; other integration and numeric rules
-remain delegated to the interval engine.
+are accumulated in the same relational domain. Forward Euler is bilinear in the
+shared timestep generator. For exponential Euler, a first-order exponential
+form plus a second-derivative remainder encloses the decay factor. Declared
+synaptic and output delays are explicit queues of affine states. Fixed-point
+numeric rules remain delegated to the interval engine.
 
 Every declared float32 conversion of current, state, output contribution, and
 accumulated logit adds the conservative radius
 $\epsilon\max(|\ell|,|u|)+\eta_{\min}$. Output and accumulator roundoff are
 charged to direct pairwise margins rather than formed by subtracting independent
-logit boxes; this preserves cancellation of shared spike terms.
+logit boxes; this preserves cancellation of shared spike terms. The analyzer's
+own binary64 additions, products, dot products, exponential approximation, and
+affine evaluation receive standard $\gamma_n$ error terms, and reported lower
+and upper endpoints are advanced outward with \texttt{nextafter}.
 
 For an unresolved affine leaf, we expose a recurrent guard enclosure
 $c+g^\top\epsilon\pm r$. Convex polygon clipping partitions the semantic domain
@@ -62,6 +67,50 @@ remainders are recentered and recomputed over each polygon; the remaining region
 uses width-scaled axis refinement after a declared guard-cut budget. Polygon
 areas are checked to cover the parent exactly, and only zero unresolved area
 produces a certificate.
+
+Guard cuts alone can leave a vanishingly small but topologically persistent
+residue.  We close such regions with a local branch oracle.  Conditional on a
+previous spike vector, the recurrent current is exact and the hidden state
+remains an affine enclosure over the same polygon.  At each guard the oracle
+keeps the forced outcome when its sign is robust and enumerates both outcomes
+when its enclosure crosses zero.  It deliberately retains infeasible spike
+assignments rather than relying on an unsound path-pruning heuristic.  Thus the
+enumerated trace set overapproximates all executions in the polygon. For either
+declared reset rule, each completed spike trace has an exact output class; the
+polygon is certified only when every retained trace predicts the reference
+class. Exceeding the branch cap is inconclusive.
+
+The adaptive hybrid first applies this branch oracle to the current polygon.  A
+completed single-class enumeration retires the polygon immediately.  Otherwise
+the affine analyzer supplies a sound guard-band cut, with width-scaled axis
+bisection as a fallback, and the oracle is retried on each child.  The final
+polygons must cover the root rectangle and every positive-area leaf must be
+retired.  This composition is important: branch enumeration on the full box can
+hit the cap, while refinement can isolate the few guards responsible for the
+combinatorial growth.
+
+\begin{proposition}[Sound local branch closure]
+For one deterministic floating-point member using forward or exponential Euler,
+finite declared delivery queues, and a convex parameter polygon $P$, the
+completed local oracle's prediction set contains the prediction of every
+execution with parameters in $P$.
+\end{proposition}
+\begin{proof}
+Induct on time.  Initially the single affine state contains the exact zero
+state.  Assume the retained branches contain the prefix of an arbitrary concrete
+execution.  Affine integration and the declared rounding envelope contain its
+pre-threshold voltage.  If the guard sign is robust, the oracle takes the same
+outcome; if it is uncertain, the oracle retains both outcomes and hence retains
+the concrete one.  The corresponding reset, recurrent update, and queued
+delivery preserve the enclosure.  Thus some retained branch contains every
+concrete prefix.  At the
+finite horizon its spike trace has the same accumulated output and its class is
+included in the reported prediction set.
+\end{proof}
+Because polygon cuts form an area-checked cover, applying the proposition to
+every retired leaf proves the hybrid certificate.  The implementation is also
+tested against randomized recurrent executions; sampled testing is not used in
+the proof.
 
 For reset-to-value execution at a fixed timestep, threshold does not enter the
 state update conditional on a spike trace. We exploit this to exhaust every

@@ -1,0 +1,110 @@
+{
+  "advance_gate": {
+    "area_partition_maximum_absolute_error": 1.3102630092021172e-11,
+    "every_seed_nonzero": true,
+    "minimum_certified_input_fraction": 0.2,
+    "passed": true
+  },
+  "certified_input_count": 58,
+  "certified_input_fraction": 0.3625,
+  "certified_input_fraction_exact_95_percent_interval": [
+    0.28807845793944453,
+    0.4421183265419606
+  ],
+  "code_revision": "078519b6bb998c768fa400f303b28f1b190f725a",
+  "finite_grid_falsification": {
+    "certified_fraction_of_grid_stable_inputs": 0.5178571428571429,
+    "certified_grid_violation_count": 0,
+    "grid_counterexample_input_count": 48,
+    "grid_identity_count": 112,
+    "grid_identity_fraction": 0.7,
+    "interpretation": "Zero violations is a falsification result, not an additional proof. The gap between 70% grid identity and 36.25% full certification quantifies proof- and resource-budget conservatism on this screen.",
+    "points_per_input": 81,
+    "resolution_per_axis": 9,
+    "uncertified_grid_counterexample_count": 48,
+    "uncertified_grid_identity_count": 54
+  },
+  "interpretation": "The method advances beyond a selected development example: with all budgets frozen, it proves the entire joint continuous box for 58 of 160 untouched screen inputs and for at least one input from every training seed. The result supports tractability of the proposed per-input family certificate for this bounded subfamily, while the full split, other axes, a second event task, and hardware remain open.",
+  "mean_certified_parameter_fraction": 0.6377704113276023,
+  "median_certified_parameter_fraction": 0.7855608100300969,
+  "per_seed": [
+    {
+      "certified_input_count": 13,
+      "certified_input_fraction": 0.40625,
+      "mean_certified_parameter_fraction": 0.6699631665821946,
+      "median_seconds": 19.654102150001563,
+      "sample_count": 32,
+      "seed": 1701
+    },
+    {
+      "certified_input_count": 10,
+      "certified_input_fraction": 0.3125,
+      "mean_certified_parameter_fraction": 0.5339118213928709,
+      "median_seconds": 17.642781550064683,
+      "sample_count": 32,
+      "seed": 2718
+    },
+    {
+      "certified_input_count": 14,
+      "certified_input_fraction": 0.4375,
+      "mean_certified_parameter_fraction": 0.6605825088634429,
+      "median_seconds": 18.300866200006567,
+      "sample_count": 32,
+      "seed": 3141
+    },
+    {
+      "certified_input_count": 11,
+      "certified_input_fraction": 0.34375,
+      "mean_certified_parameter_fraction": 0.652346987456294,
+      "median_seconds": 18.924479449982755,
+      "sample_count": 32,
+      "seed": 5772
+    },
+    {
+      "certified_input_count": 10,
+      "certified_input_fraction": 0.3125,
+      "mean_certified_parameter_fraction": 0.6720475723432092,
+      "median_seconds": 18.80762589990627,
+      "sample_count": 32,
+      "seed": 8119
+    }
+  ],
+  "route_assessment": {
+    "advance_to_full_frozen_audit": true,
+    "claim_all_execution_semantics_axes": false,
+    "claim_physical_certificate": false,
+    "claim_population_certified_fraction_from_screen": false
+  },
+  "runtime": {
+    "certificate_median_seconds_per_input": 18.914791749906726,
+    "certificate_wall_seconds": 2900.808169899974,
+    "grid_wall_seconds": 2.115327299805358
+  },
+  "sample_count": 160,
+  "schema_version": "SHDHybridFamilyAuditSummary/v1",
+  "scope": {
+    "integration": "forward Euler",
+    "relative_threshold_scale_bounds": [
+      -0.01,
+      0.01
+    ],
+    "relative_timestep_bounds": [
+      -0.01,
+      0.01
+    ],
+    "selection": "first 32 frozen certificate-audit inputs per seed; no labels, predictions, margins, or grid behavior used for selection",
+    "state_arithmetic": "float32 with explicit sound rounding envelopes",
+    "target_reset": "reset-to-value",
+    "task": "SHD recurrent SNN"
+  },
+  "seed_count": 5,
+  "source_code_revisions": {
+    "certificate_audit": "d68168ceb1cce1d7026706f1d7820a94de6d26f8",
+    "grid_validation": "d68168ceb1cce1d7026706f1d7820a94de6d26f8"
+  },
+  "source_report_hashes": {
+    "artifacts/shd_v57_hybrid_audit_v1/hybrid_family_audit.json": "317bd1662069f950b37de97aeffd3ab06bf3536248f8c61ae0835ef9b8a037b7",
+    "artifacts/shd_v58_hybrid_audit_grid_v1/hybrid_audit_grid_validation.json": "b9104d9a61dfc981aafe2f0fd9d2860ad33d18afa60d5092dc3f8ac514f35a35"
+  },
+  "status": "frozen five-seed screen plus independent finite-grid falsification; the screen passed and triggered the separately frozen full audit"
+}

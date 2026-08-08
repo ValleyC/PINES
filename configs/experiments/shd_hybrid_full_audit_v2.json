@@ -1,0 +1,48 @@
+{
+  "schema_version": "SHDHybridFamilyFullAudit/v1",
+  "condition": "reset_to_value",
+  "relative_timestep_radius": 0.01,
+  "relative_threshold_radius": 0.01,
+  "seeds": [1701, 2718, 3141, 5772, 8119],
+  "audit_selection": {
+    "split": "certificate_audit",
+    "rule": "all indices in frozen split order",
+    "use_all_available": true,
+    "uses_predictions_for_selection": false,
+    "uses_labels_for_selection": false
+  },
+  "certificate_budgets": {
+    "maximum_polygon_leaves": 64,
+    "maximum_local_branches": 64,
+    "maximum_guard_band_splits": 8
+  },
+  "analysis_arithmetic": {
+    "coefficient_format": "binary64",
+    "operation_error": "standard gamma_n bounds added to affine residuals",
+    "endpoint_rounding": "numpy.nextafter toward negative or positive infinity",
+    "declared_float32_conversion_error": "epsilon times maximum magnitude plus minimum subnormal",
+    "scientific_budgets_changed_from_screen": false
+  },
+  "screen_provenance": {
+    "config": "configs/experiments/shd_hybrid_audit_v1.json",
+    "config_hash": "257ead26de109bf76e8a68bcafea2270db5199fb60d3f9d91290054a22a3b763",
+    "report": "artifacts/shd_v57_hybrid_audit_v1/hybrid_family_audit.json",
+    "report_hash": "317bd1662069f950b37de97aeffd3ab06bf3536248f8c61ae0835ef9b8a037b7",
+    "sample_count": 160,
+    "certified_input_fraction": 0.3625,
+    "advance_gate_passed": true,
+    "note": "The screen used the same mathematical domain and resource budgets before explicit analyzer-binary64 inflation was added. The stricter development rerun remained certified. This full audit is canonical; screen values are retained only as method-freeze provenance."
+  },
+  "execution": {
+    "worker_count": 20,
+    "shards_per_seed": 20,
+    "blas_threads_per_worker": 1,
+    "resume_only_from_hash_validated_immutable_shards": true
+  },
+  "full_audit_gate": {
+    "minimum_certified_input_fraction": 0.2,
+    "require_every_seed_nonzero": true,
+    "require_zero_area_cover_failures": true
+  },
+  "interpretation": "This is the canonical full audit. It preserves the method, input selection, and 64/64/8 resource budgets frozen before the five-seed screen, while adding conservative outward error for the analyzer's own binary64 arithmetic. It applies to every available certificate-audit input without label, prediction, margin, or grid filtering. Caps and unresolved leaves are inconclusive, never certified. The 100-shard execution changes scheduling and resumability only."
+}

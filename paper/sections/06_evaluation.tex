@@ -291,6 +291,35 @@ unique executions preserve class 2; the smallest reference-class margin is
 1.033. This supports abstraction slack rather than a hidden sampled flip, but
 does not certify any unsampled point.
 
+Local spike-branch closure converts that residue into a certificate.  On all
+3,365 residual polygons, every sound enumeration completes; the median peak
+branch count is two, the 99th percentile is three, and the maximum is 14.  Every
+retained trace predicts class 2.  Combined with the 99.7557\% polygon cover, the
+area sum is one to $6.8\times10^{-12}$ and the selected development input is
+fully certified over the joint continuous box.  This is a complete per-input
+certificate, but not population evidence because the input guided method
+development.
+
+We therefore freeze substantially smaller hybrid budgets---64 polygon leaves,
+64 local branches, and eight guard-band cuts---before opening a five-seed
+screen.  The screen takes the first 32 inputs from each frozen certificate-audit
+order without inspecting labels, predictions, margins, or grid stability.  It
+fully certifies 58/160 inputs (36.25\%; exact two-sided 95\% binomial interval
+28.81--44.21\%), with seed-level fractions from 31.25\% to 43.75\% and nonzero
+coverage for every seed.  Mean and median certified parameter volume, counting
+inconclusive inputs fractionally, are 63.78\% and 78.56\%.  Parameter-area
+partitions close to $1.4\times10^{-11}$ on every input, so the preregistered
+20\% advancement gate passes.
+
+An independent $9\times9$ execution grid over the same box then attempts to
+falsify all 160 decisions.  None of the 58 certificates is contradicted.  The
+grid is stable on 112 inputs (70.0\%) and finds prediction changes on 48; all 48
+are correctly left uncertified.  The other 54 stable but inconclusive inputs
+quantify remaining proof- or budget-conservatism.  Grid stability is not used as
+a certificate.  Passing the screen triggers the separately frozen audit over
+all 4,305 available certificate-split inputs; until that audit is complete, the
+36.25\% result is a tractability screen rather than the final population claim.
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{figures/shd_branch_set_feasibility.pdf}

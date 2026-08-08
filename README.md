@@ -42,5 +42,9 @@ manifest. Without one, reports are explicitly conditional on the emulator.
 This repository covers finite-horizon digital classification SNNs. Analog
 mismatch, continual learning, control, and energy claims are out of scope.
 The current family engine is exact for an explicitly enumerated bounded family;
-full-model zonotope propagation and the two physical campaigns are tracked as
-gated research milestones rather than represented as completed results.
+its relational affine/polygon/branch engine also proves targeted continuous
+timestep--threshold families for recurrent float-state models. A frozen
+five-seed screen certifies 58/160 untouched SHD inputs and has triggered the
+all-input audit. Broader numeric-axis coverage, DVS full-model certification,
+and the two physical campaigns remain gated research milestones rather than
+represented as completed results.

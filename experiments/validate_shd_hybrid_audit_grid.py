@@ -36,7 +36,10 @@ def main() -> None:
     audit_path = root / args.audit_report
     with audit_path.open("r", encoding="utf-8") as handle:
         audit = json.load(handle)
-    if audit.get("schema_version") != "SHDHybridFamilyAuditResult/v1":
+    if audit.get("schema_version") not in {
+        "SHDHybridFamilyAuditResult/v1",
+        "SHDHybridFamilyFullAuditResult/v1",
+    }:
         raise ValueError("unsupported hybrid audit report")
 
     output_dir = root / args.output_root
