@@ -1,0 +1,56 @@
+{
+  "code_revision": "5e9ae5eb8a18603adaa6e36004ab2a159e62fc3d",
+  "condition": "reset_to_value",
+  "family_radius": 0.01,
+  "input_report_hashes": {
+    "artifacts/shd_v29_adaptive_affine/seed_1701/reset_to_value_adaptive_affine.json": "6a6f08256cb95d8318b91ac09bcd463825157d3b03ffde4f10813c71069a3b71",
+    "artifacts/shd_v31_guard_guided_affine/seed_1701/reset_to_value_adaptive_affine.json": "d9e7bdd8f360e338bbbcd5a4a60f4321e306b5d1ea6e36535cc01eefe3e69571"
+  },
+  "interpretation": "Choosing the split axis from accumulated uncertain-guard generator scores is matched at 64 leaves, slightly worse at 256, and improves certified volume by 1.37 points at 1,024 and 0.63 points at 4,096. The small, non-monotone gain does not remove unresolved guard-surface residue. Further axis-policy tuning is stopped in favor of explicit non-axis-aligned guard constraints.",
+  "route_assessment": {
+    "advance_guard_axis_heuristic_to_five_seeds": false,
+    "advance_to_non_axis_aligned_guard_constraints": true,
+    "any_full_certificate": false,
+    "guard_better_at_finest_shared_budget": true,
+    "guard_finest_fraction": 0.8634643554687573,
+    "maximum_absolute_fraction_gain": 0.01367187500000322,
+    "width_finest_fraction": 0.8571777343750119
+  },
+  "rows": [
+    {
+      "guard_certified_parameter_fraction": 0.03125000000000139,
+      "guard_minus_width_fraction": 0.0,
+      "guard_seconds": 1.5401602999772877,
+      "max_leaves": 64,
+      "width_certified_parameter_fraction": 0.03125000000000139,
+      "width_seconds": 1.898059600032866
+    },
+    {
+      "guard_certified_parameter_fraction": 0.3046875000000028,
+      "guard_minus_width_fraction": -0.001953125000000666,
+      "guard_seconds": 6.454679999966174,
+      "max_leaves": 256,
+      "width_certified_parameter_fraction": 0.30664062500000344,
+      "width_seconds": 7.6238470999524
+    },
+    {
+      "guard_certified_parameter_fraction": 0.6284179687500067,
+      "guard_minus_width_fraction": 0.01367187500000322,
+      "guard_seconds": 24.81359829986468,
+      "max_leaves": 1024,
+      "width_certified_parameter_fraction": 0.6147460937500034,
+      "width_seconds": 30.42706930008717
+    },
+    {
+      "guard_certified_parameter_fraction": 0.8634643554687573,
+      "guard_minus_width_fraction": 0.006286621093745448,
+      "guard_seconds": 98.95234900014475,
+      "max_leaves": 4096,
+      "width_certified_parameter_fraction": 0.8571777343750119,
+      "width_seconds": 123.27006750018336
+    }
+  ],
+  "schema_version": "SHDGuardGuidedAffineSummary/v1",
+  "seed": 1701,
+  "status": "sound single-input matched-budget split-policy development comparison; certified volume is diagnostic and neither policy completes the input"
+}

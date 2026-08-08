@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 85
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 86
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -91,6 +91,10 @@
   for decision intervals. Adaptive affine coverage on a grid-stable input rises
   to 95.61% at 16,384 leaves, but unresolved guard-surface cells prevent a full
   certificate. This method advances to symbolic guard cuts, not five seeds yet.
+- Matched guard-guided affine split test: uncertain-guard sensitivity raises
+  certified volume from 61.47% to 62.84% at 1,024 leaves and from 85.72% to
+  86.35% at 4,096, but is slightly worse at 256. The small, non-monotone gain
+  rejects further axis-policy tuning and supports non-axis-aligned constraints.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,

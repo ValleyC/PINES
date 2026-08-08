@@ -257,6 +257,10 @@ coverage rises from 3.13\% at 64 leaves to 30.66\% at 256, 61.47\% at 1,024,
 the first sound domain with nonzero SHD local coverage, but the remaining
 guard-surface residue calls for symbolic constraint cuts rather than still finer
 axis-aligned boxes.
+Using accumulated uncertain-guard generator scores to choose the split axis
+raises matched 4,096-leaf coverage only from 85.72\% to 86.35\% (and is slightly
+worse at 256 leaves). We therefore stop axis-policy tuning; the next step must
+represent non-axis-aligned guard constraints.
 
 \begin{figure}[t]
   \centering

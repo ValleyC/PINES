@@ -247,12 +247,20 @@ volume grows from 3.13% at 64 leaves to 30.66%, 61.47%, 85.72%, and 95.61% at
 guard-surface cells remain, and certified volume is not a probability over
 semantics. The route advances to symbolic guard-surface cuts, not to five seeds.
 
+`guard_guided_affine_summary.json` compares width-based bisection with an affine
+guard-sensitivity axis policy. The guard policy improves coverage by 1.37 points
+at 1,024 leaves and 0.63 points at 4,096, but is slightly worse at 256. This
+small, non-monotone gain ends axis-policy tuning; it does not alter the missing
+full-certificate verdict.
+
 ```powershell
 python experiments/run_shd_affine_guard_certificate.py --seed 1701 --partitions 1 2 4 8
 python experiments/run_shd_affine_guard_certificate.py --seed 1701 --partitions 16 --sample-count 32 --output-root artifacts/shd_v28_affine_guard_p16
 python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --domain affine_guard --sample-count 1 --max-leaves 64 256 1024 4096 --output-root artifacts/shd_v29_adaptive_affine
 python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --domain affine_guard --sample-count 1 --max-leaves 16384 --output-root artifacts/shd_v30_adaptive_affine_p16384
 python experiments/aggregate_shd_affine_guard_domain.py
+python experiments/run_shd_adaptive_margin_certificate.py --seed 1701 --domain affine_guard --split-strategy guard --sample-count 1 --max-leaves 64 256 1024 4096 --output-root artifacts/shd_v31_guard_guided_affine
+python experiments/aggregate_shd_guard_guided_affine.py
 ```
 
 ### Post-repair bounded-family headroom
