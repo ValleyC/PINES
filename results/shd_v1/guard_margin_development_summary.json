@@ -1,0 +1,70 @@
+{
+  "code_revision": "c66dea9447dc0b0c70a4ea1eab32dca14a5489bf",
+  "condition": "reset_to_value",
+  "input_report_hashes": {
+    "artifacts\\shd_v14_guard_margin_smoke\\seed_1701\\reset_to_value\\guard_margin\\repair_report.json": "a1bbf480443c64be748f1362040358598df92f2510e04fa13031ebc9b9fea7a1",
+    "artifacts\\shd_v14_guard_margin_w05\\seed_1701\\reset_to_value\\guard_margin\\repair_report.json": "0bc256ff2e2f3d1cad6e947d179d800139b40983c99d896211b81239a2eebc15",
+    "artifacts\\shd_v14_guard_margin_w10\\seed_1701\\reset_to_value\\guard_margin\\repair_report.json": "42680126855b054d2f06ca51981a6646c0e372fba21ab6638c8630d548a7691f",
+    "artifacts\\shd_v15_guard_margin\\seed_1701\\reset_to_value\\guard_margin\\repair_report.json": "a59ad0365a3500ca89bb8752d3fef4c3a529f819e7c826ebea946128c62a4ffc",
+    "artifacts\\shd_v16_guard_proof_w01\\seed_1701\\reset_to_value_branch_cells.json": "acd2267440e427c966c67764ccdcaac3e0c71ac00c0f2e9691acc3234065a30d",
+    "artifacts\\shd_v16_guard_proof_w05\\seed_1701\\reset_to_value_branch_cells.json": "a6d614b1c6c5b6da28164fc8e8f268c1c7b4bb83087a458271e74d5eabb67d9d",
+    "artifacts\\shd_v16_guard_proof_w10\\seed_1701\\reset_to_value_branch_cells.json": "e88c03e4c9aee5e7cbaa01cdbfa7b2643d01fb02ca48cd53b5c007936c2be800",
+    "artifacts\\shd_v17_guard_branch_cells\\seed_1701\\reset_to_value_branch_cells.json": "8a2a6f1be92ee67826c22466717dd279934cb92c29401b1303a12b7dc280a686",
+    "artifacts\\shd_v17_guard_family_grid\\seed_1701\\reset_to_value_family_grid.json": "1e99f05b8a4b5b8bc0633481cb6b922022658806f84b371e36b985d2b5cc1eec"
+  },
+  "interpretation": "A local near-threshold penalty partially recovers explicit proof depth relative to the prior certificate-directed proxy, but neither completes a cell nor matches the unrepaired proof depth. Stronger weights sacrifice transport accuracy without improving depth. Multi-step verified margins are required.",
+  "route_assessment": {
+    "advance_to_five_seed": false,
+    "any_representative_cell_completed": false,
+    "full_guard_exceeds_no_repair_proof_depth": false,
+    "selected_weight": 0.1,
+    "selected_weight_rule": "best qualitative transport/proof tradeoff on calibration-only development; audit/test metrics are reported but were not selection inputs"
+  },
+  "schema_version": "SHDGuardMarginDevelopment/v1",
+  "seed": 1701,
+  "selected_full_run": {
+    "accuracy_recovery_fraction": 0.7961538461538465,
+    "audit_disagreement_rate": 0.12427409988385599,
+    "certificate_directed_mean_abort_step": 42.833333333333336,
+    "certificate_upper_bound": 0.14430870619786218,
+    "epochs": 40,
+    "grid_family_identity_fraction": 0.734375,
+    "guard_weight": 0.1,
+    "logit_only_mean_abort_step": 40.333333333333336,
+    "mean_abort_step_at_128_partitions": 44.416666666666664,
+    "no_repair_mean_abort_step": 47.0
+  },
+  "smoke_rows": [
+    {
+      "accuracy_recovery_fraction": 0.780769230769231,
+      "audit_disagreement_rate": 0.13356562137049943,
+      "best_calibration_disagreements": 78,
+      "best_guard_near_fraction": 0.01126328125,
+      "certificate_upper_bound": 0.15415035147781936,
+      "epochs": 10,
+      "guard_weight": 0.1,
+      "mean_abort_step_at_128_partitions": 46.5
+    },
+    {
+      "accuracy_recovery_fraction": 0.6384615384615385,
+      "audit_disagreement_rate": 0.13937282229965156,
+      "best_calibration_disagreements": 66,
+      "best_guard_near_fraction": 0.01109609375,
+      "certificate_upper_bound": 0.16028574135735307,
+      "epochs": 10,
+      "guard_weight": 0.5,
+      "mean_abort_step_at_128_partitions": 46.5
+    },
+    {
+      "accuracy_recovery_fraction": 0.6846153846153851,
+      "audit_disagreement_rate": 0.13937282229965156,
+      "best_calibration_disagreements": 71,
+      "best_guard_near_fraction": 0.0107052734375,
+      "certificate_upper_bound": 0.16028574135735307,
+      "epochs": 10,
+      "guard_weight": 1.0,
+      "mean_abort_step_at_128_partitions": 46.333333333333336
+    }
+  ],
+  "status": "single-seed calibration-only method-development and kill decision; not five-seed or primary evidence"
+}

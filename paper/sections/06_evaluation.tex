@@ -459,6 +459,16 @@ current proxy restores sampled decisions while making explicit branch proof no
 easier. We do not claim certificate restoration; the next repair objective must
 directly enlarge verified guard margins or reduce proof complexity.
 
+A calibration-only, single-seed guard-margin ablation tests that prescription
+without entering the primary matrix. With the selected weight, 40 epochs yield
+79.6\% accuracy recovery, 73.44\% sampled grid-family identity, and mean abort
+timestep 44.42 at $128\times128$ partitioning. This partially improves on the
+42.83 reached by certificate-directed repair, but remains below 47.0 without
+repair and completes no cell. Stronger guard weights reduce accuracy recovery
+without improving proof depth. We therefore kill the pointwise penalty before a
+five-seed expansion; a successful repair must optimize a multi-step
+family-verified margin rather than center-execution threshold distance.
+
 Repair can therefore restore aggregate accuracy without restoring decision
 identity. The current evidence supports the semantic transport problem, a
 substantial label-free repair opportunity, and exact prospective certification

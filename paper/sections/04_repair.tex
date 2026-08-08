@@ -36,3 +36,10 @@ static certificate. We therefore evaluate separately whether a selected repair
 increases sound-analysis coverage or reduces proof complexity. If it only
 restores sampled decisions or labeled accuracy, we call it \emph{transport
 repair}, not certificate restoration.
+
+As a development-only proof-aware variant, we also penalize hidden units whose
+hard target execution approaches a threshold guard. This local penalty is
+selected on calibration data and evaluated by the independent sound analyzer;
+it is not itself a verified multi-step margin. We stop this route before the
+five-seed matrix if it fails to complete cells or outperform the unrepaired
+model's proof depth.

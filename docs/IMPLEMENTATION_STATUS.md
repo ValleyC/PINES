@@ -84,6 +84,11 @@
   but logit-only reaches 76.41%. A single-seed sound branch-set test completes
   no representative repaired-model cell; at the finest partition, repair
   reduces rather than increases the reached proof depth.
+- Single-seed proof-aware repair kill test: a selected pointwise guard-margin
+  penalty reaches timestep 44.42 at 128-by-128 partitioning, partially above
+  certificate-directed repair's 42.83 but below 47.0 without repair, and
+  completes no cell. Stronger weights reduce transport recovery without
+  improving proof depth, so this route is not expanded to five seeds.
 - Sample-complexity analysis: under ten-way simultaneous 95% confidence, zero
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the
@@ -130,6 +135,8 @@ systems/risk-ranking contribution.
 - Symbolic guard compression or a decision-level correlated domain. Interval
   merging, a single fixed branch, uniform partitioning, and explicit branch
   lists are now empirically ruled out at plus/minus 1%.
+- Multi-step family-verified repair margins. A pointwise center-execution guard
+  penalty is now empirically ruled out as a certificate-restoring objective.
 - Full-training-set supervised retraining as a separately budgeted oracle; the
   completed matched baseline intentionally uses only 800 labels and 280 updates.
 - Fresh sequestered DVS Gesture replication.

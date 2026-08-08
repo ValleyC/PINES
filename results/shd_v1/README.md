@@ -220,6 +220,21 @@ python experiments/run_shd_repaired_branch_set_cells.py --seed 1701
 python experiments/aggregate_shd_repaired_branch_set_cells.py
 ```
 
+### Pointwise guard-margin repair kill test
+
+`guard_margin_development_summary.json` records a calibration-only, single-seed
+development decision. The selected 40-epoch run recovers 79.6% of reset loss
+and reaches 73.44% identity over the sampled 9-by-9 family. Its finest sound
+branch-set diagnostic reaches mean abort timestep 44.42, above 42.83 for the
+earlier certificate-directed repair but below 47.0 without repair, and no cell
+completes. We therefore do not expand the pointwise penalty to five seeds.
+
+The immutable summary is regenerated from ignored development artifacts with:
+
+```powershell
+python experiments/aggregate_shd_guard_margin_development.py
+```
+
 ### Horizon diagnostic
 
 On deterministic 256-input audit subsets, trained recurrent finite-family static
