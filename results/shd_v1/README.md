@@ -84,3 +84,21 @@ Regenerate with:
 python experiments/run_shd_static_family.py --seed 1701 --output-root artifacts/shd_v1_static_family_zero_recurrence --families full --zero-recurrence
 python experiments/aggregate_shd_recurrence_ablation.py
 ```
+
+### Horizon diagnostic
+
+On deterministic 256-input audit subsets, trained recurrent static coverage
+rises from 12.58% at 10 bins to 17.19% at 50 bins; exact family agreement rises
+from 31.02% to 36.17%. The zero-recurrence intervention rises from 38.98% to
+64.06% static coverage and from 66.80% to 88.98% exact agreement. Coverage does
+not monotonically decay with time because reference margins accumulate, but the
+trained recurrent model remains below the 20% gate at every horizon. A tighter
+method must target recurrent-transition and threshold-branch dependence rather
+than merely shorten the unroll.
+
+Regenerate with:
+
+```powershell
+python experiments/run_shd_horizon_diagnostic.py --seed 1701 --max-samples 256
+python experiments/aggregate_shd_horizon_diagnostic.py
+```

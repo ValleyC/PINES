@@ -33,6 +33,9 @@
 - Within-SHD recurrence intervention: zeroing only recurrent feedback raises
   static coverage from 18.79% to 67.20% and exact agreement from 38.72% to
   89.31%. This is a mechanism diagnostic, not an accuracy-matched comparison.
+- Five-seed horizon diagnostic: trained recurrent coverage stays below 20% from
+  10 through 50 bins and increases slightly as margins accumulate. Shortening
+  the unroll therefore does not rescue the recurrent certificate.
 - Sample-complexity analysis: under ten-way simultaneous 95% confidence, zero
   disagreement requires 528, 263, and 104 pairs for one-, two-, and five-point
   budgets. SHD and N-MNIST exceed all three thresholds; DVS does not exceed the

@@ -1,0 +1,147 @@
+{
+  "audit_samples_per_seed": 256,
+  "code_revision": "614dce18c70fe7c1a2d04a260a046add00227e14",
+  "complete_audit_samples_per_seed": 861,
+  "endpoint_changes": {
+    "trained_exact": 0.051562499999999956,
+    "trained_static": 0.04609374999999999,
+    "zero_recurrence_exact": 0.22187500000000004,
+    "zero_recurrence_static": 0.25078125
+  },
+  "formulation_assessment": "Coverage does not monotonically decay with unroll length. Margin accumulation raises both exact agreement and static coverage after the first ten bins, but recurrent models remain unstable at every measured horizon. The next abstraction should target recurrent transition and spike branch dependence rather than relying on shorter unrolls.",
+  "gate_assessment": {
+    "no_observed_static_unsoundness": true,
+    "trained_recurrent_reaches_20_percent_static": false
+  },
+  "horizons": [
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "input_report_hashes": {
+    "seed_1701": "4df2b6c5b0067712d1ac008df689214a0ebbc91cef80940afe8c17adf19cb8ae",
+    "seed_2718": "c88b084638e7810508aea258ee0b92ff796a3815f95f2f968ab8d9ff8af1d250",
+    "seed_3141": "9d045b9f5ab5324fb1707368d21580bc9e4e1b65ecf8436b3ec32505f607d81f",
+    "seed_5772": "540dcb65d6892b332c0a26fd272751a8437aefbb4a8ab203322f4a90b793c4c2",
+    "seed_8119": "caa8f33bda5784c13089804aa8f5e8bcc3887577c1fe6ffe025f47c1941a25f3"
+  },
+  "rows_csv_hash": "b25302b9b3c66daf5e870b7f2e2ac2eb4071df8c1c2fa85d52679224d883c748",
+  "schema_version": "SHDHorizonDiagnosticAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed software mechanism diagnostic on deterministic 256-input audit subsets; not primary or physical evidence",
+  "subset_rule": "first 256 entries of each frozen certificate audit split",
+  "trajectories": {
+    "trained_recurrent": [
+      {
+        "exact_family_agreement_mean": 0.31015625,
+        "exact_family_agreement_std": 0.027704098791401788,
+        "horizon": 10,
+        "median_reference_margin_across_seeds": 1.772887945175171,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.184375,
+        "static_certified_mean": 0.12578125,
+        "static_certified_std": 0.03509108543980579
+      },
+      {
+        "exact_family_agreement_mean": 0.321875,
+        "exact_family_agreement_std": 0.023534953642800106,
+        "horizon": 20,
+        "median_reference_margin_across_seeds": 3.1861178874969482,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.1734375,
+        "static_certified_mean": 0.1484375,
+        "static_certified_std": 0.01586726250905461
+      },
+      {
+        "exact_family_agreement_mean": 0.36171875,
+        "exact_family_agreement_std": 0.03691354579664828,
+        "horizon": 30,
+        "median_reference_margin_across_seeds": 3.727792263031006,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.18984375,
+        "static_certified_mean": 0.171875,
+        "static_certified_std": 0.014352478961620185
+      },
+      {
+        "exact_family_agreement_mean": 0.3625,
+        "exact_family_agreement_std": 0.03870934106824218,
+        "horizon": 40,
+        "median_reference_margin_across_seeds": 3.687028408050537,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.190625,
+        "static_certified_mean": 0.171875,
+        "static_certified_std": 0.012657696676577852
+      },
+      {
+        "exact_family_agreement_mean": 0.36171875,
+        "exact_family_agreement_std": 0.037932885582219425,
+        "horizon": 50,
+        "median_reference_margin_across_seeds": 3.687028408050537,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.18984375,
+        "static_certified_mean": 0.171875,
+        "static_certified_std": 0.012657696676577852
+      }
+    ],
+    "zero_recurrence": [
+      {
+        "exact_family_agreement_mean": 0.66796875,
+        "exact_family_agreement_std": 0.021923773750628563,
+        "horizon": 10,
+        "median_reference_margin_across_seeds": 4.015340805053711,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.278125,
+        "static_certified_mean": 0.38984375,
+        "static_certified_std": 0.054084284808817155
+      },
+      {
+        "exact_family_agreement_mean": 0.84609375,
+        "exact_family_agreement_std": 0.041395193099184234,
+        "horizon": 20,
+        "median_reference_margin_across_seeds": 6.276980400085449,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.24296875,
+        "static_certified_mean": 0.603125,
+        "static_certified_std": 0.07399225307844734
+      },
+      {
+        "exact_family_agreement_mean": 0.8875,
+        "exact_family_agreement_std": 0.029928095795903054,
+        "horizon": 30,
+        "median_reference_margin_across_seeds": 6.373610496520996,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.24765625,
+        "static_certified_mean": 0.63984375,
+        "static_certified_std": 0.07304791944440478
+      },
+      {
+        "exact_family_agreement_mean": 0.88984375,
+        "exact_family_agreement_std": 0.027259916128699845,
+        "horizon": 40,
+        "median_reference_margin_across_seeds": 6.354372024536133,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.24921875,
+        "static_certified_mean": 0.640625,
+        "static_certified_std": 0.07149611413173096
+      },
+      {
+        "exact_family_agreement_mean": 0.88984375,
+        "exact_family_agreement_std": 0.027259916128699845,
+        "horizon": 50,
+        "median_reference_margin_across_seeds": 6.354372024536133,
+        "observed_unsound_certificates": 0,
+        "relaxation_gap_mean": 0.24921875,
+        "static_certified_mean": 0.640625,
+        "static_certified_std": 0.07149611413173096
+      }
+    ]
+  }
+}

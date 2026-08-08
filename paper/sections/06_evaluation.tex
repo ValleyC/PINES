@@ -167,6 +167,28 @@ Figure~\ref{fig:recurrence-ablation-static} summarizes the result.
   \label{fig:recurrence-ablation-static}
 \end{figure}
 
+Shortening the unroll does not rescue the recurrent certificate. On fixed
+256-input subsets, mean trained-model static coverage rises from 12.58\% at ten
+time bins to 17.19\% at 50, while exact agreement rises from 31.02\% to 36.17\%.
+The corresponding zero-recurrence trajectories rise from 38.98\% to 64.06\%
+and from 66.80\% to 88.98\%. The upward trend follows accumulating reference
+margin; recurrent semantic instability is already present at the earliest
+measured horizon and remains below the coverage gate. Thus shorter horizons are
+not the missing method. A tighter analysis must preserve dependence through the
+recurrent transition and threshold branches. Figure~\ref{fig:shd-horizon}
+reports the complete five-seed trajectories.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/shd_horizon_diagnostic.pdf}
+  \caption{Five-seed horizon diagnostic on deterministic 256-input SHD audit
+  subsets. Margin accumulation improves both quantities rather than causing
+  monotonic temporal decay, but trained recurrence remains below the static
+  coverage gate at every measured horizon. Shading is one sample standard
+  deviation across seeds.}
+  \label{fig:shd-horizon}
+\end{figure}
+
 Table~\ref{tab:sample-complexity} isolates confidence inflation at zero observed
 disagreement. Under the frozen ten-way Bonferroni correction, one-, two-, and
 five-point budgets require at least 528, 263, and 104 paired audit samples,
