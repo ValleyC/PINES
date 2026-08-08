@@ -22,6 +22,7 @@ from transportcert.torch_emulator import TorchEmulator
 METHODS = (
     "no_repair",
     "certificate_directed",
+    "guard_margin",
     "logit_only",
     "global_threshold",
     "per_platform_qat",
@@ -38,6 +39,8 @@ def main() -> None:
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1_final")
     parser.add_argument("--repair-root", default="artifacts/shd_v3_repairs_matched")
+    parser.add_argument("--guard-root", default="artifacts/shd_v15_guard_margin")
+    parser.add_argument("--methods", nargs="+", choices=METHODS, default=METHODS)
     parser.add_argument("--output-root", default="artifacts/shd_v12_repair_family_grid")
     args = parser.parse_args()
     if not (0 < args.radius < 1):
@@ -48,6 +51,7 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     seed_dir = root / args.artifact_root / f"seed_{args.seed}"
     repair_seed_dir = root / args.repair_root / f"seed_{args.seed}" / args.condition
+    guard_seed_dir = root / args.guard_root / f"seed_{args.seed}" / args.condition
     output_dir = root / args.output_root / f"seed_{args.seed}"
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / f"{args.condition}_family_grid.json"
@@ -79,7 +83,7 @@ def main() -> None:
     )
     center_index = (GRID_RESOLUTION // 2) * GRID_RESOLUTION + GRID_RESOLUTION // 2
     rows = []
-    for method in METHODS:
+    for method in args.methods:
         if method == "no_repair":
             deployed_model = source_model
             model_path = source_model_path
@@ -90,7 +94,11 @@ def main() -> None:
                 "trainable_parameters": 0,
             }
         else:
-            method_dir = repair_seed_dir / method
+            method_dir = (
+                guard_seed_dir / method
+                if method == "guard_margin"
+                else repair_seed_dir / method
+            )
             model_path = method_dir / "repaired_model.npz"
             repair_report_path = method_dir / "repair_report.json"
             deployed_model = DenseRecurrentSNN.load(model_path)
@@ -156,7 +164,7 @@ def main() -> None:
         )
 
     report = {
-        "schema_version": "SHDRepairFamilyGridDiagnostic/v1",
+        "schema_version": "SHDRepairFamilyGridDiagnostic/v2",
         "status": (
             "finite-grid post-repair diagnostic; identity is measured against the original "
             "source/reference predictions and is not a continuous-family certificate"
@@ -175,7 +183,7 @@ def main() -> None:
         "split_indices_hash": sha256_file(split_path),
         "reference_semantics_hash": reference.semantics_hash,
         "target_semantics_hash": target.semantics_hash,
-        "methods": list(METHODS),
+        "methods": list(args.methods),
         "rows": rows,
         "device": device,
         "torch_version": torch.__version__,
