@@ -45,6 +45,7 @@ class AdaptiveGuardCutCertificateResult:
     maximum_polygon_vertices: int
     guard_band_splits: int
     axis_fallback_splits: int
+    unresolved_polygons: tuple[np.ndarray, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -712,6 +713,7 @@ class AdaptiveAffineGuardCutCertifier:
         box: SemanticsBox,
         *,
         max_leaves: int = 4096,
+        retain_unresolved_polygons: bool = False,
     ) -> AdaptiveGuardCutCertificateResult:
         events = _validate_inputs(model, inputs)
         if len(events) != 1:
@@ -739,6 +741,7 @@ class AdaptiveAffineGuardCutCertifier:
         maximum_vertices = len(root_polygon)
         guard_band_splits = 0
         axis_fallback_splits = 0
+        unresolved_polygons: list[np.ndarray] = []
 
         while queue:
             _, depth, _, polygon = heapq.heappop(queue)
@@ -809,6 +812,8 @@ class AdaptiveAffineGuardCutCertifier:
             if not useful_split:
                 unresolved_area += area
                 unresolved_leaves += 1
+                if retain_unresolved_polygons:
+                    unresolved_polygons.append(polygon.copy())
                 continue
             leaf_count += len(children) - 1
             if split_kind == "guard":
@@ -838,4 +843,5 @@ class AdaptiveAffineGuardCutCertifier:
             maximum_polygon_vertices=maximum_vertices,
             guard_band_splits=guard_band_splits,
             axis_fallback_splits=axis_fallback_splits,
+            unresolved_polygons=tuple(unresolved_polygons),
         )

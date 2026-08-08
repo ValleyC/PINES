@@ -209,7 +209,12 @@ def test_adaptive_guard_cut_retires_spiking_polygon() -> None:
         output_delays=(0,),
     )
     result = AdaptiveAffineGuardCutCertifier().certify(
-        model, np.ones((1, 1, 1)), reference, box, max_leaves=3
+        model,
+        np.ones((1, 1, 1)),
+        reference,
+        box,
+        max_leaves=3,
+        retain_unresolved_polygons=True,
     )
     assert not result.certified
     assert 0.0 < result.certified_parameter_fraction < 1.0
@@ -218,6 +223,11 @@ def test_adaptive_guard_cut_retires_spiking_polygon() -> None:
         result.certified_parameter_fraction
         + result.unresolved_parameter_fraction,
         1.0,
+    )
+    assert len(result.unresolved_polygons) == result.unresolved_leaves
+    assert np.isclose(
+        sum(polygon_area(polygon) for polygon in result.unresolved_polygons) / 4.0,
+        result.unresolved_parameter_fraction,
     )
 
 

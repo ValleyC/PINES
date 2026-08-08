@@ -31,6 +31,7 @@ def main() -> None:
     parser.add_argument("--selection-grid", type=int, default=9)
     parser.add_argument("--max-leaves", type=int, nargs="+", default=(64, 256))
     parser.add_argument("--max-guard-band-splits", type=int, default=-1)
+    parser.add_argument("--save-residual-polygons", action="store_true")
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1_final")
     parser.add_argument("--output-root", default="artifacts/shd_v32_guard_cuts")
@@ -49,8 +50,11 @@ def main() -> None:
     output_dir = root / args.output_root / f"seed_{args.seed}"
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / f"{args.condition}_guard_cuts.json"
+    residual_path = output_dir / f"{args.condition}_guard_cut_residuals.npz"
     if report_path.exists():
         raise FileExistsError(f"guard-cut output exists: {report_path}")
+    if args.save_residual_polygons and residual_path.exists():
+        raise FileExistsError(f"guard-cut residual output exists: {residual_path}")
 
     model_path = seed_dir / "model.npz"
     split_path = seed_dir / "split_indices.npz"
@@ -122,6 +126,8 @@ def main() -> None:
         )
     )
     rows = []
+    retained_polygons: list[np.ndarray] = []
+    retained_row_indices: list[int] = []
     for max_leaves in args.max_leaves:
         for position, (dataset_index, frame) in enumerate(
             zip(selected_indices, selected_frames, strict=True)
@@ -133,6 +139,7 @@ def main() -> None:
                 reference,
                 box,
                 max_leaves=max_leaves,
+                retain_unresolved_polygons=args.save_residual_polygons,
             )
             rows.append(
                 {
@@ -153,6 +160,11 @@ def main() -> None:
                     "seconds": time.perf_counter() - started,
                 }
             )
+            if args.save_residual_polygons:
+                retained_polygons.extend(result.unresolved_polygons)
+                retained_row_indices.extend(
+                    [len(rows) - 1] * len(result.unresolved_polygons)
+                )
             print(
                 f"guard cuts seed={args.seed} leaves={max_leaves} "
                 f"input={position + 1}/{len(selected_indices)} "
@@ -160,6 +172,28 @@ def main() -> None:
                 f"covered={result.certified_parameter_fraction:.4f}",
                 flush=True,
             )
+
+    residual_artifact_hash = None
+    if args.save_residual_polygons:
+        vertex_counts = np.asarray(
+            [len(polygon) for polygon in retained_polygons], dtype=np.int64
+        )
+        offsets = np.concatenate(
+            [np.zeros(1, dtype=np.int64), np.cumsum(vertex_counts)]
+        )
+        vertices = (
+            np.concatenate(retained_polygons, axis=0)
+            if retained_polygons
+            else np.empty((0, 2), dtype=np.float64)
+        )
+        with residual_path.open("xb") as handle:
+            np.savez_compressed(
+                handle,
+                vertices=vertices,
+                offsets=offsets,
+                row_indices=np.asarray(retained_row_indices, dtype=np.int64),
+            )
+        residual_artifact_hash = sha256_file(residual_path)
 
     report = {
         "schema_version": "SHDGuardCutCertificate/v1",
@@ -190,6 +224,13 @@ def main() -> None:
         "target_semantics_hash": target.semantics_hash,
         "box_hash": box.box_hash,
         "rows": rows,
+        "residual_polygon_artifact": (
+            str(residual_path.relative_to(root)).replace("\\", "/")
+            if args.save_residual_polygons
+            else None
+        ),
+        "residual_polygon_artifact_hash": residual_artifact_hash,
+        "retained_residual_polygon_count": len(retained_polygons),
         "device_for_grid_selection": device,
         "torch_version": torch.__version__,
         "code_revision": code_revision(root),
