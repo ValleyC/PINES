@@ -20,7 +20,7 @@ from transportcert.emulator import VectorizedEmulator
 from transportcert.models import DenseRecurrentSNN
 
 
-METHODS = ("no_repair", "certificate_directed", "logit_only")
+METHODS = ("no_repair", "certificate_directed", "guard_margin", "logit_only")
 
 
 def main() -> None:
@@ -34,6 +34,8 @@ def main() -> None:
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1_final")
     parser.add_argument("--repair-root", default="artifacts/shd_v3_repairs_matched")
+    parser.add_argument("--guard-root", default="artifacts/shd_v15_guard_margin")
+    parser.add_argument("--methods", nargs="+", choices=METHODS, default=METHODS)
     parser.add_argument("--output-root", default="artifacts/shd_v13_repaired_branch_cells")
     args = parser.parse_args()
     if not (0 < args.radius < 1):
@@ -44,6 +46,7 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     seed_dir = root / args.artifact_root / f"seed_{args.seed}"
     repair_seed_dir = root / args.repair_root / f"seed_{args.seed}" / args.condition
+    guard_seed_dir = root / args.guard_root / f"seed_{args.seed}" / args.condition
     output_dir = root / args.output_root / f"seed_{args.seed}"
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / f"{args.condition}_branch_cells.json"
@@ -78,13 +81,17 @@ def main() -> None:
     certifier = BranchSetMemberCertifier()
     rows = []
     model_metadata = {}
-    for method in METHODS:
+    for method in args.methods:
         if method == "no_repair":
             deployed_model = source_model
             model_path = source_model_path
             repair_report_hash = None
         else:
-            method_dir = repair_seed_dir / method
+            method_dir = (
+                guard_seed_dir / method
+                if method == "guard_margin"
+                else repair_seed_dir / method
+            )
             model_path = method_dir / "repaired_model.npz"
             repair_report_path = method_dir / "repair_report.json"
             deployed_model = DenseRecurrentSNN.load(model_path)
@@ -153,7 +160,7 @@ def main() -> None:
                     )
 
     report = {
-        "schema_version": "SHDRepairedBranchSetCellDiagnostic/v1",
+        "schema_version": "SHDRepairedBranchSetCellDiagnostic/v2",
         "status": (
             "single-seed representative-cell sound-analysis diagnostic; cells do not "
             "cover the full family and cap failures are inconclusive"
@@ -163,6 +170,7 @@ def main() -> None:
         "relative_radius": args.radius,
         "partitions": list(args.partitions),
         "max_branches": args.max_branches,
+        "methods": list(args.methods),
         "sample_count": len(selected_indices),
         "selected_indices_hash": array_hash(selected_indices),
         "source_model_hash": source_model.model_hash,
