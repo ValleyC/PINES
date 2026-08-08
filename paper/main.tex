@@ -1,0 +1,58 @@
+\documentclass{article}
+
+\IfFileExists{neurips_2027.sty}{\usepackage{neurips_2027}}{\usepackage[margin=1in]{geometry}}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{natbib}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newcommand{\TRef}{\mathrm{ref}}
+\newcommand{\Emu}{\mathrm{emu}}
+\newcommand{\Hw}{\mathrm{hw}}
+\newcommand{\Dis}{\mathsf{Dis}}
+\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+
+\title{Transport Certificates for Spiking Neural Networks}
+\author{Anonymous Authors}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Intermediate representations can move a trained spiking neural network (SNN)
+between simulators and neuromorphic devices, but they do not answer the
+deployment question: will the transported network preserve its decisions under
+the target's discretization, reset, timing, numeric, and delivery semantics?
+We formulate this question as prospective certification over a versioned family
+of digital execution semantics. The proposed hierarchy combines exact semantic
+mappings, sound finite-horizon per-input analysis, exact label-free statistical
+bounds, and an emulator-to-hardware conformance term. The same certificate
+directs label-free repair on a disjoint calibration split before an untouched
+audit is certified. We describe realizations for SpiNNaker2 and a parameterized
+Virtex-7 recurrent SNN pipeline, together with a preregistered evaluation on SHD,
+DVS Gesture, and N-MNIST. This draft states the method and frozen experimental
+contract; it does not report unfinished hardware results.
+\end{abstract}
+
+\input{sections/01_introduction}
+\input{sections/02_semantics}
+\input{sections/03_certificates}
+\input{sections/04_repair}
+\input{sections/05_hardware}
+\input{sections/06_evaluation}
+\input{sections/07_related_limitations}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\appendix
+\input{sections/08_appendix}
+\end{document}

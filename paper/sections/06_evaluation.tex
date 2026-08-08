@@ -1,0 +1,46 @@
+\section{Preregistered evaluation}
+
+The primary event-native tasks are SHD with an SRNN and DVS Gesture with a
+convolutional/recurrent SNN. N-MNIST with a feedforward SNN is a negative control
+expected to be more transport-robust. SSC is deferred until all primary gates
+pass. Five training seeds share frozen sample IDs and semantics variants.
+
+The canonical training set is hash-partitioned into training, label-free repair
+calibration, and unlabeled certificate audit splits. The canonical labeled test
+set is sequestered. We vary reset, integration, threshold timing, precision,
+rounding/saturation, and one-step delay separately, followed by four preregistered
+high-risk combinations.
+
+For every condition we will report actual absolute accuracy change, certificate
+upper bound and slack, static certified-input fraction, sample complexity,
+emulator--hardware disagreement, decisions at one-, two-, and five-point budgets,
+repair recovery, remaining risk, label count, runtime, and hardware runs. Single-
+axis experiments support causal attribution and provide counterexamples to
+invalid equivalence claims.
+
+\begin{table}[t]
+\centering
+\caption{Frozen primary matrix. Checkmarks denote required measurements, not
+completed experiments.}
+\begin{tabular}{lccc}
+\toprule
+Task & Reference--emulator & SpiNNaker2 & Virtex-7 \\
+\midrule
+SHD SRNN & \checkmark & \checkmark & \checkmark \\
+DVS Gesture conv/SRNN & \checkmark & \checkmark & \checkmark \\
+N-MNIST feedforward control & \checkmark & diagnostic & diagnostic \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The submission gate requires two physical backends, four conditions with more
+than five points of uncorrected loss, no observed simultaneous-bound violation,
+median slack at most three points, 90th-percentile slack at most eight points,
+and at least 70\% label-free recovery across both tasks and backends. The method
+must beat global threshold scaling and PTQ at matched cost. If more than 80\% of
+inputs lack a nonvacuous static family certificate, or conformance dominates, we
+pivot to a systems venue.
+
+\TODO{Insert frozen five-seed results only after the prospective hardware matrix
+and clean-machine replay pass.}
+

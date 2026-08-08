@@ -1,0 +1,41 @@
+\section{Artifact and proof obligations}
+
+Every certificate stores the model, data, checkpoint, reference and target
+semantics, code revision, split, seed, firmware, and bitstream hashes; sample
+count; simultaneous confidence; static certified fraction; semantic,
+conformance, and total bounds; budget verdict; and assumptions. Artifacts are
+created once with exclusive filesystem semantics.
+
+The software test matrix covers scalar/vector differential execution across both
+integration and reset rules, multiple delays, and fixed-point formats; numeric
+overflow; semantic hash stability; exact confidence limits; simultaneous
+composition; small-domain counterexamples; split disjointness; repair
+re-certification; CLI workflows; and physical manifest validation.
+
+\section{Sample complexity at zero observed disagreement}
+
+For zero disagreements in $n$ independent pairs, the one-sided
+Clopper--Pearson upper limit is
+\begin{equation}
+U(\alpha)=1-\alpha^{1/n}.
+\end{equation}
+This expression makes the cost of small decision budgets explicit and is used to
+plan canary size before hardware execution rather than after observing results.
+
+\section{Proof-status vocabulary}
+
+\begin{description}
+\item[Structural identity.] Canonical semantics hashes and model transitions are
+identical.
+\item[Mapped equivalence.] A symbolic parameter map preserves every transition
+under stated preconditions.
+\item[Finite-domain proof.] Exhaustive states/inputs and horizon are recorded;
+the conclusion does not extend beyond them.
+\item[Static certificate.] A sound abstract set proves the argmax over one input
+and the declared family.
+\item[Statistical certificate.] Coverage depends on the paired audit sampling
+assumptions.
+\item[Physical certificate.] Statistical certificate plus a valid device canary
+and immutable manifest.
+\end{description}
+

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HardwareRunManifest/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "backend", "backend_serial", "adapter_version", "firmware_hash", "bitstream_hash", "semantics_hash", "model_hash", "dataset_hash", "seed_hash", "run_id", "timestamp_utc", "capture_hash", "independent_pairing"],
+  "properties": {
+    "schema_version": {"const": "HardwareRunManifest/v1"},
+    "backend": {"enum": ["spinnaker2", "virtex7"]},
+    "backend_serial": {"type": "string", "minLength": 1},
+    "adapter_version": {"type": "string", "minLength": 1},
+    "firmware_hash": {"type": "string", "minLength": 1},
+    "bitstream_hash": {"type": ["string", "null"]},
+    "semantics_hash": {"type": "string", "minLength": 1},
+    "model_hash": {"type": "string", "minLength": 1},
+    "dataset_hash": {"type": "string", "minLength": 1},
+    "seed_hash": {"type": "string", "minLength": 1},
+    "run_id": {"type": "string", "minLength": 1},
+    "timestamp_utc": {"type": "string", "format": "date-time"},
+    "capture_hash": {"type": "string", "minLength": 1},
+    "independent_pairing": {"const": true}
+  }
+}
+

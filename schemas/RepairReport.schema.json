@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RepairReport/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source_certificate_hash", "permitted_parameter_changes", "calibration_data_hash", "audit_data_hash", "data_budget", "label_budget", "optimization_evaluations", "optimization_seconds", "original_model_hash", "repaired_model_hash", "pre_repair_objective", "post_repair_objective", "post_repair_certificate_hash", "selected_changes", "code_revision"],
+  "properties": {
+    "schema_version": {"const": "RepairReport/v1"},
+    "source_certificate_hash": {"type": "string"},
+    "permitted_parameter_changes": {"type": "array", "items": {"type": "string"}},
+    "calibration_data_hash": {"type": "string"},
+    "audit_data_hash": {"type": "string"},
+    "data_budget": {"type": "integer", "minimum": 1},
+    "label_budget": {"type": "integer", "minimum": 0},
+    "optimization_evaluations": {"type": "integer", "minimum": 1},
+    "optimization_seconds": {"type": "number", "minimum": 0},
+    "original_model_hash": {"type": "string"},
+    "repaired_model_hash": {"type": "string"},
+    "pre_repair_objective": {"type": "number"},
+    "post_repair_objective": {"type": "number"},
+    "post_repair_certificate_hash": {"type": "string"},
+    "selected_changes": {"type": "array", "items": {"type": "object"}},
+    "code_revision": {"type": "string"}
+  }
+}
+

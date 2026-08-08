@@ -1,0 +1,23 @@
+{
+  "name": "primary-local-robustness-box-v1",
+  "base": {
+    "version": "1.0",
+    "timestep": 1.0,
+    "integration_rule": "forward_euler",
+    "threshold_timing": "post_integration",
+    "update_ordering": "integrate>threshold>reset",
+    "reset_rule": "subtractive",
+    "state_format": {"kind": "float64", "rounding": "nearest_even", "overflow": "saturate"},
+    "weight_format": {"kind": "float64", "rounding": "nearest_even", "overflow": "saturate"},
+    "synaptic_delay_steps": 0,
+    "output_delay_steps": 0,
+    "randomness": {"deterministic": true, "seed": 0}
+  },
+  "timestep_bounds": [0.95, 1.05],
+  "threshold_scale_bounds": [0.95, 1.05],
+  "integration_rules": ["forward_euler", "exponential_euler"],
+  "threshold_timings": ["post_integration"],
+  "reset_rules": ["subtractive", "to_value"],
+  "synaptic_delays": [0, 1],
+  "output_delays": [0, 1]
+}

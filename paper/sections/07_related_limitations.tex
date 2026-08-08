@@ -1,0 +1,31 @@
+\section{Related work, assumptions, and failure cases}
+
+NIR supplies interoperable primitives and explicitly documents that digital
+implementations can diverge because of discretization, neuron models,
+quantization, and nondeterminism \citep{pedersen2024nir}. Our work treats NIR as
+the graph transport layer and adds a separate operational semantics and evidence
+layer; it does not modify NIR's representation contract.
+
+General machine learning has an extensive literature on disagreement and
+label-free performance prediction. Disagreement-on-the-line studies when model
+disagreement tracks performance under distribution shift \citep{lee2023dotl},
+while disagreement discrepancy optimizes an auxiliary classifier to obtain error
+bounds \citep{rosenfeld2023disagreement}. We cite these as prior art. Our basic
+accuracy-change inequality is elementary. The proposed contribution is prospective
+SNN execution-family certification, sound state analysis, physical conformance,
+and repair under a separated audit protocol.
+
+The guarantee assumes a fixed finite horizon, immutable model and semantics,
+paired audit inputs drawn independently from the deployment distribution, and
+correct capture identities. Distribution drift after certification is outside
+the claim. A finite enumerated family says nothing about an omitted backend
+behavior. Interval merging may be sound but vacuous near repeated threshold
+branches. Clopper--Pearson bounds can require large audit sets at one-point
+budgets. A small emulator--hardware canary bound does not diagnose the cause of
+conformance failures.
+
+The scope is digital classification. We exclude analog mismatch, continual
+learning, control, safety certification, and energy claims. A certificate bounds
+absolute accuracy change, not class-conditional harm unless the sampling and
+report are extended accordingly.
+

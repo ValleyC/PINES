@@ -1,0 +1,32 @@
+\section{Certificate-directed repair}
+
+Repair follows a fixed order. First, a proved closed-form transport is applied
+when one exists. Second, the primary method calibrates each neuron's threshold,
+leak/time constant, bias, numeric scale, and permitted delay compensation without
+labels. Third, an optional target-semantics fine-tune may use a declared few-shot
+label budget.
+
+Let $c_0(x)$ be the reference class and $m_s(x)$ its target logit margin over the
+largest competing class. Rather than minimizing only mean logit distance, the
+primary objective approximates uncertified prediction mass:
+\begin{equation}
+\mathcal{L}_{\mathrm{cert}}=
+\frac{1}{|C|}\sum_{x\in C}w(x)\,\mathrm{softplus}(-m_s(x)/\gamma)
++\lambda_z d_z+\lambda_v d_v,
+\end{equation}
+where $C$ is the unlabeled calibration split, $w(x)$ emphasizes informative
+reference margins, and $d_z,d_v$ compare spike and state traces. A vectorized
+smooth-spike executor optimizes this objective with straight-through fixed-point
+transitions; auditable hard-semantics coordinate search then refines and validates
+the candidate.
+
+No calibration sample enters the final audit. After a candidate is selected, its
+model hash is frozen and a new certificate is built on disjoint IDs. The repair
+report records permitted changes, data and label budgets, objective evaluations,
+runtime, original and repaired hashes, and the post-repair certificate.
+
+Comparisons include no repair, post-training quantization, global threshold
+scaling, per-platform quantization-aware training, logit-only distillation, and
+fully supervised target retraining. Calibration examples, label counts,
+optimization evaluations, wall-clock/GPU cost, and hardware runs are matched or
+reported explicitly.

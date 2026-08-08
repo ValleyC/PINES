@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "timestep": 1.0,
+  "integration_rule": "forward_euler",
+  "threshold_timing": "post_integration",
+  "update_ordering": "integrate>threshold>reset",
+  "reset_rule": "subtractive",
+  "state_format": {
+    "kind": "float64",
+    "rounding": "nearest_even",
+    "overflow": "saturate"
+  },
+  "weight_format": {
+    "kind": "float64",
+    "rounding": "nearest_even",
+    "overflow": "saturate"
+  },
+  "synaptic_delay_steps": 0,
+  "output_delay_steps": 0,
+  "randomness": {"deterministic": true, "seed": 0}
+}
+

@@ -1,0 +1,65 @@
+\section{A four-level transport certificate}
+
+\subsection{Exact and per-input certificates}
+
+The first level searches a library of proved parameter transports. Structural
+identity is the trivial member. Any nontrivial mapping must preserve the complete
+transition, including reset and queues, and survive symbolic derivation,
+exhaustive small-state checking, and adversarial trace search.
+
+For a general bounded family, we unroll the recurrent network for $T$ steps and
+propagate lower and upper state sets. Affine maps use sign-split interval
+arithmetic. Fixed-point rounding is enclosed at integer bin boundaries; wrapping
+that may cross the representable range expands to the full numeric domain.
+Delays are queues of abstract states. At a threshold discontinuity, the analyzer
+splits quiet and spiking branches, applies the appropriate reset, and conservatively
+merges them. Discrete semantic variants are analyzed separately and their output
+sets are joined.
+
+For reference prediction $c_0$ and target logit intervals
+$[\ell_c(x),u_c(x)]$, input $x$ is certified if
+\begin{equation}
+  \ell_{c_0}(x) > \max_{c\ne c_0} u_c(x).
+\end{equation}
+The condition proves an unchanged argmax for every semantics member represented
+by the abstract family. Exact enumeration is also available when the declared
+family itself is finite; a MILP checker is planned as a tighter small-network
+oracle.
+
+\subsection{Distribution certificate}
+
+Static certification need not cover every input. On an untouched unlabeled audit
+sample $x_1,\ldots,x_n$, define
+\begin{equation}
+  D_i(s)=\mathbf{1}[F_{s_0}(x_i)\ne F_s(x_i)].
+\end{equation}
+For $k_s=\sum_i D_i(s)$, we use the exact one-sided Clopper--Pearson limit
+$U_s(\alpha)$. With $m$ target family members, Bonferroni correction at
+$\alpha=\delta/m$ yields simultaneous coverage, and
+$U_{\TRef,\Emu}=\max_s U_s(\delta/m)$ for a fixed but unknown declared target.
+
+\begin{proposition}[Accuracy-change bound]
+For arbitrary labels $Y$ and paired predictions from classifiers $f$ and $g$,
+\[
+|\Pr[f(X)=Y]-\Pr[g(X)=Y]|\leq \Pr[f(X)\ne g(X)].
+\]
+\end{proposition}
+\begin{proof}
+Pointwise, the two correctness indicators can differ only when the predictions
+differ. Taking expectations and applying $|\mathbb{E}Z|\leq\mathbb{E}|Z|$
+proves the statement.
+\end{proof}
+
+\subsection{Physical certificate}
+
+An emulator cannot certify unmodeled hardware behavior. We therefore execute an
+unlabeled canary and estimate paired emulator--hardware disagreement. Splitting
+failure probability across the two estimates gives
+\begin{equation}
+U_{\mathrm{total}}=\min\{1,
+U_{\TRef,\Emu}(\delta/2)+U_{\Emu,\Hw}(\delta/2)\}.
+\end{equation}
+Without the second term, the report is marked \emph{conditional on emulator}.
+For nondeterministic hardware, the primary sample contains independent
+$(x,\text{run})$ pairs. Repeated execution of selected inputs characterizes
+run-to-run variance but cannot replace those pairs.
