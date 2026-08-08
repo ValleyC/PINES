@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import itertools
 import heapq
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -46,6 +46,19 @@ class AdaptiveGuardCutCertificateResult:
     guard_band_splits: int
     axis_fallback_splits: int
     unresolved_polygons: tuple[np.ndarray, ...] = ()
+
+
+@dataclass(frozen=True)
+class FixedTraceAffineResult:
+    trace_robust: bool
+    certified: bool
+    reference_prediction: int
+    trace_prediction: int
+    total_guard_count: int
+    uncertain_guard_count: int
+    uncertain_timestep_count: int
+    first_uncertain_timestep: int | None
+    minimum_signed_guard_margin: float
 
 
 @dataclass(frozen=True)
@@ -607,6 +620,162 @@ class AffineGuardFamilyCertifier:
             cut_generators,
             cut_radius,
             cut_strength,
+        )
+
+
+class FixedTraceAffineAnalyzer:
+    """Prove or diagnose one center trace over a convex semantics polygon."""
+
+    def analyze(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        box: SemanticsBox,
+        parameter_vertices: np.ndarray,
+    ) -> FixedTraceAffineResult:
+        events = _validate_inputs(model, inputs)
+        if len(events) != 1:
+            raise ValueError("fixed-trace analysis currently accepts one input")
+        discrete_sizes = (
+            len(box.integration_rules),
+            len(box.threshold_timings),
+            len(box.reset_rules),
+            len(box.synaptic_delays),
+            len(box.output_delays),
+        )
+        if discrete_sizes != (1, 1, 1, 1, 1):
+            raise ValueError("fixed-trace analysis requires one discrete member")
+        if box.base.state_format.is_fixed:
+            raise NotImplementedError("fixed-trace affine analysis requires float state")
+        if box.integration_rules[0] is not IntegrationRule.FORWARD_EULER:
+            raise NotImplementedError("fixed-trace analysis requires forward Euler")
+        vertices = np.asarray(parameter_vertices, dtype=np.float64)
+        if vertices.ndim != 2 or vertices.shape[1] != 2 or len(vertices) < 3:
+            raise ValueError("parameter polygon must have shape [vertices, 2]")
+        centroid = np.mean(vertices, axis=0)
+        timestep_center = sum(box.timestep_bounds) / 2.0
+        timestep_radius = (box.timestep_bounds[1] - box.timestep_bounds[0]) / 2.0
+        threshold_center = sum(box.threshold_scale_bounds) / 2.0
+        threshold_radius = (
+            box.threshold_scale_bounds[1] - box.threshold_scale_bounds[0]
+        ) / 2.0
+        center_timestep = timestep_center + timestep_radius * centroid[0]
+        center_threshold_scale = threshold_center + threshold_radius * centroid[1]
+        center_semantics = replace(box.base, timestep=float(center_timestep))
+        center_model = model.with_parameters(
+            threshold=model.threshold * float(center_threshold_scale)
+        )
+        center_trace = VectorizedEmulator().run(
+            center_model, events, center_semantics
+        )
+        forced_spikes = center_trace.spikes[0]
+        trace_prediction = int(center_trace.predictions[0])
+        reference_prediction = int(
+            VectorizedEmulator().run(model, events, reference).predictions[0]
+        )
+
+        state = box.base.state_format
+        weight = box.base.weight_format
+        w_in = np.asarray(weight.quantize(model.input_weights), dtype=np.float64)
+        w_rec = np.asarray(weight.quantize(model.recurrent_weights), dtype=np.float64)
+        bias = np.asarray(state.quantize(model.bias), dtype=np.float64)
+        base_drive = events @ w_in + bias
+        voltage = _HybridAffine.exact(np.zeros((1, model.hidden_size)))
+        threshold = _HybridAffine.semantic_interval(
+            model.threshold[None, :] * box.threshold_scale_bounds[0],
+            model.threshold[None, :] * box.threshold_scale_bounds[1],
+            1,
+        )
+        timestep = _HybridAffine.semantic_interval(
+            np.full((1, model.hidden_size), box.timestep_bounds[0]),
+            np.full((1, model.hidden_size), box.timestep_bounds[1]),
+            0,
+        )
+        synaptic_delay = box.synaptic_delays[0]
+        current_queue = [
+            _HybridAffine.exact(np.zeros_like(voltage.center))
+            for _ in range(synaptic_delay)
+        ]
+        previous_spikes = np.zeros((1, model.hidden_size), dtype=np.float64)
+        uncertain_guard_count = 0
+        uncertain_timesteps: set[int] = set()
+        first_uncertain: int | None = None
+        minimum_signed_margin = np.inf
+        timing = box.threshold_timings[0]
+        reset = box.reset_rules[0]
+
+        def inspect_guard(step: int, guard: _HybridAffine, spikes: np.ndarray) -> None:
+            nonlocal uncertain_guard_count, first_uncertain, minimum_signed_margin
+            lower, upper = guard.bounds(vertices)
+            signed = np.where(spikes > 0.0, lower, -upper)
+            minimum_signed_margin = min(
+                minimum_signed_margin, float(np.min(signed))
+            )
+            robust = np.where(spikes > 0.0, lower >= 0.0, upper < 0.0)
+            count = int(np.count_nonzero(~robust))
+            uncertain_guard_count += count
+            if count:
+                uncertain_timesteps.add(step)
+                if first_uncertain is None:
+                    first_uncertain = step
+
+        for step in range(events.shape[1]):
+            exact_current = base_drive[:, step, :] + previous_spikes @ w_rec
+            current = _HybridAffine.exact(
+                np.asarray(state.quantize(exact_current), dtype=np.float64)
+            )
+            if current_queue:
+                current_queue.append(current)
+                current = current_queue.pop(0)
+            spikes_array = forced_spikes[step][None, :]
+            spikes = _HybridAffine.exact(spikes_array)
+            if timing is ThresholdTiming.PRE_INTEGRATION:
+                inspect_guard(step, voltage.subtract(threshold), spikes_array)
+                voltage = AffineGuardFamilyCertifier._integrate(
+                    AffineGuardFamilyCertifier._reset(
+                        voltage,
+                        spikes,
+                        threshold,
+                        model.reset_value,
+                        reset,
+                        vertices,
+                    ),
+                    current,
+                    timestep,
+                    model.tau_mem,
+                    vertices,
+                ).float_quantize(state, vertices)
+            else:
+                voltage = AffineGuardFamilyCertifier._integrate(
+                    voltage,
+                    current,
+                    timestep,
+                    model.tau_mem,
+                    vertices,
+                ).float_quantize(state, vertices)
+                inspect_guard(step, voltage.subtract(threshold), spikes_array)
+                voltage = AffineGuardFamilyCertifier._reset(
+                    voltage,
+                    spikes,
+                    threshold,
+                    model.reset_value,
+                    reset,
+                    vertices,
+                ).float_quantize(state, vertices)
+            previous_spikes = spikes_array
+
+        trace_robust = uncertain_guard_count == 0
+        return FixedTraceAffineResult(
+            trace_robust=trace_robust,
+            certified=trace_robust and trace_prediction == reference_prediction,
+            reference_prediction=reference_prediction,
+            trace_prediction=trace_prediction,
+            total_guard_count=events.shape[1] * model.hidden_size,
+            uncertain_guard_count=uncertain_guard_count,
+            uncertain_timestep_count=len(uncertain_timesteps),
+            first_uncertain_timestep=first_uncertain,
+            minimum_signed_guard_margin=float(minimum_signed_margin),
         )
 
 

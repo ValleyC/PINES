@@ -8,6 +8,7 @@ from transportcert.abstract import IntervalFamilyCertifier, SemanticsBox
 from transportcert.affine import (
     AdaptiveAffineGuardCutCertifier,
     AffineGuardFamilyCertifier,
+    FixedTraceAffineAnalyzer,
     _HybridAffine,
     polygon_area,
     split_polygon_guard_band,
@@ -238,3 +239,49 @@ def test_adaptive_guard_cut_rejects_negative_split_budget() -> None:
         assert "guard-band" in str(error)
     else:
         raise AssertionError("negative guard-band split budget was accepted")
+
+
+def test_fixed_trace_affine_analyzer_distinguishes_robust_and_switching_trace() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[2.0]]),
+        recurrent_weights=np.zeros((1, 1)),
+        output_weights=np.asarray([[0.0, 1.0]]),
+        bias=np.zeros(1),
+        threshold=np.ones(1),
+        tau_mem=np.ones(1),
+        reset_value=np.zeros(1),
+    )
+    reference = ExecutionSemantics()
+    target = replace(reference, reset_rule=ResetRule.TO_VALUE)
+    box = SemanticsBox(
+        base=target,
+        timestep_bounds=(0.9, 1.1),
+        threshold_scale_bounds=(0.9, 1.1),
+        integration_rules=(target.integration_rule,),
+        threshold_timings=(target.threshold_timing,),
+        reset_rules=(target.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    square = np.asarray(
+        [[-1.0, -1.0], [1.0, -1.0], [1.0, 1.0], [-1.0, 1.0]]
+    )
+    robust = FixedTraceAffineAnalyzer().analyze(
+        model, np.ones((1, 1, 1)), reference, box, square
+    )
+    assert robust.trace_robust
+    assert robust.certified
+
+    switching_model = model.with_parameters(
+        input_weights=np.asarray([[1.0]])
+    )
+    switching = FixedTraceAffineAnalyzer().analyze(
+        switching_model,
+        np.ones((1, 1, 1)),
+        reference,
+        box,
+        square,
+    )
+    assert not switching.trace_robust
+    assert switching.uncertain_guard_count == 1
+    assert switching.first_uncertain_timestep == 0
