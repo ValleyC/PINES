@@ -1,0 +1,171 @@
+{
+  "audit_samples_per_seed": 104,
+  "cells": 50,
+  "code_revision": "14f487ee29d43a17a7df9deac504890840af4089",
+  "conditions_with_mean_loss_over_five_points": 2,
+  "decision_metrics": {
+    "0.01": {
+      "accepted": 0,
+      "conservative_rejects": 14,
+      "rejected": 50,
+      "unsafe_accepts": 0
+    },
+    "0.02": {
+      "accepted": 0,
+      "conservative_rejects": 20,
+      "rejected": 50,
+      "unsafe_accepts": 0
+    },
+    "0.05": {
+      "accepted": 10,
+      "conservative_rejects": 23,
+      "rejected": 40,
+      "unsafe_accepts": 0
+    }
+  },
+  "formulation_assessment": "A credible convolutional/recurrent reference confirms severe semantic transport loss and predictive disagreement ranking, but the distribution-free certificate again fails the frozen tightness gates. The small audit set also creates a roughly five-point simultaneous-confidence floor near zero observed disagreement. This is development evidence because official test accuracy selected the reference pipeline; a fresh sequestered replication is required for submission.",
+  "gate_assessment": {
+    "four_conditions_over_five_point_loss": false,
+    "median_slack_at_most_three_points": false,
+    "no_observed_simultaneous_bound_violation": true,
+    "p90_slack_at_most_eight_points": false,
+    "reference_mean_at_least_80_percent": true
+  },
+  "input_artifact_hashes": {
+    "semantics_seed_1701": "e53a3e7153847ddaae2df407da6b609480d196a7f03fa2b7347e56b36682471b",
+    "semantics_seed_2718": "08f00f1d2d5ad6be04ce5c4b6b5610f18d69a1a57caff16c3c68b59f1f57720c",
+    "semantics_seed_3141": "c19470814cec42e40720be8ec00cbc3b3dc352064b064ec39ad875a4b6b10096",
+    "semantics_seed_5772": "b0e5ef2757f58f078fe22666ef55474bf22ca1c57758c8a30a813f7dd3f0be3f",
+    "semantics_seed_8119": "83dc741101ebbcd0023caf6b60640c10905cde8a1fc06d321c52a807db05c416",
+    "training_seed_1701": "4d8d190dd0563452b5158534a75174f91794c63ae3cd32693cfdb0dc9d07098d",
+    "training_seed_2718": "4c3a9dcfca88e22e4565b3b65540e1fcd5b9e09fed8fc2270eb21aa70c154d35",
+    "training_seed_3141": "3f07b66421f3c589dc501339f34a34b22afd648795f43bef7a7debf902537cb3",
+    "training_seed_5772": "8316c4166ba63a7c32d81cb0ab779c3c2755e25b91b7518e039a1fe22341686f",
+    "training_seed_8119": "999137fb570f07b2afa3f1694f5ec3fd5eaf03fcf713e956ffde8390342be99e"
+  },
+  "median_bound_slack": 0.18542859484547242,
+  "p90_bound_slack": 0.2941984116319046,
+  "pearson_disagreement_vs_absolute_change": {
+    "p": 8.559697685708323e-29,
+    "r": 0.9623042692142724
+  },
+  "per_condition": [
+    {
+      "absolute_change_mean": 0.04318181818181821,
+      "accuracy_loss_mean": 0.03712121212121215,
+      "accuracy_loss_std": 0.03567449902415485,
+      "audit_disagreement_mean": 0.12884615384615386,
+      "bound_mean": 0.23307084529134298,
+      "bound_slack_mean": 0.18988902710952477,
+      "condition": "exponential__fixed",
+      "seeds_over_five_point_loss": 2
+    },
+    {
+      "absolute_change_mean": 0.04015151515151518,
+      "accuracy_loss_mean": 0.03712121212121215,
+      "accuracy_loss_std": 0.03940122310286621,
+      "audit_disagreement_mean": 0.14038461538461539,
+      "bound_mean": 0.24801295365733997,
+      "bound_slack_mean": 0.20786143850582475,
+      "condition": "exponential_euler",
+      "seeds_over_five_point_loss": 2
+    },
+    {
+      "absolute_change_mean": 0.005303030303030298,
+      "accuracy_loss_mean": -0.002272727272727271,
+      "accuracy_loss_std": 0.006881023532039748,
+      "audit_disagreement_mean": 0.025,
+      "bound_mean": 0.09225479382242145,
+      "bound_slack_mean": 0.08695176351939116,
+      "condition": "fixed_q8_weights_q16_state",
+      "seeds_over_five_point_loss": 0
+    },
+    {
+      "absolute_change_mean": 0.3659090909090909,
+      "accuracy_loss_mean": 0.3659090909090909,
+      "accuracy_loss_std": 0.10855428833992722,
+      "audit_disagreement_mean": 0.5346153846153846,
+      "bound_mean": 0.6599602432239275,
+      "bound_slack_mean": 0.29405115231483664,
+      "condition": "floor_rounding_saturation",
+      "seeds_over_five_point_loss": 5
+    },
+    {
+      "absolute_change_mean": 0.006818181818181812,
+      "accuracy_loss_mean": -0.002272727272727271,
+      "accuracy_loss_std": 0.00785471263383625,
+      "audit_disagreement_mean": 0.0019230769230769232,
+      "bound_mean": 0.05359055620155294,
+      "bound_slack_mean": 0.04677237438337113,
+      "condition": "pre_integration_threshold",
+      "seeds_over_five_point_loss": 0
+    },
+    {
+      "absolute_change_mean": 0.3621212121212122,
+      "accuracy_loss_mean": 0.3621212121212122,
+      "accuracy_loss_std": 0.11077845634952932,
+      "audit_disagreement_mean": 0.5403846153846154,
+      "bound_mean": 0.6651985916055512,
+      "bound_slack_mean": 0.30307737948433905,
+      "condition": "pre_threshold__floor",
+      "seeds_over_five_point_loss": 5
+    },
+    {
+      "absolute_change_mean": 0.034848484848484865,
+      "accuracy_loss_mean": 0.01818181818181821,
+      "accuracy_loss_std": 0.03686133522940262,
+      "audit_disagreement_mean": 0.10961538461538463,
+      "bound_mean": 0.2094442274810829,
+      "bound_slack_mean": 0.17459574263259808,
+      "condition": "reset__fixed__delay_1",
+      "seeds_over_five_point_loss": 1
+    },
+    {
+      "absolute_change_mean": 0.03484848484848484,
+      "accuracy_loss_mean": 0.01515151515151516,
+      "accuracy_loss_std": 0.038349349869917775,
+      "audit_disagreement_mean": 0.10576923076923077,
+      "bound_mean": 0.20474607751668245,
+      "bound_slack_mean": 0.16989759266819765,
+      "condition": "reset_to_value",
+      "seeds_over_five_point_loss": 1
+    },
+    {
+      "absolute_change_mean": 0.036363636363636355,
+      "accuracy_loss_mean": 0.018181818181818188,
+      "accuracy_loss_std": 0.040212218263909735,
+      "audit_disagreement_mean": 0.1,
+      "bound_mean": 0.19755632277219015,
+      "bound_slack_mean": 0.16119268640855378,
+      "condition": "reset_to_value__delay_1",
+      "seeds_over_five_point_loss": 1
+    },
+    {
+      "absolute_change_mean": 0.006818181818181812,
+      "accuracy_loss_mean": -0.002272727272727271,
+      "accuracy_loss_std": 0.00785471263383625,
+      "audit_disagreement_mean": 0.0019230769230769232,
+      "bound_mean": 0.05359055620155294,
+      "bound_slack_mean": 0.04677237438337113,
+      "condition": "synaptic_delay_1",
+      "seeds_over_five_point_loss": 0
+    }
+  ],
+  "reference_test_accuracy_mean": 0.8484848484848484,
+  "reference_test_accuracy_std": 0.017563671392984273,
+  "rows_csv_hash": "7dd8660f7e10ac788030f5daebb3ee31299e28c71abfd2a4dd3ea2a7b96f3f46",
+  "schema_version": "DVSGestureSoftwareAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "simultaneous_bound_violations": 0,
+  "spearman_disagreement_vs_absolute_change": {
+    "p": 5.68430257371182e-17,
+    "rho": 0.8779958942632553
+  },
+  "status": "development software evidence; semantic targets were untouched before freeze, but official test accuracy was used for reference-model selection; not physical evidence"
+}

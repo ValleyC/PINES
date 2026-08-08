@@ -72,6 +72,31 @@ disagreement itself substantially exceeds net accuracy change.
   \label{fig:shd-software-pilot}
 \end{figure}
 
+The five frozen convolutional/recurrent DVS Gesture models reach
+$84.85\pm1.76\%$ reference test accuracy. Floor-rounded fixed point loses 36.6
+points on average, whereas exponential integration loses 3.7 points and
+reset-to-value loses 1.5 points; only the two floor conditions exceed five
+points on average. Disagreement again ranks absolute test change (Pearson
+$r=0.962$), and none of 50 simultaneous limits is violated. The certificate is
+still operationally loose: median slack is 18.5 points and 90th-percentile slack
+is 29.4 points. With only 104 audit recordings per seed, simultaneous confidence
+also imposes a roughly five-point floor near zero observed disagreement.
+Figure~\ref{fig:dvs-software} shows both regimes.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/dvs_software_matrix.pdf}
+  \caption{Five-seed DVS Gesture development matrix. Severe floor-rounding
+  failures are easy to reject, but the distribution-free bound is too loose for
+  small semantic changes. Color on the left encodes empirical disagreement.}
+  \label{fig:dvs-software}
+\end{figure}
+
+This DVS result is prospective with respect to semantic targets, which were not
+executed until the v3 model was frozen, but it is not a final sequestered result:
+official test accuracy selected the reference-model pipeline. A fresh external
+replication is required before submission.
+
 The feedforward N-MNIST negative control distinguishes a generic statistical
 failure from a recurrence-dependent one. Five independently trained models
 reach $97.42\pm0.11\%$ reference test accuracy. Reset-to-value loses only 0.29

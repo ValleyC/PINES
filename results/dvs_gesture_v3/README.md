@@ -1,0 +1,40 @@
+# DVS Gesture v3 development evidence
+
+This directory contains the tracked aggregate of the five-seed convolutional/
+recurrent DVS Gesture software matrix. Large checkpoints, predictions, raw
+archives, and processed event windows remain under ignored `artifacts/` and
+`data/` directories; their hashes are recorded in the summary.
+
+Protocol:
+
+- Canonical IBM/Figshare archives verified against Tonic's published MD5s.
+- Four fixed 1.5-second windows per recording at 25 ms per semantic step.
+- Splits are hash-partitioned by recording identity, so windows never cross
+  training, label-free repair, or label-free audit partitions.
+- Five fixed seeds use the same 32/64-channel spiking convolutional front end
+  and 256-neuron recurrent spiking layer.
+
+Key results across 50 seed-condition cells:
+
+- Reference test accuracy: 84.85% mean, 1.76-point sample standard deviation.
+- Floor-rounded fixed point loses 36.59 points on average.
+- No observed violation of the simultaneous 95% disagreement bound.
+- Disagreement ranks absolute change with Pearson r = 0.962.
+- Median bound slack: 18.54 points; 90th-percentile slack: 29.42 points.
+- Only two conditions lose more than five points on average.
+
+These results support the transport-sensitivity and label-free ranking claims,
+but fail both certificate-tightness gates. The audit has only 104 recordings per
+seed, which creates a roughly five-point simultaneous-confidence floor even
+near zero observed disagreement.
+
+This is development evidence, not a final sequestered result: official test
+accuracy was used to select the v3 reference pipeline before any semantic target
+was executed. A fresh, externally sequestered replication is required for a
+submission claim.
+
+Regenerate the aggregate with:
+
+```powershell
+python experiments/aggregate_dvs_gesture.py
+```
