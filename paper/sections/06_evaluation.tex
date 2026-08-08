@@ -41,6 +41,43 @@ must beat global threshold scaling and PTQ at matched cost. If more than 80\% of
 inputs lack a nonvacuous static family certificate, or conformance dominates, we
 pivot to a systems venue.
 
-\TODO{Insert frozen five-seed results only after the prospective hardware matrix
-and clean-machine replay pass.}
+\subsection{Software evidence and an early formulation failure}
 
+We completed the frozen software matrix on SHD for five independently trained
+128-neuron SRNNs. The reference test accuracy is $71.5\pm3.0\%$ (mean and sample
+standard deviation); this is sufficient for a semantic-sensitivity study but not
+the reference-model quality we require for the final submission. Five of ten
+target conditions lose more than five points on average. Reset-to-value loses
+9.9 points, reset plus one-step delay loses 16.1 points, and floor-rounded fixed
+point loses 53.6 points. Thus the recurrent transport failure is not a
+single-seed artifact.
+
+Across all 50 seed--condition cells, unlabeled audit disagreement strongly ranks
+absolute test accuracy change (Pearson $r=0.989$, Spearman $\rho=0.957$). The
+Bonferroni-corrected 95\% Clopper--Pearson limits have no observed violation.
+They are nevertheless too loose for deployment: median slack is 17.6 points and
+90th-percentile slack is 30.1 points, failing the preregistered three- and
+eight-point gates by a large margin. Figure~\ref{fig:shd-software-pilot} shows
+that the failure is not primarily finite-sample confidence inflation; empirical
+disagreement itself substantially exceeds net accuracy change.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figures/shd_software_pilot.pdf}
+  \caption{Five-seed SHD software pilot (50 seed--condition cells). Every point
+  lies above the tight-bound line, so coverage holds, but the distribution-free
+  disagreement bound is operationally loose. Disagreement remains highly useful
+  as a label-free ranking signal. This is emulator evidence, not a physical
+  certificate.}
+  \label{fig:shd-software-pilot}
+\end{figure}
+
+A label-free repair pilot on one reset-to-value seed recovers 83.5\% of the lost
+accuracy, exceeding the 70\% recovery target and global threshold scaling.
+However, its post-repair disagreement bound is still 17.1\%, rejecting every
+practical budget. Repair can therefore restore aggregate accuracy without
+restoring decision identity. The current evidence supports the semantic
+transport problem and repair opportunity, but it does \emph{not} support the
+intended tight-certificate claim. The next formulation must either target a
+different certifiable quantity, introduce and validate additional assumptions,
+or accept a systems/risk-ranking contribution.
