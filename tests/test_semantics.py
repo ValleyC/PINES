@@ -51,6 +51,15 @@ def test_nearest_even_is_declared_not_implicit() -> None:
     assert numeric.quantize(0.375) == 0.5
 
 
+def test_float32_format_records_runtime_rounding() -> None:
+    numeric = NumericFormat("float32")
+    value = np.asarray([1.0 / 3.0], dtype=np.float64)
+    result = numeric.quantize(value)
+    assert result.dtype == np.float32
+    assert float(result[0]) == float(np.float32(1.0 / 3.0))
+    assert float(result[0]) != float(value[0])
+
+
 def test_stochastic_rounding_requires_stochastic_semantics() -> None:
     stochastic = NumericFormat("fixed", 8, 4, RoundingMode.STOCHASTIC)
     with pytest.raises(ValueError, match="deterministic=false"):
@@ -65,4 +74,3 @@ def test_stochastic_rounding_requires_stochastic_semantics() -> None:
 def test_negative_delays_rejected(delay: int) -> None:
     with pytest.raises(ValueError, match="non-negative"):
         ExecutionSemantics(synaptic_delay_steps=delay)
-

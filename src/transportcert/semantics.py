@@ -53,8 +53,8 @@ class NumericFormat:
     overflow: OverflowMode = OverflowMode.SATURATE
 
     def __post_init__(self) -> None:
-        if self.kind not in {"float64", "fixed"}:
-            raise ValueError("numeric kind must be 'float64' or 'fixed'")
+        if self.kind not in {"float32", "float64", "fixed"}:
+            raise ValueError("numeric kind must be 'float32', 'float64', or 'fixed'")
         if self.kind == "fixed":
             if self.total_bits is None or self.fractional_bits is None:
                 raise ValueError("fixed format requires total_bits and fractional_bits")
@@ -70,7 +70,8 @@ class NumericFormat:
     def quantize(
         self, value: float | np.ndarray, rng: np.random.Generator | None = None
     ) -> float | np.ndarray:
-        values = np.asarray(value, dtype=np.float64)
+        dtype = np.float32 if self.kind == "float32" else np.float64
+        values = np.asarray(value, dtype=dtype)
         if not self.is_fixed:
             result = values
         else:
@@ -196,4 +197,3 @@ class ExecutionSemantics:
     def load(cls, path: str | Path) -> "ExecutionSemantics":
         with Path(path).open("r", encoding="utf-8") as handle:
             return cls.from_dict(json.load(handle))
-

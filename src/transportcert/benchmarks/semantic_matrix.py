@@ -25,7 +25,8 @@ from .shd import PackedSHD
 
 
 def primary_semantic_conditions() -> dict[str, ExecutionSemantics]:
-    reference = ExecutionSemantics()
+    float32 = NumericFormat("float32")
+    reference = ExecutionSemantics(state_format=float32, weight_format=float32)
     fixed_state = NumericFormat(
         "fixed", 16, 8, RoundingMode.NEAREST_EVEN, OverflowMode.SATURATE
     )
