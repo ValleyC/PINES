@@ -53,8 +53,11 @@ directions for all 150 stored prediction pairs, so uniformly tighter label-free
 accuracy guarantees require additional assumptions. Label-free calibration
 recovers $77.2\%$ and $87.8\%$ of reset and floor-rounded fixed-point accuracy
 loss, respectively, across five seeds, but never produces a five-point
-certificate and is not uniformly better than logit-only distillation. Sequestered
-replication and physical certificates remain unfinished.
+certificate and is not uniformly better than logit-only distillation. On DVS
+Gesture development models, restricted label-free repair recovers $91.1\%$ of
+fixed-point loss versus $98.7\%$ for a 97-label QAT baseline, while both retain
+roughly 21-point certificates. Sequestered replication and physical certificates
+remain unfinished.
 \end{abstract}
 
 \input{sections/01_introduction}

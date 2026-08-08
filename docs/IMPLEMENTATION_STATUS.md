@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 68
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 70
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -31,6 +31,11 @@
   It beats no repair and global scaling in every cell, but loses to logit-only
   on floor rounding and to labeled QAT on the genuine fixed-point comparison.
   No repaired method/seed/condition cell accepts a five-point budget.
+- Five-seed DVS Gesture floor-rounded repair development study. Restricted
+  certificate-directed calibration recovers 91.1% of lost accuracy with every
+  seed above 79.5%, versus 89.3% for logit-only, 74.8% for global scaling, and
+  98.7% for 97-label QAT. It beats logit-only in only three paired seeds and its
+  21.5-point mean bound is substantially looser than logit-only's 15.1 points.
 - Full-audit SHD finite-family analysis: 38.72% mean member-wise coverage over
   the 16-member family, exactly matching enumerated agreement and passing the
   declared 20% gate. The preserved 18.79% predecessor merged logits across
@@ -91,7 +96,7 @@ finite-family or systems/risk-ranking contribution.
 - Fresh sequestered DVS Gesture replication.
 - Cocotb/formal execution in an installed HDL toolchain and board synthesis.
 - Actual SpiNNaker2 and Virtex-7 canary captures and repeated-run analysis.
-- Certificate-directed repair across DVS Gesture and both physical backends.
+- Certificate-directed repair across both physical backends.
 - External clean-machine reproduction of every software figure and table.
 
 No physical evidence is currently available on this machine: neither target

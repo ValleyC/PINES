@@ -154,6 +154,38 @@ executed until the v3 model was frozen, but it is not a final sequestered result
 official test accuracy selected the reference-model pipeline. A fresh external
 replication is required before submission.
 
+We nevertheless use this frozen development matrix to test cross-architecture
+repair on its severe floor-rounded condition. Certificate-directed and
+logit-only methods expose the same 960 per-channel scale and bias parameters,
+use all 97 calibration recordings without labels, and receive 280 updates.
+Source-initialized QAT uses all 97 labels, exposes 678,560 parameters, and
+receives the same updates. Every selected checkpoint is then evaluated on the
+disjoint 104-recording audit split with a ten-way corrected
+$\alpha=0.005$ Clopper--Pearson limit.
+
+Certificate-directed repair recovers $91.1\pm7.8\%$ of the 36.6-point mean
+fixed-point loss and clears 70\% for every seed. Logit-only recovers
+$89.3\pm8.4\%$, global threshold scaling $74.8\pm8.6\%$, and labeled QAT
+$98.7\pm9.9\%$. The proposed objective beats logit-only in only three of five
+paired seeds; one seed ties global scaling. Mean remaining accuracy loss is 3.11
+points for the proposed repair and 0.76 points for QAT. Yet their mean bounds
+are nearly identical and loose---21.49 and 21.07 points---while logit-only is
+tighter at 15.11 points. No repaired seed certifies a five-point budget. Thus
+the cross-task result supports restricted label-free repair, but not objective
+superiority or certificate restoration. Figure~\ref{fig:dvs-repair} summarizes
+the separation. It inherits the development-only limitation above.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/dvs_repair_floor_matched_v2.pdf}
+  \caption{Five-seed DVS Gesture development repair on floor-rounded fixed
+  point. Error bars show sample standard deviations; dashed lines mark the
+  70\% recovery and five-point certificate gates. QAT uses 97 labels and the
+  full model; the other methods are label-free. Accuracy recovery again fails
+  to imply restored reference decision identity.}
+  \label{fig:dvs-repair}
+\end{figure*}
+
 The feedforward N-MNIST negative control distinguishes a generic statistical
 failure from a recurrence-dependent one. Five independently trained models
 reach $97.42\pm0.11\%$ reference test accuracy. Reset-to-value loses only 0.29
