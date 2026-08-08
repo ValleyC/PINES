@@ -245,9 +245,22 @@ class IntervalFamilyCertifier:
     ) -> IntervalCertificateResult:
         events = _validate_inputs(model, inputs)
         reference_trace = VectorizedEmulator().run(model, events, reference)
+        weight = box.base.weight_format
+        numeric = box.base.state_format
+        w_in = np.asarray(weight.quantize(model.input_weights))
+        bias = np.asarray(numeric.quantize(model.bias))
+        input_drive = events @ w_in + bias
         member_bounds = [
             self._propagate_member(
-                model, events, box, integration, timing, reset, synaptic_delay, output_delay
+                model,
+                events,
+                box,
+                integration,
+                timing,
+                reset,
+                synaptic_delay,
+                output_delay,
+                input_drive,
             )
             for integration, timing, reset, synaptic_delay, output_delay in itertools.product(
                 box.integration_rules,
@@ -283,10 +296,10 @@ class IntervalFamilyCertifier:
         reset: ResetRule,
         synaptic_delay: int,
         output_delay: int,
+        input_drive: np.ndarray,
     ) -> tuple[np.ndarray, np.ndarray]:
         numeric = box.base.state_format
         weight = box.base.weight_format
-        w_in = np.asarray(weight.quantize(model.input_weights))
         w_rec = np.asarray(weight.quantize(model.recurrent_weights))
         w_out = np.asarray(weight.quantize(model.output_weights))
         batch, horizon, _ = events.shape
@@ -306,15 +319,13 @@ class IntervalFamilyCertifier:
         ]
         threshold_lower = model.threshold * box.threshold_scale_bounds[0]
         threshold_upper = model.threshold * box.threshold_scale_bounds[1]
-        bias = np.asarray(numeric.quantize(model.bias))
 
         for step in range(horizon):
-            input_drive = events[:, step, :] @ w_in + bias
             recurrent_lower, recurrent_upper = _linear_interval(
                 spike_lower, spike_upper, w_rec
             )
-            current_lower = input_drive + recurrent_lower
-            current_upper = input_drive + recurrent_upper
+            current_lower = input_drive[:, step, :] + recurrent_lower
+            current_upper = input_drive[:, step, :] + recurrent_upper
             current_lower, current_upper = _quantize_interval(
                 current_lower, current_upper, numeric
             )
