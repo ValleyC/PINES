@@ -50,6 +50,7 @@ class BranchSetMemberCertifier:
         reference_prediction: int,
         *,
         max_branches: int = 4096,
+        merge_equivalent: bool = True,
     ) -> BranchSetCertificateResult:
         events = _validate_inputs(model, inputs)
         if events.shape[0] != 1:
@@ -176,9 +177,10 @@ class BranchSetMemberCertifier:
                 numeric.quantize(previous_spikes @ w_out), dtype=np.float64
             )
             logits = np.asarray(numeric.quantize(logits + contribution), dtype=np.float64)
-            lower, upper, previous_spikes, logits = self._merge_equivalent(
-                lower, upper, previous_spikes, logits
-            )
+            if merge_equivalent:
+                lower, upper, previous_spikes, logits = self._merge_equivalent(
+                    lower, upper, previous_spikes, logits
+                )
             maximum_seen = max(maximum_seen, len(lower))
             if len(lower) > max_branches:
                 return BranchSetCertificateResult(

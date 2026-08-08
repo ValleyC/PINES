@@ -48,6 +48,19 @@ def test_branch_set_contains_sampled_predictions(small_model, event_batch) -> No
             )
             assert prediction in result.reachable_predictions
 
+    unmerged = BranchSetMemberCertifier().certify(
+        small_model,
+        inputs,
+        _box(semantics, 0.05),
+        int(reference),
+        max_branches=16384,
+        merge_equivalent=False,
+    )
+    assert unmerged.complete
+    assert set(result.reachable_predictions).issuperset(
+        unmerged.reachable_predictions
+    )
+
 
 def test_branch_set_rejects_multiple_discrete_members(small_model, event_batch) -> None:
     semantics = ExecutionSemantics()
