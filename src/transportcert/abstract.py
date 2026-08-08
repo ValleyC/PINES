@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import json
+import heapq
 import math
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -128,6 +129,20 @@ class DecisionMarginCertificateResult:
     reference_predictions: np.ndarray
     target_margin_lower: np.ndarray
     target_margin_upper: np.ndarray
+
+
+@dataclass(frozen=True)
+class AdaptiveMarginCertificateResult:
+    """Result of a sound adaptive cover over a two-dimensional semantics box."""
+
+    certified: bool
+    certified_parameter_fraction: float
+    unresolved_parameter_fraction: float
+    analyzed_boxes: int
+    final_leaves: int
+    certified_leaves: int
+    unresolved_leaves: int
+    maximum_depth: int
 
 
 def partition_semantics_box(
@@ -730,3 +745,186 @@ class DecisionMarginFamilyCertifier:
             margin_lower += contribution_lower
             margin_upper += contribution_upper
         return margin_lower, margin_upper
+
+
+class AdaptiveDecisionMarginCertifier:
+    """Adaptively bisect a semantics box until every leaf decision is proved.
+
+    The leaves always form a closed cover of the original timestep/threshold
+    rectangle. Certified leaves can be retired; unresolved leaves are split on
+    their widest normalized axis until ``max_leaves`` is reached. A nonzero
+    certified parameter fraction is diagnostic only. The input is certified
+    exactly when the unresolved fraction is zero.
+    """
+
+    def __init__(
+        self, member_certifier: DecisionMarginFamilyCertifier | None = None
+    ) -> None:
+        self.member_certifier = member_certifier or DecisionMarginFamilyCertifier()
+
+    @staticmethod
+    def _measure(
+        box: SemanticsBox,
+        timestep_active: bool,
+        threshold_active: bool,
+    ) -> float:
+        timestep_width = box.timestep_bounds[1] - box.timestep_bounds[0]
+        threshold_width = (
+            box.threshold_scale_bounds[1] - box.threshold_scale_bounds[0]
+        )
+        return (timestep_width if timestep_active else 1.0) * (
+            threshold_width if threshold_active else 1.0
+        )
+
+    @staticmethod
+    def _split(
+        box: SemanticsBox,
+        root_timestep_width: float,
+        root_threshold_width: float,
+    ) -> tuple[SemanticsBox, SemanticsBox] | None:
+        timestep_width = box.timestep_bounds[1] - box.timestep_bounds[0]
+        threshold_width = (
+            box.threshold_scale_bounds[1] - box.threshold_scale_bounds[0]
+        )
+        if timestep_width <= 0.0 and threshold_width <= 0.0:
+            return None
+        timestep_score = (
+            timestep_width / root_timestep_width
+            if root_timestep_width > 0.0
+            else -1.0
+        )
+        threshold_score = (
+            threshold_width / root_threshold_width
+            if root_threshold_width > 0.0
+            else -1.0
+        )
+        if timestep_score >= threshold_score and timestep_width > 0.0:
+            midpoint = sum(box.timestep_bounds) / 2.0
+            return (
+                replace(
+                    box,
+                    timestep_bounds=(box.timestep_bounds[0], midpoint),
+                    name=f"{box.name}-dt-lower",
+                ),
+                replace(
+                    box,
+                    timestep_bounds=(midpoint, box.timestep_bounds[1]),
+                    name=f"{box.name}-dt-upper",
+                ),
+            )
+        midpoint = sum(box.threshold_scale_bounds) / 2.0
+        return (
+            replace(
+                box,
+                threshold_scale_bounds=(
+                    box.threshold_scale_bounds[0],
+                    midpoint,
+                ),
+                name=f"{box.name}-threshold-lower",
+            ),
+            replace(
+                box,
+                threshold_scale_bounds=(
+                    midpoint,
+                    box.threshold_scale_bounds[1],
+                ),
+                name=f"{box.name}-threshold-upper",
+            ),
+        )
+
+    def certify(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        box: SemanticsBox,
+        *,
+        max_leaves: int = 4096,
+    ) -> AdaptiveMarginCertificateResult:
+        events = _validate_inputs(model, inputs)
+        if events.shape[0] != 1:
+            raise ValueError("adaptive certification currently accepts one input")
+        if max_leaves < 1:
+            raise ValueError("max_leaves must be positive")
+        root_timestep_width = box.timestep_bounds[1] - box.timestep_bounds[0]
+        root_threshold_width = (
+            box.threshold_scale_bounds[1] - box.threshold_scale_bounds[0]
+        )
+        timestep_active = root_timestep_width > 0.0
+        threshold_active = root_threshold_width > 0.0
+        root_area = self._measure(box, timestep_active, threshold_active)
+        if not timestep_active and not threshold_active:
+            result = self.member_certifier.certify(model, events, reference, box)
+            certified = bool(result.certified[0])
+            return AdaptiveMarginCertificateResult(
+                certified=certified,
+                certified_parameter_fraction=float(certified),
+                unresolved_parameter_fraction=float(not certified),
+                analyzed_boxes=1,
+                final_leaves=1,
+                certified_leaves=int(certified),
+                unresolved_leaves=int(not certified),
+                maximum_depth=0,
+            )
+
+        queue: list[tuple[float, int, int, SemanticsBox]] = []
+        counter = itertools.count()
+        heapq.heappush(queue, (-root_area, 0, next(counter), box))
+        leaf_count = 1
+        analyzed = 0
+        certified_area = 0.0
+        certified_leaves = 0
+        unresolved_area = 0.0
+        unresolved_leaves = 0
+        maximum_depth = 0
+        while queue:
+            _, depth, _, leaf = heapq.heappop(queue)
+            maximum_depth = max(maximum_depth, depth)
+            result = self.member_certifier.certify(
+                model, events, reference, leaf
+            )
+            analyzed += 1
+            leaf_area = self._measure(
+                leaf, timestep_active, threshold_active
+            )
+            if bool(result.certified[0]):
+                certified_area += leaf_area
+                certified_leaves += 1
+                continue
+            children = (
+                self._split(
+                    leaf,
+                    root_timestep_width,
+                    root_threshold_width,
+                )
+                if leaf_count < max_leaves
+                else None
+            )
+            if children is None:
+                unresolved_area += leaf_area
+                unresolved_leaves += 1
+                continue
+            leaf_count += 1
+            for child in children:
+                child_area = self._measure(
+                    child, timestep_active, threshold_active
+                )
+                heapq.heappush(
+                    queue,
+                    (-child_area, depth + 1, next(counter), child),
+                )
+
+        certified_fraction = min(1.0, certified_area / root_area)
+        unresolved_fraction = min(1.0, unresolved_area / root_area)
+        if not np.isclose(certified_fraction + unresolved_fraction, 1.0):
+            raise AssertionError("adaptive leaves do not cover the root box")
+        return AdaptiveMarginCertificateResult(
+            certified=unresolved_leaves == 0,
+            certified_parameter_fraction=certified_fraction,
+            unresolved_parameter_fraction=unresolved_fraction,
+            analyzed_boxes=analyzed,
+            final_leaves=certified_leaves + unresolved_leaves,
+            certified_leaves=certified_leaves,
+            unresolved_leaves=unresolved_leaves,
+            maximum_depth=maximum_depth,
+        )

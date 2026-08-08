@@ -5,6 +5,7 @@ from dataclasses import replace
 import numpy as np
 
 from transportcert.abstract import (
+    AdaptiveDecisionMarginCertifier,
     DecisionMarginFamilyCertifier,
     IntervalFamilyCertifier,
     SemanticsBox,
@@ -215,3 +216,64 @@ def test_decision_margin_bounds_contain_sampled_float_executions(
             )
             assert np.all(margins >= result.target_margin_lower - 1e-12)
             assert np.all(margins <= result.target_margin_upper + 1e-12)
+
+
+def test_adaptive_margin_certifier_retires_a_certified_root() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[2.0, 1.0]]),
+        recurrent_weights=np.zeros((2, 2)),
+        output_weights=np.asarray([[1.0, 0.9], [1.0, 1.0]]),
+        bias=np.zeros(2),
+        threshold=np.ones(2),
+        tau_mem=np.ones(2),
+        reset_value=np.zeros(2),
+    )
+    reference = ExecutionSemantics()
+    box = SemanticsBox(
+        base=reference,
+        timestep_bounds=(0.9, 1.1),
+        integration_rules=(reference.integration_rule,),
+        threshold_timings=(reference.threshold_timing,),
+        reset_rules=(reference.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    result = AdaptiveDecisionMarginCertifier().certify(
+        model, np.ones((1, 1, 1)), reference, box, max_leaves=1
+    )
+    assert result.certified
+    assert result.certified_parameter_fraction == 1.0
+    assert result.analyzed_boxes == 1
+
+
+def test_adaptive_margin_certifier_preserves_unresolved_cover() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[1.0]]),
+        recurrent_weights=np.zeros((1, 1)),
+        output_weights=np.asarray([[0.0, 1.0]]),
+        bias=np.zeros(1),
+        threshold=np.ones(1),
+        tau_mem=np.ones(1),
+        reset_value=np.zeros(1),
+    )
+    reference = ExecutionSemantics()
+    box = SemanticsBox(
+        base=reference,
+        timestep_bounds=(0.9, 1.1),
+        integration_rules=(reference.integration_rule,),
+        threshold_timings=(reference.threshold_timing,),
+        reset_rules=(reference.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    result = AdaptiveDecisionMarginCertifier().certify(
+        model, np.ones((1, 1, 1)), reference, box, max_leaves=4
+    )
+    assert not result.certified
+    assert result.certified_leaves > 0
+    assert result.unresolved_leaves > 0
+    assert np.isclose(
+        result.certified_parameter_fraction
+        + result.unresolved_parameter_fraction,
+        1.0,
+    )
