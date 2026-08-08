@@ -147,6 +147,11 @@ def main() -> None:
         ),
     )
     parser.add_argument("--max-samples", type=int)
+    parser.add_argument(
+        "--zero-recurrence",
+        action="store_true",
+        help="diagnostic ablation that zeros only the trained recurrent matrix",
+    )
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     seed_dir = root / args.artifact_root / f"seed_{args.seed}"
@@ -163,7 +168,13 @@ def main() -> None:
             raise ValueError("max-samples must be positive")
         audit_indices = audit_indices[: args.max_samples]
     inputs = store.frames(audit_indices)
-    model = DenseRecurrentSNN.load(seed_dir / "model.npz")
+    source_model = DenseRecurrentSNN.load(seed_dir / "model.npz")
+    model = source_model
+    if args.zero_recurrence:
+        model = source_model.with_parameters(
+            recurrent_weights=np.zeros_like(source_model.recurrent_weights),
+            name=f"{source_model.name}-zero-recurrence-ablation",
+        )
     reference = primary_semantic_conditions()["reference"]
     all_families = _families()
     selected_names = tuple(args.families or all_families.keys())
@@ -211,8 +222,14 @@ def main() -> None:
         )
     report = {
         "schema_version": "SHDStaticFamilyExperiment/v1",
-        "status": "software interval-family evidence; not physical evidence",
+        "status": (
+            "software zero-recurrence interval-family diagnostic; not physical evidence"
+            if args.zero_recurrence
+            else "software interval-family evidence; not physical evidence"
+        ),
         "seed": args.seed,
+        "ablation": "zero_recurrence" if args.zero_recurrence else "none",
+        "source_model_hash": source_model.model_hash,
         "model_hash": model.model_hash,
         "model_artifact_hash": sha256_file(seed_dir / "model.npz"),
         "train_store_hash": store.data_hash,
