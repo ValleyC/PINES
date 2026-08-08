@@ -5,6 +5,7 @@ from dataclasses import replace
 import numpy as np
 
 from transportcert.abstract import (
+    DecisionMarginFamilyCertifier,
     IntervalFamilyCertifier,
     SemanticsBox,
     _linear_interval,
@@ -148,3 +149,69 @@ def test_partitioned_box_is_a_closed_cover_and_never_loses_certificates(
     )
 
     assert np.all(~coarse.certified | partitioned.certified)
+
+
+def test_decision_margin_domain_preserves_shared_output_spikes() -> None:
+    model = DenseRecurrentSNN(
+        input_weights=np.asarray([[2.0, 1.0]]),
+        recurrent_weights=np.zeros((2, 2)),
+        output_weights=np.asarray([[1.0, 0.9], [1.0, 1.0]]),
+        bias=np.zeros(2),
+        threshold=np.ones(2),
+        tau_mem=np.ones(2),
+        reset_value=np.zeros(2),
+    )
+    inputs = np.ones((1, 1, 1))
+    reference = ExecutionSemantics()
+    box = SemanticsBox(
+        base=reference,
+        timestep_bounds=(0.9, 1.1),
+        integration_rules=(reference.integration_rule,),
+        threshold_timings=(reference.threshold_timing,),
+        reset_rules=(reference.reset_rule,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+
+    logit_result = IntervalFamilyCertifier().certify(
+        model, inputs, reference, box
+    )
+    margin_result = DecisionMarginFamilyCertifier().certify(
+        model, inputs, reference, box
+    )
+
+    assert logit_result.certified.tolist() == [False]
+    assert margin_result.certified.tolist() == [True]
+    assert margin_result.target_margin_lower[0, 1] > 0.0
+
+
+def test_decision_margin_bounds_contain_sampled_float_executions(
+    small_model, event_batch
+) -> None:
+    reference = ExecutionSemantics()
+    box = SemanticsBox(
+        base=reference,
+        timestep_bounds=(0.9, 1.1),
+        threshold_scale_bounds=(0.9, 1.1),
+        integration_rules=(IntegrationRule.FORWARD_EULER,),
+        reset_rules=(ResetRule.SUBTRACTIVE,),
+        synaptic_delays=(0,),
+        output_delays=(0,),
+    )
+    inputs = event_batch[:4]
+    result = DecisionMarginFamilyCertifier().certify(
+        small_model, inputs, reference, box
+    )
+    rows = np.arange(len(inputs))
+    for timestep in (0.9, 1.0, 1.1):
+        semantics = replace(reference, timestep=timestep)
+        for threshold_scale in (0.9, 1.0, 1.1):
+            candidate = small_model.with_parameters(
+                threshold=small_model.threshold * threshold_scale
+            )
+            logits = VectorizedEmulator().run(candidate, inputs, semantics).final_logits
+            margins = (
+                logits[rows, result.reference_predictions, None] - logits
+            )
+            assert np.all(margins >= result.target_margin_lower - 1e-12)
+            assert np.all(margins <= result.target_margin_upper + 1e-12)

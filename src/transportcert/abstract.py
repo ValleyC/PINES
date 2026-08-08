@@ -119,6 +119,17 @@ class IntervalCertificateResult:
     target_logit_upper: np.ndarray
 
 
+@dataclass(frozen=True)
+class DecisionMarginCertificateResult:
+    """Sound pairwise decision-margin bounds for floating-point execution."""
+
+    certified: np.ndarray
+    certified_fraction: float
+    reference_predictions: np.ndarray
+    target_margin_lower: np.ndarray
+    target_margin_upper: np.ndarray
+
+
 def partition_semantics_box(
     box: SemanticsBox,
     timestep_partitions: int,
@@ -476,3 +487,246 @@ class IntervalFamilyCertifier:
                 numeric,
             )
         return logit_lower, logit_upper
+
+
+class DecisionMarginFamilyCertifier:
+    """Sound decision-level interval propagation for bounded semantics families.
+
+    Unlike :class:`IntervalFamilyCertifier`, this domain accumulates each
+    reference-versus-competitor logit difference directly. Shared uncertain
+    spikes therefore cannot independently maximize one logit and minimize the
+    other. Hidden state and spike reachability remain interval abstractions.
+
+    The current implementation deliberately accepts only floating-point state
+    execution. Separate fixed-point logit rounding can destroy a bound expressed
+    only in terms of the pre-rounded pairwise difference; supporting it requires
+    an additional correlated accumulator state.
+    """
+
+    def certify(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        box: SemanticsBox,
+    ) -> DecisionMarginCertificateResult:
+        return self.certify_union(model, inputs, reference, (box,))
+
+    def certify_partitioned(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        box: SemanticsBox,
+        timestep_partitions: int,
+        threshold_partitions: int,
+    ) -> DecisionMarginCertificateResult:
+        return self.certify_union(
+            model,
+            inputs,
+            reference,
+            partition_semantics_box(
+                box, timestep_partitions, threshold_partitions
+            ),
+        )
+
+    def certify_union(
+        self,
+        model: DenseRecurrentSNN,
+        inputs: np.ndarray,
+        reference: ExecutionSemantics,
+        boxes: tuple[SemanticsBox, ...],
+    ) -> DecisionMarginCertificateResult:
+        if not boxes:
+            raise ValueError("at least one semantics box is required")
+        events = _validate_inputs(model, inputs)
+        first = boxes[0]
+        if first.base.state_format.is_fixed:
+            raise NotImplementedError(
+                "decision-margin propagation currently requires floating-point state"
+            )
+        if any(
+            box.base.weight_format != first.base.weight_format
+            or box.base.state_format != first.base.state_format
+            for box in boxes[1:]
+        ):
+            raise ValueError("all union boxes must share weight and state formats")
+        reference_trace = VectorizedEmulator().run(model, events, reference)
+        prediction = reference_trace.predictions
+        weight = first.base.weight_format
+        numeric = first.base.state_format
+        w_in = np.asarray(weight.quantize(model.input_weights))
+        bias = np.asarray(numeric.quantize(model.bias))
+        input_drive = events @ w_in + bias
+        certified = np.ones(events.shape[0], dtype=bool)
+        lower = np.full((events.shape[0], model.output_size), np.inf)
+        upper = np.full((events.shape[0], model.output_size), -np.inf)
+        rows = np.arange(events.shape[0])
+        for box in boxes:
+            if box.base.state_format.is_fixed:
+                raise NotImplementedError(
+                    "decision-margin propagation currently requires floating-point state"
+                )
+            for integration, timing, reset, synaptic_delay, output_delay in itertools.product(
+                box.integration_rules,
+                box.threshold_timings,
+                box.reset_rules,
+                box.synaptic_delays,
+                box.output_delays,
+            ):
+                member_lower, member_upper = self._propagate_member_margins(
+                    model,
+                    events,
+                    prediction,
+                    box,
+                    integration,
+                    timing,
+                    reset,
+                    synaptic_delay,
+                    output_delay,
+                    input_drive,
+                )
+                competing_lower = member_lower.copy()
+                competing_lower[rows, prediction] = np.inf
+                certified &= np.all(competing_lower > 0.0, axis=1)
+                lower = np.minimum(lower, member_lower)
+                upper = np.maximum(upper, member_upper)
+        return DecisionMarginCertificateResult(
+            certified=certified,
+            certified_fraction=float(np.mean(certified)),
+            reference_predictions=prediction,
+            target_margin_lower=lower,
+            target_margin_upper=upper,
+        )
+
+    @staticmethod
+    def _margin_contribution_interval(
+        spike_lower: np.ndarray,
+        spike_upper: np.ndarray,
+        positive_differences: np.ndarray,
+        negative_differences: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        lower = np.sum(
+            spike_lower[:, :, None] * positive_differences
+            + spike_upper[:, :, None] * negative_differences,
+            axis=1,
+        )
+        upper = np.sum(
+            spike_upper[:, :, None] * positive_differences
+            + spike_lower[:, :, None] * negative_differences,
+            axis=1,
+        )
+        return lower, upper
+
+    def _propagate_member_margins(
+        self,
+        model: DenseRecurrentSNN,
+        events: np.ndarray,
+        reference_predictions: np.ndarray,
+        box: SemanticsBox,
+        integration: IntegrationRule,
+        timing: ThresholdTiming,
+        reset: ResetRule,
+        synaptic_delay: int,
+        output_delay: int,
+        input_drive: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        numeric = box.base.state_format
+        weight = box.base.weight_format
+        w_rec = np.asarray(weight.quantize(model.recurrent_weights))
+        w_out = np.asarray(weight.quantize(model.output_weights))
+        batch, horizon, _ = events.shape
+        voltage_lower = np.zeros((batch, model.hidden_size))
+        voltage_upper = voltage_lower.copy()
+        spike_lower = np.zeros_like(voltage_lower)
+        spike_upper = np.zeros_like(voltage_lower)
+        margin_lower = np.zeros((batch, model.output_size))
+        margin_upper = margin_lower.copy()
+        current_queue = [
+            (np.zeros_like(voltage_lower), np.zeros_like(voltage_upper))
+            for _ in range(synaptic_delay)
+        ]
+        output_queue = [
+            (np.zeros_like(margin_lower), np.zeros_like(margin_upper))
+            for _ in range(output_delay)
+        ]
+        threshold_lower = model.threshold * box.threshold_scale_bounds[0]
+        threshold_upper = model.threshold * box.threshold_scale_bounds[1]
+        chosen_weights = w_out[:, reference_predictions].T
+        margin_weights = chosen_weights[:, :, None] - w_out[None, :, :]
+        positive_margin_weights = np.maximum(margin_weights, 0.0)
+        negative_margin_weights = np.minimum(margin_weights, 0.0)
+
+        for step in range(horizon):
+            recurrent_lower, recurrent_upper = _linear_interval(
+                spike_lower, spike_upper, w_rec
+            )
+            current_lower = input_drive[:, step, :] + recurrent_lower
+            current_upper = input_drive[:, step, :] + recurrent_upper
+            current_lower, current_upper = _quantize_interval(
+                current_lower, current_upper, numeric
+            )
+            if current_queue:
+                current_queue.append((current_lower, current_upper))
+                current_lower, current_upper = current_queue.pop(0)
+
+            if timing is ThresholdTiming.PRE_INTEGRATION:
+                voltage_lower, voltage_upper, spike_lower, spike_upper = (
+                    _threshold_and_reset_interval(
+                        voltage_lower,
+                        voltage_upper,
+                        threshold_lower,
+                        threshold_upper,
+                        model.reset_value,
+                        reset,
+                    )
+                )
+                voltage_lower, voltage_upper = _integrate_interval(
+                    voltage_lower,
+                    voltage_upper,
+                    current_lower,
+                    current_upper,
+                    model.tau_mem,
+                    box.timestep_bounds,
+                    integration,
+                )
+            else:
+                voltage_lower, voltage_upper = _integrate_interval(
+                    voltage_lower,
+                    voltage_upper,
+                    current_lower,
+                    current_upper,
+                    model.tau_mem,
+                    box.timestep_bounds,
+                    integration,
+                )
+                voltage_lower, voltage_upper = _quantize_interval(
+                    voltage_lower, voltage_upper, numeric
+                )
+                voltage_lower, voltage_upper, spike_lower, spike_upper = (
+                    _threshold_and_reset_interval(
+                        voltage_lower,
+                        voltage_upper,
+                        threshold_lower,
+                        threshold_upper,
+                        model.reset_value,
+                        reset,
+                    )
+                )
+            voltage_lower, voltage_upper = _quantize_interval(
+                voltage_lower, voltage_upper, numeric
+            )
+            contribution_lower, contribution_upper = (
+                self._margin_contribution_interval(
+                    spike_lower,
+                    spike_upper,
+                    positive_margin_weights,
+                    negative_margin_weights,
+                )
+            )
+            if output_queue:
+                output_queue.append((contribution_lower, contribution_upper))
+                contribution_lower, contribution_upper = output_queue.pop(0)
+            margin_lower += contribution_lower
+            margin_upper += contribution_upper
+        return margin_lower, margin_upper
