@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from transportcert.benchmarks.nmnist import (
+from pines.benchmarks.nmnist import (
     PackedNMNIST,
     load_nmnist_config,
     preprocess_nmnist,

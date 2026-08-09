@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from transportcert.branch_analysis import (
+from pines.branch_analysis import (
     nested_grid_flat_indices,
     packed_trace_hashes,
     summarize_branch_grid,

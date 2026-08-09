@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import beta, spearmanr, t
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
 
 
 def _exact_interval(successes: int, samples: int, confidence: float) -> list[float]:
@@ -354,8 +354,8 @@ def main() -> None:
     summary = {
         "schema_version": "SHDHybridFamilyFullAuditSummary/v1",
         "status": (
-            "frozen five-seed all-input audit plus independent grid and Sobol "
-            "falsification diagnostics"
+            "five-seed confirmation-style all-input audit plus canonical grid "
+            "and Sobol falsification diagnostics; not a sequestered final audit"
         ),
         "scope": {
             "task": "SHD recurrent SNN",
@@ -364,6 +364,7 @@ def main() -> None:
             "relative_timestep_bounds": [-0.01, 0.01],
             "relative_threshold_scale_bounds": [-0.01, 0.01],
             "selection": "all 861 frozen certificate-audit inputs per seed",
+            "sequestered_from_all_prior_method_development": False,
         },
         "sample_count": samples,
         "seed_count": len(per_seed),
@@ -496,10 +497,12 @@ def main() -> None:
         },
         "code_revision": code_revision(root),
         "route_assessment": {
-            "claim_shd_population_certificate_fraction": (
+            "development_tractability_gate_passed": (
                 confirmation_certified / confirmation_samples >= 0.2
                 and confirmation_joint_violations == 0
             ),
+            "claim_final_shd_population_certificate_fraction": False,
+            "requires_new_preregistered_sequestered_audit": True,
             "claim_all_execution_semantics_axes": False,
             "claim_second_event_task": False,
             "claim_physical_certificate": False,
@@ -509,7 +512,10 @@ def main() -> None:
             "continuous box. The grid and Sobol designs can falsify but cannot "
             "strengthen that proof. Stable-but-uncertified inputs measure analyzer "
             "or fixed-budget slack; sampled counterexamples measure genuine observed "
-            "semantic instability."
+            "semantic instability. Because the certificate split was reused during "
+            "the broader research program, coverage intervals quantify input and "
+            "training-seed variability but are not a final preregistered population "
+            "claim."
         ),
     }
     write_json_immutable(output_path, summary)
@@ -541,7 +547,7 @@ def main() -> None:
     axis.set_ylabel("Audit inputs (%)")
     axis.set_ylim(0.0, 100.0)
     axis.legend(frameon=False, ncol=2, loc="upper center")
-    axis.set_title("Confirmatory SHD joint timestep/threshold family audit")
+    axis.set_title("SHD joint timestep/threshold development audit")
     fig.tight_layout()
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(figure_path, bbox_inches="tight")

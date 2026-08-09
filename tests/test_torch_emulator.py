@@ -5,9 +5,9 @@ import pytest
 
 torch = pytest.importorskip("torch")
 
-from transportcert.emulator import VectorizedEmulator
-from transportcert.semantics import ExecutionSemantics, NumericFormat, ResetRule
-from transportcert.torch_emulator import TorchEmulator
+from pines.emulator import VectorizedEmulator
+from pines.semantics import ExecutionSemantics, NumericFormat, ResetRule
+from pines.torch_emulator import TorchEmulator
 
 
 @pytest.mark.parametrize("reset", list(ResetRule))

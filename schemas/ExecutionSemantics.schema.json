@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://transportcert.invalid/schema/ExecutionSemantics-v1.json",
+  "$id": "https://pines.invalid/schema/ExecutionSemantics-v1.json",
   "title": "ExecutionSemantics/v1",
   "type": "object",
   "additionalProperties": false,
@@ -38,4 +38,3 @@
     }
   }
 }
-

@@ -1,0 +1,27 @@
+{
+  "schema_version": "SHDCartesianBranchCapProfile/v1",
+  "status": "development-only single-member branch-cap ablation; not population evidence",
+  "experiments": [
+    {
+      "branch_cap": 64,
+      "config": "configs/experiments/shd_hybrid_cartesian_margin_q10_v1.json",
+      "report": "artifacts/shd_v84_cartesian_margin_q10_v1/cartesian_member_scaling.json",
+      "verification": "artifacts/shd_v84_cartesian_margin_q10_v1/artifact_verification.json",
+      "member_index": 0
+    },
+    {
+      "branch_cap": 128,
+      "config": "configs/experiments/shd_cartesian_q10_subtractive_branch128_v1.json",
+      "report": "artifacts/shd_v87_cartesian_q10_subtractive_branch128_v1/cartesian_member_scaling.json",
+      "verification": "artifacts/shd_v87_cartesian_q10_subtractive_branch128_v1/artifact_verification.json",
+      "member_index": 0
+    },
+    {
+      "branch_cap": 256,
+      "config": "configs/experiments/shd_cartesian_q10_subtractive_branch256_v1.json",
+      "report": "artifacts/shd_v88_cartesian_q10_subtractive_branch256_v1/cartesian_member_scaling.json",
+      "verification": "artifacts/shd_v88_cartesian_q10_subtractive_branch256_v1/artifact_verification.json",
+      "member_index": 0
+    }
+  ]
+}

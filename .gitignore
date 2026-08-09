@@ -18,3 +18,8 @@ paper/*.out
 paper/*.pdf
 paper/*.fdb_latexmk
 paper/*.fls
+output/
+tmp/
+paper/
+manuscript/
+transport_manuscript/

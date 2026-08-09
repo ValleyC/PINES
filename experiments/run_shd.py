@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from transportcert.benchmarks.shd import (
+from pines.benchmarks.shd import (
     PackedSHD,
     load_experiment_config,
     preprocess_shd,

@@ -3,9 +3,9 @@ requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "transportcert"
+name = "pines-snn"
 version = "0.1.0"
-description = "Transport certificates for finite-horizon digital spiking neural networks"
+description = "Prediction-invariance certification across SNN execution semantics"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -18,7 +18,7 @@ nir = ["nir>=1.0"]
 torch = ["torch>=2.5"]
 
 [project.scripts]
-transportcert = "transportcert.cli:main"
+pines = "pines.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

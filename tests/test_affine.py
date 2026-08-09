@@ -5,8 +5,8 @@ from dataclasses import replace
 
 import numpy as np
 
-from transportcert.abstract import IntervalFamilyCertifier, SemanticsBox
-from transportcert.affine import (
+from pines.abstract import IntervalFamilyCertifier, SemanticsBox
+from pines.affine import (
     AdaptiveAffineGuardCutCertifier,
     AdaptiveHybridPolygonCertifier,
     AffineGuardFamilyCertifier,
@@ -18,9 +18,9 @@ from transportcert.affine import (
     split_polygon_guard_band,
     split_polygon_halfspace,
 )
-from transportcert.emulator import VectorizedEmulator
-from transportcert.models import DenseRecurrentSNN
-from transportcert.semantics import (
+from pines.emulator import VectorizedEmulator
+from pines.models import DenseRecurrentSNN
+from pines.semantics import (
     ExecutionSemantics,
     IntegrationRule,
     ResetRule,
@@ -90,7 +90,7 @@ def test_hybrid_affine_exponential_encloses_shared_samples() -> None:
 
 
 def test_hybrid_affine_float_quantization_encloses_rounding() -> None:
-    from transportcert.semantics import NumericFormat
+    from pines.semantics import NumericFormat
 
     affine = _HybridAffine(
         center=np.asarray([[1.0]]),

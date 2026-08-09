@@ -5,9 +5,9 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from transportcert.certificates import CertificateEngine, SemanticsFamily
-from transportcert.repair import CertificateDirectedRepair
-from transportcert.semantics import ExecutionSemantics, ResetRule
+from pines.certificates import CertificateEngine, SemanticsFamily
+from pines.repair import CertificateDirectedRepair
+from pines.semantics import ExecutionSemantics, ResetRule
 
 
 def _source_report(model, inputs):

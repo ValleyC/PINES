@@ -9,10 +9,8 @@ Before review, run:
 
 ```powershell
 python -m pytest
-transportcert reproduce --config configs/toy_study.json --output-dir artifacts/local-toy
-latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+pines reproduce --config configs/toy_study.json --output-dir artifacts/local-toy
 ```
 
-The last command runs from `paper/`. Evidence and reports are immutable: choose a
-new output directory or run ID instead of overwriting an artifact.
-
+Evidence and reports are immutable. Choose a new output directory or run ID
+instead of overwriting an artifact.

@@ -4,15 +4,15 @@ from dataclasses import replace
 
 import numpy as np
 
-from transportcert.certificates import (
+from pines.certificates import (
     CertificateEngine,
     SemanticsFamily,
     exact_identity_mapping,
     exhaustive_state_equivalence,
     exhaustive_trace_equivalence,
 )
-from transportcert.models import DenseRecurrentSNN
-from transportcert.semantics import (
+from pines.models import DenseRecurrentSNN
+from pines.semantics import (
     ExecutionSemantics,
     ResetRule,
     ThresholdTiming,

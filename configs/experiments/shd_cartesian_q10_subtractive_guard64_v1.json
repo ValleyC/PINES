@@ -1,0 +1,28 @@
+{
+  "schema_version": "SHDHybridCartesianMemberScaling/v1",
+  "selection": {
+    "report": "artifacts/shd_v83_cartesian_margin_quantile_selection_v1/cartesian_margin_quantile_selection.json",
+    "field": "q10_input",
+    "split": "repair_calibration",
+    "uses_labels": false
+  },
+  "family": {
+    "relative_timestep_radius": 0.01,
+    "relative_threshold_radius": 0.01,
+    "integration_rules": ["forward_euler"],
+    "threshold_timings": ["post_integration"],
+    "reset_rules": ["subtractive"],
+    "synaptic_delays": [0],
+    "output_delays": [0]
+  },
+  "certificate_budgets": {
+    "maximum_polygon_leaves": [256],
+    "maximum_local_branches": 64,
+    "maximum_guard_band_splits": 64
+  },
+  "execution": {
+    "worker_count": 1,
+    "blas_threads_per_worker": 1
+  },
+  "interpretation": "Development-only guard-cut ablation on the 10th-margin-quantile sampled-stable input and forward-Euler/post-threshold/subtractive-reset/zero-delay member. It doubles the 32-cut budget while holding leaves and branches fixed and is not population evidence."
+}

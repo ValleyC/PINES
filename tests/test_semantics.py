@@ -5,7 +5,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from transportcert.semantics import (
+from pines.semantics import (
     ExecutionSemantics,
     NumericFormat,
     OverflowMode,

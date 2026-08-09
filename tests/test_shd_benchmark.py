@@ -5,7 +5,7 @@ import json
 import h5py
 import numpy as np
 
-from transportcert.benchmarks.shd import (
+from pines.benchmarks.shd import (
     PackedSHD,
     SHDPreprocessConfig,
     build_torch_srnn,

@@ -1,6 +1,6 @@
 {
-  "schema_version": "TransportCertProtocol/v1",
-  "title": "Transport Certificates for SNNs — NeurIPS 2027",
+  "schema_version": "PINESProtocol/v1",
+  "title": "PINES: Prediction Invariance across Neuromorphic Execution Semantics",
   "partition_salt": "transportcert-neurips2027-v1",
   "training_partition": {
     "train": 0.8,
@@ -36,4 +36,3 @@
   "physical_pairing": "one independent hardware run per sampled input",
   "result_freeze": "official submission deadline minus six weeks"
 }
-

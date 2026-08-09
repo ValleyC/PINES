@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from transportcert.reproduce import run_toy_study
+from pines.reproduce import run_toy_study
 
 
 def main() -> None:

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import numpy as np
 
-from transportcert.affine import polygon_area
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.affine import polygon_area
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
 
 
 def _quantiles(values: np.ndarray) -> dict[str, float]:

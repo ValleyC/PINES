@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
 
 
 def main() -> None:

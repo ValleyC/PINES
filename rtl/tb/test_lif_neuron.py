@@ -6,7 +6,7 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
-from transportcert.rtl_reference import RTLNeuronConfig, rtl_lif_step
+from pines.rtl_reference import RTLNeuronConfig, rtl_lif_step
 
 
 @cocotb.test()

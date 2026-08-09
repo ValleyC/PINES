@@ -4,12 +4,12 @@ from dataclasses import replace
 
 import numpy as np
 
-from transportcert.emulator import VectorizedEmulator
-from transportcert.parameter_batch import (
+from pines.emulator import VectorizedEmulator
+from pines.parameter_batch import (
     ReferenceParameterSweepEmulator,
     TorchParameterBatchEmulator,
 )
-from transportcert.semantics import (
+from pines.semantics import (
     ExecutionSemantics,
     IntegrationRule,
     NumericFormat,
@@ -17,7 +17,7 @@ from transportcert.semantics import (
     ThresholdTiming,
     UpdateOrdering,
 )
-from transportcert.torch_emulator import TorchEmulator, _torch
+from pines.torch_emulator import TorchEmulator, _torch
 
 
 def test_parameter_batch_matches_individual_torch_runs(small_model, event_batch) -> None:

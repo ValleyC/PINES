@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from transportcert.benchmarks.shd import PackedSHD
-from transportcert.benchmarks.shd_repair import SHDRepairConfig, run_shd_repair
+from pines.benchmarks.shd import PackedSHD
+from pines.benchmarks.shd_repair import SHDRepairConfig, run_shd_repair
 
 
 def main() -> None:

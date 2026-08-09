@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from transportcert.benchmarks.dvs_gesture import (
+from pines.benchmarks.dvs_gesture import (
     PackedDVSGesture,
     load_dvs_gesture_config,
     preprocess_dvs_gesture,

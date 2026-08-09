@@ -6,7 +6,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
 
 
 METHODS = ("no_repair", "certificate_directed", "logit_only")

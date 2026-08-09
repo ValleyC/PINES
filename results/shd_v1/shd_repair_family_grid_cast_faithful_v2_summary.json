@@ -1,0 +1,214 @@
+{
+  "aggregate_rows": [
+    {
+      "center_target_identity_fraction": {
+        "max": 0.8125,
+        "mean": 0.765625,
+        "min": 0.7109375,
+        "std": 0.04243273629375084
+      },
+      "continuous_grid_identity_cost": {
+        "max": 0.15625,
+        "mean": 0.1171875,
+        "min": 0.0859375,
+        "std": 0.027621358640099514
+      },
+      "grid_family_identity_fraction": {
+        "max": 0.6953125,
+        "mean": 0.6484375,
+        "min": 0.6171875,
+        "std": 0.036225072248030094
+      },
+      "grid_pair_disagreement_fraction": {
+        "max": 0.2884837962962963,
+        "mean": 0.2390046296296296,
+        "min": 0.1903935185185185,
+        "std": 0.04276282540588938
+      },
+      "labels_used": "none",
+      "method": "no_repair",
+      "optimization_steps": 0,
+      "paired_grid_identity_gain_over_no_repair": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      },
+      "trainable_parameters": 0
+    },
+    {
+      "center_target_identity_fraction": {
+        "max": 0.875,
+        "mean": 0.853125,
+        "min": 0.8125,
+        "std": 0.025555355052806445
+      },
+      "continuous_grid_identity_cost": {
+        "max": 0.171875,
+        "mean": 0.1265625,
+        "min": 0.0859375,
+        "std": 0.031926276158910236
+      },
+      "grid_family_identity_fraction": {
+        "max": 0.7421875,
+        "mean": 0.7265625,
+        "min": 0.703125,
+        "std": 0.016572815184059706
+      },
+      "grid_pair_disagreement_fraction": {
+        "max": 0.17168209876543206,
+        "mean": 0.1499614197530864,
+        "min": 0.1240354938271605,
+        "std": 0.017367459616007743
+      },
+      "labels_used": "none",
+      "method": "certificate_directed",
+      "optimization_steps": 280,
+      "paired_grid_identity_gain_over_no_repair": {
+        "max": 0.1171875,
+        "mean": 0.078125,
+        "min": 0.0234375,
+        "std": 0.036643873123620545
+      },
+      "trainable_parameters": 640
+    },
+    {
+      "center_target_identity_fraction": {
+        "max": 0.9140625,
+        "mean": 0.875,
+        "min": 0.8046875,
+        "std": 0.04349815908460954
+      },
+      "continuous_grid_identity_cost": {
+        "max": 0.1640625,
+        "mean": 0.14375,
+        "min": 0.1171875,
+        "std": 0.018814991529362963
+      },
+      "grid_family_identity_fraction": {
+        "max": 0.7890625,
+        "mean": 0.73125,
+        "min": 0.671875,
+        "std": 0.04370812728343552
+      },
+      "grid_pair_disagreement_fraction": {
+        "max": 0.20823688271604934,
+        "mean": 0.13771219135802468,
+        "min": 0.10474537037037035,
+        "std": 0.041321711557122595
+      },
+      "labels_used": "none",
+      "method": "logit_only",
+      "optimization_steps": 280,
+      "paired_grid_identity_gain_over_no_repair": {
+        "max": 0.125,
+        "mean": 0.0828125,
+        "min": 0.0390625,
+        "std": 0.03811347161765771
+      },
+      "trainable_parameters": 640
+    },
+    {
+      "center_target_identity_fraction": {
+        "max": 0.875,
+        "mean": 0.8421875,
+        "min": 0.8125,
+        "std": 0.02614562582918986
+      },
+      "continuous_grid_identity_cost": {
+        "max": 0.2109375,
+        "mean": 0.153125,
+        "min": 0.109375,
+        "std": 0.04641703367972796
+      },
+      "grid_family_identity_fraction": {
+        "max": 0.734375,
+        "mean": 0.6890625,
+        "min": 0.625,
+        "std": 0.04433206549722221
+      },
+      "grid_pair_disagreement_fraction": {
+        "max": 0.19743441358024694,
+        "mean": 0.16929012345679012,
+        "min": 0.14178240740740744,
+        "std": 0.02274143162586263
+      },
+      "labels_used": "none",
+      "method": "global_threshold",
+      "optimization_steps": 0,
+      "paired_grid_identity_gain_over_no_repair": {
+        "max": 0.078125,
+        "mean": 0.040625,
+        "min": 0.0,
+        "std": 0.02995357736356377
+      },
+      "trainable_parameters": 1
+    },
+    {
+      "center_target_identity_fraction": {
+        "max": 0.8046875,
+        "mean": 0.7953125,
+        "min": 0.78125,
+        "std": 0.010186253758129139
+      },
+      "continuous_grid_identity_cost": {
+        "max": 0.1171875,
+        "mean": 0.084375,
+        "min": 0.0625,
+        "std": 0.023696485762661094
+      },
+      "grid_family_identity_fraction": {
+        "max": 0.734375,
+        "mean": 0.7109375,
+        "min": 0.6640625,
+        "std": 0.03314563036811941
+      },
+      "grid_pair_disagreement_fraction": {
+        "max": 0.22627314814814814,
+        "mean": 0.20499614197530863,
+        "min": 0.1830632716049383,
+        "std": 0.018624911388931256
+      },
+      "labels_used": "repair calibration labels",
+      "method": "per_platform_qat",
+      "optimization_steps": 280,
+      "paired_grid_identity_gain_over_no_repair": {
+        "max": 0.109375,
+        "mean": 0.0625,
+        "min": 0.0390625,
+        "std": 0.029231698334171417
+      },
+      "trainable_parameters": 108928
+    }
+  ],
+  "code_revision": "uncommitted",
+  "condition": "reset_to_value",
+  "grid_resolution": 9,
+  "input_report_hashes": {
+    "seed_1701": "b4a4f4857a9c3face51b5c731cd107884f2e2c64145510f4c8ef1d3ca40ca50d",
+    "seed_2718": "47c1a5a9b80c6241f9c23148d36ef75245bd16b930de72ea63ca79b79c3b6415",
+    "seed_3141": "1d90e66880f2b40cfc1a80abd5cf5c28157c654e8a04ac175881d6dda29479f7",
+    "seed_5772": "ea2e0858868f82001b1786cf24d2ca7aaa55afc817c8d951bfd72e65364f4a02",
+    "seed_8119": "8f9c0abc50159324f9b9bfc0633a22ec0896ad8f6509f577dd72712f51e142b6"
+  },
+  "interpretation": "Restricted label-free repair enlarges the sampled continuous-family identity ceiling in every seed, but the certificate-directed objective does not beat matched logit-only imitation on mean family identity. A sound post-repair certificate remains necessary.",
+  "relative_radius": 0.01,
+  "route_assessment": {
+    "certificate_directed_beats_logit_only_mean": false,
+    "certificate_directed_gain_over_no_repair_mean": 0.078125,
+    "certificate_directed_gain_positive_every_seed": true,
+    "certificate_directed_grid_identity_mean": 0.7265625,
+    "certificate_directed_minus_logit_only_mean": -0.004687499999999956
+  },
+  "rows_csv_hash": "a8bb330c3da95cc8f95c1888789beb2149680966435593daeb889ca404f76fe2",
+  "sample_count_per_seed": 128,
+  "schema_version": "SHDRepairFamilyGridAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed finite-grid post-repair diagnostic; not a proof"
+}

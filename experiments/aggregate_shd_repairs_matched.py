@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 from pathlib import Path
@@ -7,8 +8,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
-from transportcert.statistics import clopper_pearson_upper
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.statistics import clopper_pearson_upper
 
 
 SEEDS = (1701, 2718, 3141, 5772, 8119)
@@ -33,13 +34,20 @@ def _stats(values: list[float]) -> dict[str, float]:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--artifact-root", default="artifacts/shd_v3_repairs_matched"
+    )
+    parser.add_argument("--result-stem", default="repair_matched_v2")
+    parser.add_argument("--figure-stem", default="shd_repair_matched_v2")
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    artifact_root = root / "artifacts" / "shd_v3_repairs_matched"
+    artifact_root = root / args.artifact_root
     output_root = root / "results" / "shd_v1"
-    summary_path = output_root / "repair_matched_v2_summary.json"
-    rows_path = output_root / "repair_matched_v2_rows.csv"
-    figure_pdf = root / "paper" / "figures" / "shd_repair_matched_v2.pdf"
-    figure_png = root / "paper" / "figures" / "shd_repair_matched_v2.png"
+    summary_path = output_root / f"{args.result_stem}_summary.json"
+    rows_path = output_root / f"{args.result_stem}_rows.csv"
+    figure_pdf = root / "paper" / "figures" / f"{args.figure_stem}.pdf"
+    figure_png = root / "paper" / "figures" / f"{args.figure_stem}.png"
     destinations = (summary_path, rows_path, figure_pdf, figure_png)
     if any(path.exists() for path in destinations):
         raise FileExistsError("matched repair aggregate destination already exists")
@@ -57,7 +65,10 @@ def main() -> None:
                     / "repair_report.json"
                 )
                 report = json.loads(path.read_text(encoding="utf-8"))
-                if report["schema_version"] != "SHDRepairExperiment/v2":
+                if report["schema_version"] not in {
+                    "SHDRepairExperiment/v2",
+                    "SHDRepairExperiment/v3",
+                }:
                     raise ValueError(f"unexpected report schema: {path}")
                 if not report["calibration_audit_disjoint"]:
                     raise ValueError(f"calibration/audit overlap: {path}")
@@ -286,6 +297,32 @@ def main() -> None:
         "rows_csv_hash": sha256_file(rows_path),
         "code_revision": code_revision(root),
     }
+    certificate_seventy_count = sum(
+        float(row["accuracy_recovery_fraction"]) >= 0.70
+        for row in certificate_rows
+    )
+    logit_winning_conditions = sum(
+        next(
+            method
+            for method in item["per_method"]
+            if method["method"] == "logit_only"
+        )["accuracy_recovery"]["mean"]
+        >= next(
+            method
+            for method in item["per_method"]
+            if method["method"] == "certificate_directed"
+        )["accuracy_recovery"]["mean"]
+        for item in condition_summaries
+    )
+    summary["formulation_assessment"] = (
+        f"Certificate-directed repair clears 70% recovery in "
+        f"{certificate_seventy_count}/10 condition-seed cells. Logit-only has "
+        f"equal or higher mean recovery in {logit_winning_conditions}/2 "
+        "conditions. No repaired model obtains a five-point disagreement "
+        "certificate. The result supports a repair opportunity but does not pass "
+        "the preregistered robust-repair gate or establish a unique advantage for "
+        "the certificate-directed objective."
+    )
     write_json_immutable(summary_path, summary)
 
     labels = ("Cert-directed", "Logit-only", "Global threshold", "QAT", "Scratch")

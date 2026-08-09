@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
-from transportcert.benchmarks.shd_repair import (
+from pines.benchmarks.semantic_matrix import primary_semantic_conditions
+from pines.benchmarks.shd_repair import (
     build_repairable_srnn,
     build_supervised_target_srnn,
     _export_supervised,

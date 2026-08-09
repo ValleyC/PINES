@@ -5,8 +5,8 @@ import json
 import numpy as np
 import pytest
 
-from transportcert.adapters.hardware import load_hardware_capture
-from transportcert.artifacts import sha256_file
+from pines.adapters.hardware import load_hardware_capture
+from pines.artifacts import sha256_file
 
 
 def _write_manifest(path, capture, *, independent=True):

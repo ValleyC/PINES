@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
 
 
 def _read(path: Path) -> dict[str, object]:

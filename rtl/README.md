@@ -7,7 +7,7 @@ core adds explicit synaptic and output delay stages.
 
 The primary verification path is:
 
-1. generate fixed-point traces from `transportcert.rtl_reference`;
+1. generate fixed-point traces from `pines.rtl_reference`;
 2. run the same current/threshold sequence through cocotb;
 3. compare every state and spike transition, not only the final prediction;
 4. run bounded formal properties for overflow and reset invariants;

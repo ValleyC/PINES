@@ -14,7 +14,7 @@
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 96
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 122
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -26,11 +26,13 @@
   replication because its reference pipeline was selected using official test
   accuracy before semantic targets were run.
 - Five-seed SHD matched repair study on reset-to-value and floor-rounded
-  fixed-point execution. Certificate-directed repair recovers 77.2% and 87.8%
-  of lost accuracy, respectively, and every one of its ten cells clears 70%.
-  It beats no repair and global scaling in every cell, but loses to logit-only
-  on floor rounding and to labeled QAT on the genuine fixed-point comparison.
-  No repaired method/seed/condition cell accepts a five-point budget.
+  fixed-point execution under the cast-faithful executor. Certificate-directed
+  repair recovers 72.1% and 89.7% of lost accuracy, respectively; nine of its
+  ten cells clear 70%, with reset seed 8119 recovering only 23.1%. It beats no
+  repair and global scaling in every cell, but logit-only has higher mean
+  recovery in both conditions and labeled QAT is strongest on the genuine
+  fixed-point comparison. No repaired method/seed/condition cell accepts a
+  five-point budget.
 - Five-seed DVS Gesture floor-rounded repair development study. Restricted
   certificate-directed calibration recovers 91.1% of lost accuracy with every
   seed above 79.5%, versus 89.3% for logit-only, 74.8% for global scaling, and
@@ -129,23 +131,61 @@
   yielding the first complete per-input joint continuous-family certificate.
 - Frozen five-seed hybrid screen: with 64 leaves, 64 local branches, and eight
   guard cuts fixed before opening the screen, 58/160 untouched SHD audit inputs
-  are fully certified (36.25%, exact 95% interval 28.81--44.21%), and every seed
-  is nonzero. An independent 9-by-9 grid contradicts none of the 58 certificates,
+  are fully certified (36.25%), and every seed is nonzero. Because the same 32
+  input positions recur across seeds, no pooled binomial interval is reported.
+  The historical 9-by-9 grid contradicts none of the 58 certificates,
   finds concrete flips for 48 inputs, and is stable but inconclusive for 54. The
-  declared 20% advancement gate passes and triggers the all-input audit.
+  declared 20% advancement gate passes and triggers the all-input audit; both
+  screen and grid are retained only as development provenance.
+- Soundness-corrected five-seed audit: all 4,305 frozen model--input evaluations
+  are being recomputed with input-drive reduction envelopes, outward branch
+  logits, shared polygon intersections, no positive-area sliver deletion, and
+  outward partial-area accounting. Seed 1701 is complete at 347/861 certificates
+  (40.30%) and 61.33% mean proved volume. Relative to the superseded analyzer,
+  345 certificates remain, three are withdrawn, and two are gained. The remaining
+  seeds, independent artifact verification, and canonical falsification are live.
+- The prior 1,398/4,145 coverage headline, pooled binomial interval, and
+  grid/Sobol counts are superseded. Final uncertainty will separately report an
+  input-cluster bootstrap and a five-training-seed interval.
 - Broader family engine: the local oracle now carries explicit synaptic/output
   queues, encloses exponential Euler with a second-order remainder, and conjoins
   mutually exclusive discrete members. Randomized recurrent differential tests
   cover these additions; fixed-point local branching remains open.
+- Selected-input 16-member continuous certificate: a canonical, label-free
+  $5\times5$ development screen finds 236/800 stable calibration inputs and
+  selects dataset index 862 by its minimum reference-class margin. Member-wise
+  sound analysis covers all combinations of forward/exponential Euler,
+  pre/post-integration threshold timing, subtractive/reset-to-value reset, and
+  zero/one-step synaptic delay over the full plus/minus 1% timestep--threshold
+  box. Mean proved area rises from 15.47% at 16 leaves per member to 70.97% at
+  64 and 100% at 256; all 16 members complete at the final budget. The run uses
+  60.8 CPU-minutes (30.5 wall-minutes on two workers), while the slowest member
+  takes 305.6 seconds. The affine layer closes no leaf; every success requires
+  sound local branch enumeration. All 16 immutable shards pass independent
+  config, source-hash, row, and exact area-accounting verification. This closes
+  semantic breadth for one selected float32 input with zero output delay, not
+  population coverage or the numeric-format axis.
 - Five-seed bounded-subfamily decomposition: after adding the 9-by-9 continuous
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
   and the full family 31.09%. Every primary-axis seed remains above 56.25%.
 - Five-seed post-repair reset-family diagnostic: certificate-directed repair
-  raises sampled family identity from 64.84% to 75.00% and improves every seed,
-  but logit-only reaches 76.41%. A single-seed sound branch-set test completes
+  raises sampled family identity from 63.88% to 76.14% on all 861 frozen audit
+  inputs per seed and improves every seed, but logit-only reaches 76.33%. These
+  values use the cast-faithful executor and repaired models and supersede the
+  earlier full-float32 and 128-input diagnostics. The proposed-minus-logit
+  paired input-cluster interval is [-1.51, 1.14] points and the seed-level
+  interval is [-3.05, 2.68], so neither objective is superior. A
+  single-seed sound branch-set test on the earlier models completes
   no representative repaired-model cell; at the finest partition, repair
   reduces rather than increases the reached proof depth.
+- Five-seed floor-fixed-point family diagnostic: sampled 9-by-9 identity rises
+  from 18.58% without repair to 75.42% after certificate-directed repair on all
+  861 audit inputs per seed, a 56.84-point paired gain that is positive in every
+  seed. Logit-only reaches 76.52% and the labeled target fine-tune 79.42%. This
+  condition's proposed-minus-logit intervals are [-2.42, 0.23] points over input
+  clusters and [-3.33, 1.14] over seeds. This is not yet a sound
+  continuous certificate because fixed-point local branching is unimplemented.
 - Single-seed proof-aware repair kill test: a selected pointwise guard-margin
   penalty reaches timestep 44.42 at 128-by-128 partitioning, partially above
   certificate-directed repair's 42.83 but below 47.0 without repair, and
@@ -173,16 +213,21 @@ problem, disagreement as a strong label-free ranking signal, label-free repair
 as an accuracy-recovery mechanism, and sound prospective certification of both
 finite enumerated families and a targeted joint continuous family. The local
 branch result removes the previous central scientific blocker: a complete
-continuous certificate now exists, and frozen five-seed screening exceeds the
-20% tractability gate without input filtering. The full 4,305-input audit is the
-next authority for a population-level SHD coverage claim.
+continuous certificate now exists. A separate selected-input result also closes
+all 16 declared integration/timing/reset/synaptic-delay members over the same
+continuous box. The soundness-corrected five-seed targeted-family audit is in
+progress; its completed first seed retains 40.30% full-box coverage after paired
+withdrawals and gains. A final population estimate and canonical falsification
+claim await all five seeds, and population coverage of the complete Cartesian
+family has not been measured.
 
-This advance is narrower than the complete manuscript contract. The certified
-screen covers reset-to-value with joint plus/minus 1% timestep and threshold
-uncertainty, forward Euler, float32 state arithmetic, and zero delay. The new
-engine can represent exponential integration and delivery queues, but those
-axes have not yet passed frozen full-model audits; fixed-point local branching,
-DVS family certification, and both physical conformance terms remain open.
+This advance is narrower than the complete manuscript contract. The population
+audit covers reset-to-value with joint plus/minus 1% timestep and threshold
+uncertainty, forward Euler, float32 state arithmetic, and zero delay. The
+selected-input Cartesian certificate adds exponential integration, threshold
+timing, subtractive reset, and synaptic delay, but has not passed a frozen
+population audit. Fixed-point local branching, DVS family certification, and
+both physical conformance terms remain open.
 
 Targeted bounded-axis contracts remain scientifically viable: their sampled
 ceilings are 60--69%, and repair can add roughly ten points of reset-family
@@ -195,9 +240,9 @@ uniformly tighter without adding information or assumptions. A top-venue claim
 must therefore specify and validate such an assumption rather than presenting
 raw label-free disagreement as both universal and operationally tight.
 
-The NeurIPS framing therefore advances from ``missing certificate method'' to
-``incomplete breadth and physical validation.'' It remains conditional on the
-all-input SHD audit, at least one sound bounded family on DVS Gesture, two
+The manuscript framing therefore advances from ``missing certificate method'' to
+``incomplete breadth and physical validation.'' It remains conditional on at
+least one sound bounded family on DVS Gesture, two
 physical backends, emulator--hardware conformance, and certificate-directed
 repair that improves post-repair certified risk rather than only accuracy. The
 distribution certificate also remains mathematically sharp but operationally
@@ -205,11 +250,12 @@ loose without additional assumptions.
 
 ## Open experimental milestones
 
-- Complete and aggregate the frozen 4,305-input SHD hybrid audit, then run an
-  independent full-audit parameter grid as a falsification check.
-- Freeze and execute continuous-family screens for integration, threshold timing,
-  and delay, followed by the preregistered 16-member Cartesian family if the
-  targeted screens remain tractable.
+- Complete, provenance-check, aggregate, and canonically falsify the
+  soundness-corrected five-seed targeted-family SHD audit.
+- Improve or preregister the resource allocation needed for a frozen
+  population audit of the 16-member continuous Cartesian family. The selected
+  development input is fully certified, but its 60.8 CPU-minute cost cannot be
+  extrapolated into a tractability claim for all audit inputs.
 - Extend the sound hybrid domain to the DVS convolutional/recurrent model or
   define and preregister an equivalently faithful reduced abstract interface.
 - Multi-step family-verified repair margins. A pointwise center-execution guard

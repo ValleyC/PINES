@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from transportcert.statistics import (
+from pines.statistics import (
     bonferroni_alpha,
     clopper_pearson_upper,
     compose_physical_bound,

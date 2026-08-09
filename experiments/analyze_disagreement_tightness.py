@@ -6,13 +6,13 @@ from pathlib import Path
 
 import numpy as np
 
-from transportcert.artifacts import (
+from pines.artifacts import (
     array_hash,
     code_revision,
     sha256_file,
     write_json_immutable,
 )
-from transportcert.statistics import disagreement_tightness_witness
+from pines.statistics import disagreement_tightness_witness
 
 
 def main() -> None:

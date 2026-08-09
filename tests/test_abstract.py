@@ -4,7 +4,7 @@ from dataclasses import replace
 
 import numpy as np
 
-from transportcert.abstract import (
+from pines.abstract import (
     AdaptiveDecisionMarginCertifier,
     DecisionMarginFamilyCertifier,
     IntervalFamilyCertifier,
@@ -12,9 +12,9 @@ from transportcert.abstract import (
     _linear_interval,
     partition_semantics_box,
 )
-from transportcert.emulator import VectorizedEmulator
-from transportcert.models import DenseRecurrentSNN
-from transportcert.semantics import (
+from pines.emulator import VectorizedEmulator
+from pines.models import DenseRecurrentSNN
+from pines.semantics import (
     ExecutionSemantics,
     IntegrationRule,
     ResetRule,

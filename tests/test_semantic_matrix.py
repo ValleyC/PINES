@@ -1,4 +1,4 @@
-from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
+from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 
 
 def test_primary_semantic_conditions_are_unique_and_preregistered() -> None:

@@ -1,4 +1,4 @@
-# NeurIPS 2027 submission gates
+# Submission gates
 
 The submission proceeds only if every item below is true at the six-week freeze:
 
@@ -19,5 +19,4 @@ The submission proceeds only if every item below is true at the six-week freeze:
 
 If static family bounds are vacuous on more than 80% of inputs or physical
 conformance dominates, the project pivots to a systems venue. The guarantee is
-not weakened to preserve a NeurIPS narrative.
-
+not weakened to preserve a submission narrative.

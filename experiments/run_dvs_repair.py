@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from transportcert.benchmarks.dvs_gesture import PackedDVSGesture
-from transportcert.benchmarks.dvs_repair import (
+from pines.benchmarks.dvs_gesture import PackedDVSGesture
+from pines.benchmarks.dvs_repair import (
     DVSGestureRepairConfig,
     run_dvs_repair,
 )

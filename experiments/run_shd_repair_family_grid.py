@@ -7,16 +7,16 @@ from pathlib import Path
 
 import numpy as np
 
-from transportcert.artifacts import (
+from pines.artifacts import (
     array_hash,
     code_revision,
     sha256_file,
     write_json_immutable,
 )
-from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
-from transportcert.benchmarks.shd import PackedSHD
-from transportcert.models import DenseRecurrentSNN
-from transportcert.torch_emulator import TorchEmulator
+from pines.benchmarks.semantic_matrix import primary_semantic_conditions
+from pines.benchmarks.shd import PackedSHD
+from pines.models import DenseRecurrentSNN
+from pines.torch_emulator import TorchEmulator
 
 
 METHODS = (
@@ -29,6 +29,13 @@ METHODS = (
     "per_platform_qat",
 )
 GRID_RESOLUTION = 9
+
+
+def _packed_bool_hex(values: np.ndarray) -> str:
+    bits = np.asarray(values, dtype=np.uint8)
+    if bits.ndim != 1:
+        raise ValueError("identity vector must be one-dimensional")
+    return np.packbits(bits, bitorder="little").tobytes().hex()
 
 
 def main() -> None:
@@ -152,8 +159,12 @@ def main() -> None:
                 ),
                 "center_target_identity_inputs": int(np.count_nonzero(matches[center_index])),
                 "center_target_identity_fraction": float(np.mean(matches[center_index])),
+                "center_target_identity_packed_hex": _packed_bool_hex(
+                    matches[center_index]
+                ),
                 "grid_family_identity_inputs": int(np.count_nonzero(grid_identity)),
                 "grid_family_identity_fraction": float(np.mean(grid_identity)),
+                "grid_family_identity_packed_hex": _packed_bool_hex(grid_identity),
                 "continuous_grid_identity_cost": float(
                     np.mean(matches[center_index]) - np.mean(grid_identity)
                 ),
@@ -169,7 +180,7 @@ def main() -> None:
         )
 
     report = {
-        "schema_version": "SHDRepairFamilyGridDiagnostic/v2",
+        "schema_version": "SHDRepairFamilyGridDiagnostic/v3",
         "status": (
             "finite-grid post-repair diagnostic; identity is measured against the original "
             "source/reference predictions and is not a continuous-family certificate"
@@ -181,7 +192,9 @@ def main() -> None:
         "grid_points": GRID_RESOLUTION * GRID_RESOLUTION,
         "sample_count": len(selected_indices),
         "sample_selection": "first entries of the frozen certificate-audit order",
+        "selected_indices": selected_indices.tolist(),
         "selected_indices_hash": array_hash(selected_indices),
+        "identity_bit_order": "little",
         "source_model_hash": source_model.model_hash,
         "source_model_artifact_hash": sha256_file(source_model_path),
         "train_store_hash": store.data_hash,

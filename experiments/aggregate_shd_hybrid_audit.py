@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import beta
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
 
 
 def _exact_interval(successes: int, samples: int, confidence: float) -> list[float]:

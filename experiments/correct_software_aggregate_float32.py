@@ -5,8 +5,8 @@ import csv
 import json
 from pathlib import Path
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
-from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 
 
 def main() -> None:

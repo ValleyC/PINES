@@ -1,4 +1,4 @@
-from transportcert.rtl_reference import RTLNeuronConfig, rtl_lif_step, signed_clip_or_wrap
+from pines.rtl_reference import RTLNeuronConfig, rtl_lif_step, signed_clip_or_wrap
 
 
 def test_rtl_oracle_saturates_and_wraps() -> None:

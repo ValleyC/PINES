@@ -3,16 +3,78 @@ from __future__ import annotations
 import argparse
 import json
 import time
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
-from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
-from transportcert.benchmarks.shd import PackedSHD
-from transportcert.emulator import VectorizedEmulator
-from transportcert.models import DenseRecurrentSNN
-from transportcert.parameter_batch import ReferenceParameterSweepEmulator
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.benchmarks.semantic_matrix import primary_semantic_conditions
+from pines.benchmarks.shd import PackedSHD
+from pines.emulator import VectorizedEmulator
+from pines.models import DenseRecurrentSNN
+from pines.parameter_batch import ReferenceParameterSweepEmulator
+
+
+def _run_seed(task: dict[str, Any]) -> list[dict[str, Any]]:
+    from threadpoolctl import threadpool_limits
+
+    root = Path(task["root"])
+    seed = int(task["seed"])
+    seed_rows = task["seed_rows"]
+    semantics = primary_semantic_conditions()
+    reference = semantics["reference"]
+    target = semantics[task["condition"]]
+    store = PackedSHD(root / task["data_root"] / "train.npz")
+    model = DenseRecurrentSNN.load(
+        root / task["artifact_root"] / f"seed_{seed}" / "model.npz"
+    )
+    indices = np.asarray(
+        [row["dataset_index"] for row in seed_rows], dtype=np.int64
+    )
+    frames = store.frames(indices)
+    reference_engine = VectorizedEmulator()
+    with threadpool_limits(limits=1, user_api="blas"):
+        reference_predictions = np.asarray(
+            reference_engine.run(model, frames, reference).predictions,
+            dtype=np.int16,
+        )
+        execution = ReferenceParameterSweepEmulator(reference_engine).run(
+            model,
+            frames,
+            target,
+            np.asarray(task["timesteps"], dtype=np.float64),
+            np.asarray(task["threshold_scales"], dtype=np.float64),
+            reference_predictions,
+        )
+    mismatches = execution.predictions != reference_predictions[:, None]
+    rows = []
+    for position, audit_row in enumerate(seed_rows):
+        rows.append(
+            {
+                "seed": seed,
+                "audit_position": int(audit_row["audit_position"]),
+                "dataset_index": int(audit_row["dataset_index"]),
+                "certificate_result": bool(audit_row["certified"]),
+                "certified_parameter_fraction": float(
+                    audit_row["certified_parameter_fraction"]
+                ),
+                "reference_prediction": int(reference_predictions[position]),
+                "grid_identity": not bool(np.any(mismatches[position])),
+                "counterexample_point_count": int(
+                    np.count_nonzero(mismatches[position])
+                ),
+                "observed_predictions": [
+                    int(value)
+                    for value in np.unique(execution.predictions[position])
+                ],
+                "minimum_reference_margin": float(
+                    execution.minimum_reference_margin[position]
+                ),
+            }
+        )
+    return rows
 
 
 def main() -> None:
@@ -24,6 +86,7 @@ def main() -> None:
     parser.add_argument("--grid-resolution", type=int, default=9)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--input-batch-size", type=int, default=64)
+    parser.add_argument("--workers", type=int, default=5)
     parser.add_argument("--data-root", default="data/processed/shd_v1")
     parser.add_argument("--artifact-root", default="artifacts/shd_v1_final")
     parser.add_argument(
@@ -34,6 +97,7 @@ def main() -> None:
         args.grid_resolution < 2
         or args.batch_size < 1
         or args.input_batch_size < 1
+        or args.workers < 1
     ):
         raise ValueError("grid resolution and batch size must be positive")
 
@@ -72,61 +136,32 @@ def main() -> None:
         1.0 + timestep_radius * normalized_timestep
     )
     threshold_scales = 1.0 + threshold_radius * normalized_threshold
-    store = PackedSHD(root / args.data_root / "train.npz")
-
-    reference_engine = VectorizedEmulator()
-    family_engine = ReferenceParameterSweepEmulator(reference_engine)
     output_rows = []
     started = time.perf_counter()
-
-    for seed in config["seeds"]:
-        seed_rows = [row for row in audit["rows"] if row["seed"] == seed]
-        seed_dir = root / args.artifact_root / f"seed_{seed}"
-        model_path = seed_dir / "model.npz"
-        model = DenseRecurrentSNN.load(model_path)
-        indices = np.asarray(
-            [row["dataset_index"] for row in seed_rows], dtype=np.int64
-        )
-        frames = store.frames(indices)
-        reference_predictions = np.asarray(
-            reference_engine.run(model, frames, reference).predictions,
-            dtype=np.int16,
-        )
-
-        execution = family_engine.run(
-            model,
-            frames,
-            target,
-            timesteps,
-            threshold_scales,
-            reference_predictions,
-        )
-        mismatches = execution.predictions != reference_predictions[:, None]
-        for position, audit_row in enumerate(seed_rows):
-            output_rows.append(
-                {
-                    "seed": int(seed),
-                    "audit_position": int(audit_row["audit_position"]),
-                    "dataset_index": int(audit_row["dataset_index"]),
-                    "certificate_result": bool(audit_row["certified"]),
-                    "certified_parameter_fraction": float(
-                        audit_row["certified_parameter_fraction"]
-                    ),
-                    "reference_prediction": int(reference_predictions[position]),
-                    "grid_identity": not bool(np.any(mismatches[position])),
-                    "counterexample_point_count": int(
-                        np.count_nonzero(mismatches[position])
-                    ),
-                    "observed_predictions": [
-                        int(value)
-                        for value in np.unique(execution.predictions[position])
-                    ],
-                    "minimum_reference_margin": float(
-                        execution.minimum_reference_margin[position]
-                    ),
-                }
-            )
-        print(f"grid validation seed={seed} complete", flush=True)
+    tasks = [
+        {
+            "root": str(root),
+            "seed": int(seed),
+            "seed_rows": [row for row in audit["rows"] if row["seed"] == seed],
+            "condition": condition,
+            "data_root": args.data_root,
+            "artifact_root": args.artifact_root,
+            "timesteps": timesteps,
+            "threshold_scales": threshold_scales,
+        }
+        for seed in config["seeds"]
+    ]
+    with ProcessPoolExecutor(max_workers=min(args.workers, len(tasks))) as executor:
+        future_map = {
+            executor.submit(_run_seed, task): task["seed"] for task in tasks
+        }
+        for future in as_completed(future_map):
+            seed = future_map[future]
+            output_rows.extend(future.result())
+            print(f"grid validation seed={seed} complete", flush=True)
+    output_rows.sort(
+        key=lambda row: (row["seed"], row["audit_position"])
+    )
 
     certified_rows = [row for row in output_rows if row["certificate_result"]]
     uncertified_rows = [row for row in output_rows if not row["certificate_result"]]
@@ -161,7 +196,9 @@ def main() -> None:
         "seconds": time.perf_counter() - started,
         "executor": "VectorizedEmulator canonical operational semantics",
         "device": "cpu",
-        "train_store_hash": store.data_hash,
+        "train_store_hash": PackedSHD(
+            root / args.data_root / "train.npz"
+        ).data_hash,
         "reference_semantics_hash": reference.semantics_hash,
         "target_semantics_hash": target.semantics_hash,
         "code_revision": code_revision(root),

@@ -3,14 +3,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from transportcert.benchmarks.dvs_gesture import (
+from pines.benchmarks.dvs_gesture import (
     DVSGestureTrainConfig,
     PackedDVSGesture,
     _quantize_tensor,
     build_dvs_conv_srnn,
 )
-from transportcert.benchmarks.dvs_repair import make_restricted_dvs_repairable
-from transportcert.semantics import ExecutionSemantics, NumericFormat
+from pines.benchmarks.dvs_repair import make_restricted_dvs_repairable
+from pines.semantics import ExecutionSemantics, NumericFormat
 
 
 torch = pytest.importorskip("torch")

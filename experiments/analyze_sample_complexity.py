@@ -4,8 +4,8 @@ import csv
 import json
 from pathlib import Path
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
-from transportcert.statistics import (
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.statistics import (
     bonferroni_alpha,
     clopper_pearson_upper,
     zero_error_sample_size,

@@ -6,11 +6,11 @@ from pathlib import Path
 
 import numpy as np
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
-from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
-from transportcert.benchmarks.shd import PackedSHD
-from transportcert.models import DenseRecurrentSNN
-from transportcert.torch_emulator import TorchEmulator
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.benchmarks.semantic_matrix import primary_semantic_conditions
+from pines.benchmarks.shd import PackedSHD
+from pines.models import DenseRecurrentSNN
+from pines.torch_emulator import TorchEmulator
 
 
 RADII = (1e-6, 1e-5, 1e-4, 1e-3, 1e-2)

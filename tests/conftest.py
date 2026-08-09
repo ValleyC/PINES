@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from transportcert.models import DenseRecurrentSNN
+from pines.models import DenseRecurrentSNN
 
 
 @pytest.fixture

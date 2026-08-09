@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import torch
 
-from transportcert.benchmarks.nmnist import (
+from pines.benchmarks.nmnist import (
     NMNISTPreprocessConfig,
     build_feedforward_snn,
 )

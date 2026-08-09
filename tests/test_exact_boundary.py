@@ -5,10 +5,10 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from transportcert.emulator import VectorizedEmulator
-from transportcert.exact_boundary import ExactThresholdBoundaryOracle
-from transportcert.models import DenseRecurrentSNN
-from transportcert.semantics import ExecutionSemantics, ResetRule
+from pines.emulator import VectorizedEmulator
+from pines.exact_boundary import ExactThresholdBoundaryOracle
+from pines.models import DenseRecurrentSNN
+from pines.semantics import ExecutionSemantics, ResetRule
 
 
 def _one_neuron_model(output_weights: np.ndarray) -> DenseRecurrentSNN:

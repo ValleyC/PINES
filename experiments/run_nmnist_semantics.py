@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from transportcert.benchmarks.nmnist import PackedNMNIST
-from transportcert.benchmarks.semantic_matrix import run_shd_semantic_matrix
+from pines.benchmarks.nmnist import PackedNMNIST
+from pines.benchmarks.semantic_matrix import run_shd_semantic_matrix
 
 
 def main() -> None:

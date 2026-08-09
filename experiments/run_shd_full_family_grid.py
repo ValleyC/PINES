@@ -7,23 +7,23 @@ from pathlib import Path
 
 import numpy as np
 
-from transportcert.artifacts import (
+from pines.artifacts import (
     array_hash,
     code_revision,
     sha256_file,
     write_json_immutable,
 )
-from transportcert.benchmarks.semantic_matrix import primary_semantic_conditions
-from transportcert.benchmarks.shd import PackedSHD
-from transportcert.branch_analysis import summarize_family_prediction_grid
-from transportcert.models import DenseRecurrentSNN
-from transportcert.semantics import (
+from pines.benchmarks.semantic_matrix import primary_semantic_conditions
+from pines.benchmarks.shd import PackedSHD
+from pines.branch_analysis import summarize_family_prediction_grid
+from pines.models import DenseRecurrentSNN
+from pines.semantics import (
     IntegrationRule,
     ResetRule,
     ThresholdTiming,
     UpdateOrdering,
 )
-from transportcert.torch_emulator import TorchEmulator
+from pines.torch_emulator import TorchEmulator
 
 
 GRID_RESOLUTIONS = (3, 5, 9)

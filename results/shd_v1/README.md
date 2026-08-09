@@ -33,31 +33,36 @@ python experiments/correct_software_aggregate_float32.py --result-root results/s
 
 ## Five-seed matched repair
 
-The canonical repair aggregate is `repair_matched_v2_summary.json`. It covers
-reset-to-value and floor-rounded fixed-point execution with five methods, five
-seeds, identical 800-input calibration splits, and 280 updates for every
-gradient method. Label-free methods use zero labels; source-initialized target
-fine-tuning/QAT and random-initialized target retraining use all 800 labels.
+The canonical repair aggregate is
+`repair_matched_cast_faithful_v4_summary.json`. It covers reset-to-value and
+floor-rounded fixed-point execution with five methods, five seeds, identical
+800-input calibration splits, and 280 updates for every gradient method. The
+target executor performs the declared float32 state casts. Label-free methods
+use zero labels; source-initialized target fine-tuning/QAT and random-initialized
+target retraining use all 800 labels.
 
-Certificate-directed repair recovers 77.2% of reset loss and 87.8% of floor-
-rounding loss. Every one of its ten cells clears 70% recovery and beats both
-unrepaired deployment and global threshold scaling. It slightly beats logit-only
-on reset but loses to it on floor rounding; labeled QAT recovers 101.5% on the
-fixed-point condition. No method, seed, or condition certifies a five-point
-budget, although none of the 50 bounds is violated.
+Certificate-directed repair recovers 72.1% of reset loss and 89.7% of floor-
+rounding loss. Nine of its ten cells clear 70% recovery; reset seed 8119 reaches
+only 23.1%. It beats both unrepaired deployment and global threshold scaling in
+every cell, but logit-only has higher mean recovery in both conditions. Labeled
+QAT recovers 101.5% on the fixed-point condition. No method, seed, or condition
+certifies a five-point budget, although none of the 50 bounds is violated. The
+older `repair_matched_v2_summary.json` used the neighboring full-float32
+executor and is retained only as superseded development provenance.
 
 The earlier `repair_reset_summary.json` is preserved but superseded for baseline
 coverage. Regenerate the canonical aggregate from the ignored raw reports with:
 
 ```powershell
-python experiments/aggregate_shd_repairs_matched.py
+python experiments/aggregate_shd_repairs_matched.py --artifact-root artifacts/shd_v75_repairs_cast_faithful_v1 --result-stem repair_matched_cast_faithful_v4 --figure-stem shd_repair_matched_cast_faithful_v4
 ```
 
 ### Earlier reset-only aggregate
 
-On reset-to-value, certificate-directed repair recovers 77.2% of lost test
-accuracy on average, compared with 74.2% for pure logit distillation and 40.1%
-for global threshold scaling. It clears 70% recovery for all five seeds.
+Under the superseded full-float32 executor, certificate-directed repair recovered
+77.2% of reset loss on average, compared with 74.2% for pure logit distillation
+and 40.1% for global threshold scaling, and cleared 70% for all five seeds. The
+cast-faithful aggregate above replaces these numbers in current claims.
 
 This does not yield a deployable certificate. The mean post-repair upper bound
 is 15.1 points, no seed is accepted at a five-point budget, and the bound is
@@ -363,8 +368,9 @@ The method budgets were then frozen at 64 polygon leaves, 64 branches, and eight
 guard cuts. `hybrid_family_audit_summary.json` aggregates the first 32 untouched
 certificate-audit inputs from each of five seeds. No labels, predictions,
 margins, or grid behavior were used for selection. The full joint reset-to-value
-box is certified for 58/160 inputs (36.25%, exact two-sided 95% binomial interval
-28.81--44.21%), with 31.25--43.75% coverage by seed. Mean certified parameter
+box is certified for 58/160 model--input evaluations (36.25%), with
+31.25--43.75% coverage by seed. The same 32 input positions recur across models,
+so no pooled binomial interval is reported. Mean certified parameter
 volume is 63.78%, and the area cover closes on every input. The frozen 20%
 advance gate passes.
 
@@ -375,22 +381,85 @@ grid-stable but inconclusive inputs quantify proof- or budget-conservatism. This
 grid is a falsification diagnostic, not part of the proof. The screen triggered
 the separately frozen all-input audit over 4,305 certificate-split inputs.
 
+`hybrid_family_full_audit_summary.json` is retained as a superseded development
+artifact. Its 1,398/4,145 pooled headline and grid/Sobol counts must not be used
+as current manuscript evidence. The soundness-corrected v68 audit keeps the same
+domain, inputs, and 64/64/8 scientific budgets while adding reduction-error and
+polygon-cover safeguards. Seed 1701 is complete at 347/861 certificates (40.30%)
+and 61.33% mean proved volume; three prior certificates are withdrawn and two are
+newly proved. The other seeds and canonical falsification are in progress. Final
+coverage will report input-cluster and training-seed uncertainty separately.
+
 ```powershell
 python experiments/run_shd_residual_polygon_branch_certificate.py --seed 1701 --output-root artifacts/shd_v56_residual_polygon_branches_all
 python experiments/aggregate_shd_polygon_branch_certificate.py
 python experiments/run_shd_hybrid_family_audit.py
 python experiments/validate_shd_hybrid_audit_grid.py
 python experiments/aggregate_shd_hybrid_audit.py
-python experiments/run_shd_hybrid_family_full_audit.py
+python experiments/run_shd_hybrid_family_full_audit.py --config configs/experiments/shd_hybrid_full_audit_v3.json --output-root artifacts/shd_v68_hybrid_full_audit_soundness_corrected_v1
+```
+
+### Selected-input 16-member continuous Cartesian certificate
+
+`cartesian_member_scaling_sound_v5_summary.json` records a complete sound
+certificate over all 16 combinations of integration rule, threshold timing,
+reset rule, and zero/one-step synaptic delay for one label-free selected SHD
+input. Every member also contains the complete plus/minus 1% continuous
+timestep--threshold box. The canonical selector reproduces 236/800 stable
+repair-calibration inputs (29.5%) and selects dataset index 862 by minimum
+reference-class margin without labels.
+
+Each mutually exclusive member receives its own frozen leaf budget before the
+member results are conjoined. Mean proved area is 15.47%, 70.97%, and 100% at
+16, 64, and 256 leaves per member; zero, four, and all 16 members complete at
+those budgets. A prior run sharing 256 leaves across all members reached only
+54.93%, so member-wise allocation resolves that resource artifact. The final run
+uses 60.8 CPU-minutes and 30.5 wall-minutes on two workers. All successful leaves
+come from local branch enumeration; the affine layer closes none.
+
+The report consists of 16 immutable shards and passes independent config,
+selection, source-manifest, member-row, hash, and exact area-accounting checks.
+It fixes float32 state arithmetic and zero output delay. Because the input was
+selected during label-free development, the result demonstrates sound family
+breadth and resource scaling, not population coverage.
+
+Authoritative artifacts:
+
+- `cartesian_member_scaling_sound_v5_summary.json`
+- `cartesian_member_scaling_sound_v5_rows.csv`
+- `../../artifacts/shd_v82_cartesian_member_scaling_concurrent_v1/cartesian_member_scaling.json`
+- `../../artifacts/shd_v82_cartesian_member_scaling_concurrent_v1/artifact_verification.json`
+- `../../paper/figures/shd_cartesian_member_scaling_sound_v5.pdf`
+
+```powershell
+python experiments/select_shd_cartesian_development.py --output-root artifacts/shd_v71_cartesian_development_selection_canonical_v1
+python experiments/run_shd_hybrid_cartesian_member_scaling.py --config configs/experiments/shd_hybrid_cartesian_member_scaling_v2.json --output-root artifacts/shd_v82_cartesian_member_scaling_concurrent_v1
+python experiments/aggregate_shd_hybrid_cartesian_member_scaling.py --report artifacts/shd_v82_cartesian_member_scaling_concurrent_v1/cartesian_member_scaling.json --output results/shd_v1/cartesian_member_scaling_sound_v5_summary.json --rows results/shd_v1/cartesian_member_scaling_sound_v5_rows.csv --figure paper/figures/shd_cartesian_member_scaling_sound_v5.pdf
+python experiments/verify_shd_cartesian_member_scaling_artifact.py --report artifacts/shd_v82_cartesian_member_scaling_concurrent_v1/cartesian_member_scaling.json --config configs/experiments/shd_hybrid_cartesian_member_scaling_v2.json --output artifacts/shd_v82_cartesian_member_scaling_concurrent_v1/artifact_verification.json
 ```
 
 ### Post-repair bounded-family headroom
 
-`repair_family_grid_summary.json` compares selected reset-target models against
-the original source/reference predictions over a 9-by-9 local family.
-Certificate-directed repair raises sampled family identity from 64.84% to 75.00%
-and improves every seed, while logit-only reaches 76.41%, global threshold
-scaling 68.91%, and the labeled target fine-tune 71.09%.
+`shd_repair_family_grid_full_audit_reset_clustered_v3_summary.json` compares the cast-faithful
+reset-target repaired models against the original source/reference predictions
+over a 9-by-9 local family using all 861 audit inputs per seed.
+Certificate-directed repair raises sampled family identity from 63.88% to 76.14%
+and improves every seed, while logit-only reaches 76.33%, global threshold
+scaling 70.41%, and the labeled target fine-tune 75.31%. It supersedes the
+full-float32 `repair_family_grid_summary.json` and 128-input diagnostics.
+Its proposed-minus-logit mean is -0.19 points, with a 95% input-cluster
+bootstrap interval of [-1.51, 1.14] points and a five-seed interval of
+[-3.05, 2.68].
+
+`shd_repair_family_grid_full_audit_floor_clustered_v3_summary.json` applies the same
+cast-faithful diagnostic to the floor-rounded fixed-point condition. Sampled
+family identity rises from 18.58% without repair to 75.42% after
+certificate-directed repair, versus 76.52% for logit-only, 21.07% for global
+threshold scaling, and 79.42% for the labeled target fine-tune. The proposed
+method improves every seed but the result is not a sound continuous certificate:
+fixed-point local branching remains unimplemented.
+The proposed-minus-logit mean is -1.09 points; its input-cluster interval is
+[-2.42, 0.23] and its seed-level interval is [-3.33, 1.14].
 
 `repaired_branch_set_cells_summary.json` asks whether the sampled improvement
 makes sound explicit branch analysis easier. It does not: no representative

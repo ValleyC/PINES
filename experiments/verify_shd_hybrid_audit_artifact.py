@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from transportcert.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, sha256_file, write_json_immutable
 
 
 def _check_row(row: dict, budgets: dict) -> list[str]:

@@ -37,8 +37,8 @@
     "note": "Budgets and the complete audit input set remain frozen. This rerun supersedes the prior full audit after the proof-integrity review added input-drive reduction envelopes and eliminated positive-area sliver deletion."
   },
   "execution": {
-    "worker_count": 20,
-    "shards_per_seed": 20,
+    "worker_count": 8,
+    "shards_per_seed": 100,
     "blas_threads_per_worker": 1,
     "resume_only_from_hash_validated_immutable_shards": true
   },

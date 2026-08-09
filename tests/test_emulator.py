@@ -5,8 +5,8 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from transportcert.emulator import ScalarInterpreter, VectorizedEmulator
-from transportcert.semantics import (
+from pines.emulator import ScalarInterpreter, VectorizedEmulator
+from pines.semantics import (
     ExecutionSemantics,
     IntegrationRule,
     NumericFormat,

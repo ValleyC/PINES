@@ -4,8 +4,8 @@ import json
 
 import numpy as np
 
-from transportcert.cli import main
-from transportcert.semantics import ExecutionSemantics
+from pines.cli import main
+from pines.semantics import ExecutionSemantics
 
 
 def test_emulate_and_certify_cli(tmp_path, small_model, event_batch) -> None:
