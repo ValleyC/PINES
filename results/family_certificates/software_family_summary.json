@@ -1,0 +1,220 @@
+{
+  "budgets": [
+    0.01,
+    0.02,
+    0.05
+  ],
+  "code_revision": "c837ab82d7de0682be859a122d43e3b615b290a0",
+  "confidence": 0.95,
+  "input_report_hashes": {
+    "artifacts/dvs_gesture_v6_finite_family/seed_1701/finite_family_report.json": "d31c657acd4281ff15c8093df43c3f323119195237ecc8fb3b4c5d36af7d097a",
+    "artifacts/dvs_gesture_v6_finite_family/seed_2718/finite_family_report.json": "ddb9773ae68d5e2de6b62d39b1680ffcd4b612d00409026e5dabc7baf5628a65",
+    "artifacts/dvs_gesture_v6_finite_family/seed_3141/finite_family_report.json": "9e8a89b13aec4bf9abb4c4d166dedafc67dc9056bd75157c29e9e493273bc9a5",
+    "artifacts/dvs_gesture_v6_finite_family/seed_5772/finite_family_report.json": "74ec0018efb08c065399b6ad6bd0d16cf35f253eb472d88f63b932bd61538201",
+    "artifacts/dvs_gesture_v6_finite_family/seed_8119/finite_family_report.json": "86c3c0bd3319a8f39150ddb01a687e13b72e00900b4891d7b079cc3bc3d7b9ac",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_1701/finite_family_report.json": "5aacdf2fca7ed144cbf1a1f94078eac733b77fa39c4af2ea310b457645a0e7a3",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_2718/finite_family_report.json": "bcd08a538b3844184d7cb25f41ecd0eca68245dd50d7a15db1a4fbf6f1f308ed",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_3141/finite_family_report.json": "7b5203cf25caa7588598415d3bfbb25cafc3baaa492df5d54661831e0aa32f48",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_5772/finite_family_report.json": "95ab917064a6e2ff6e731f95c8dcb2cb58d063330ed3c74cd0f1422b73a8c631",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_8119/finite_family_report.json": "a85aff2cf73083d5490fe16e5289a9ae1d7db76b0d6fca364564a5243277ddc4",
+    "artifacts/shd_v2_memberwise_static_family/seed_1701/static_family_report.json": "dcac991f1c45c7c9a2e99fabdf2357f35aeb75c5f06b7e11b45303f57f2c6da8",
+    "artifacts/shd_v2_memberwise_static_family/seed_2718/static_family_report.json": "5f12edd928d43d82f266eec3d15b97add8923b2ec6ef6bbbd6b9a47e6fbed45f",
+    "artifacts/shd_v2_memberwise_static_family/seed_3141/static_family_report.json": "5246a658f3385e6d33b4429c536411435ceacc10c7e1119144a7f1281a8f34b5",
+    "artifacts/shd_v2_memberwise_static_family/seed_5772/static_family_report.json": "9d6d86c31ce9ebb66a2d2439410eb11fa105564c898195517a535e461f15d08c",
+    "artifacts/shd_v2_memberwise_static_family/seed_8119/static_family_report.json": "cb660ea761fbe75d3cf569b85b98fabda58270dedde3a6f2405c649f61e08a54",
+    "results/shd_v1/hybrid_family_full_audit_soundness_corrected_v1_summary.json": "a87b81b93da24875265a6d7083c451dae8c08a6ac5fc244cb274a56d838cec71"
+  },
+  "interpretation": "Finite families are exactly enumerated. The continuous SHD row counts every unresolved input as a possible disagreement, so its population bound remains sound even when the analyzer is incomplete.",
+  "per_cell_alpha": 0.0025,
+  "rows": [
+    {
+      "all_seed_verdicts": {
+        "1pp": false,
+        "2pp": false,
+        "5pp": false
+      },
+      "certified_fraction": {
+        "max": 0.42392566782810687,
+        "mean": 0.3872241579558653,
+        "min": 0.3426248548199768,
+        "std": 0.02972016279035903
+      },
+      "falsified_fraction": {
+        "max": 0.6573751451800233,
+        "mean": 0.6127758420441348,
+        "min": 0.5760743321718932,
+        "std": 0.029720162790359047
+      },
+      "family": "finite 16",
+      "samples_per_seed": [
+        861,
+        861,
+        861,
+        861,
+        861
+      ],
+      "seconds_per_input": {
+        "max": 0.00389558037161031,
+        "mean": 0.003847131103333454,
+        "min": 0.0037998170729804433,
+        "std": 3.5140626961966826e-05
+      },
+      "semantic_upper_bound": {
+        "max": 0.7022063584640619,
+        "mean": 0.6590199064342552,
+        "min": 0.6233055050414325,
+        "std": 0.028835268179720524
+      },
+      "task": "SHD",
+      "unknown_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      }
+    },
+    {
+      "all_seed_verdicts": {
+        "1pp": false,
+        "2pp": false,
+        "5pp": false
+      },
+      "certified_fraction": {
+        "max": 0.40301974448315914,
+        "mean": 0.33890824622531934,
+        "min": 0.27409988385598144,
+        "std": 0.04648953606663002
+      },
+      "falsified_fraction": {
+        "max": 0.3879210220673635,
+        "mean": 0.3684088269454123,
+        "min": 0.3042973286875726,
+        "std": 0.03604583459469607
+      },
+      "family": "reset continuous",
+      "samples_per_seed": [
+        861,
+        861,
+        861,
+        861,
+        861
+      ],
+      "seconds_per_input": {
+        "max": 55.28843760000018,
+        "mean": 51.78199366000026,
+        "min": 49.450816000000486,
+        "std": 2.7893463806587513
+      },
+      "semantic_upper_bound": {
+        "max": 0.7675642033471577,
+        "mean": 0.7055840177443777,
+        "min": 0.6437241565504443,
+        "std": 0.04465821258197059
+      },
+      "task": "SHD",
+      "unknown_fraction": {
+        "max": 0.3681765389082462,
+        "mean": 0.2926829268292683,
+        "min": 0.21370499419279906,
+        "std": 0.06100602084399022
+      }
+    },
+    {
+      "all_seed_verdicts": {
+        "1pp": false,
+        "2pp": false,
+        "5pp": false
+      },
+      "certified_fraction": {
+        "max": 0.7307692307692307,
+        "mean": 0.5769230769230769,
+        "min": 0.4519230769230769,
+        "std": 0.1191299201284987
+      },
+      "falsified_fraction": {
+        "max": 0.5480769230769231,
+        "mean": 0.4230769230769231,
+        "min": 0.2692307692307692,
+        "std": 0.11912992012849874
+      },
+      "family": "finite 16",
+      "samples_per_seed": [
+        104,
+        104,
+        104,
+        104,
+        104
+      ],
+      "seconds_per_input": {
+        "max": 0.18164059519236056,
+        "mean": 0.10822593596153289,
+        "min": 0.0855455365384002,
+        "std": 0.04134263528646309
+      },
+      "semantic_upper_bound": {
+        "max": 0.6841272912421181,
+        "mean": 0.5618586587314365,
+        "min": 0.40636370560491697,
+        "std": 0.11792652410968778
+      },
+      "task": "DVS Gesture",
+      "unknown_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      }
+    },
+    {
+      "all_seed_verdicts": {
+        "1pp": false,
+        "2pp": false,
+        "5pp": true
+      },
+      "certified_fraction": {
+        "max": 0.9801831806827643,
+        "mean": 0.9766860949208992,
+        "min": 0.9700249791840133,
+        "std": 0.004027772397151644
+      },
+      "falsified_fraction": {
+        "max": 0.02997502081598668,
+        "mean": 0.02331390507910075,
+        "min": 0.019816819317235636,
+        "std": 0.004027772397151649
+      },
+      "family": "finite 16",
+      "samples_per_seed": [
+        6005,
+        6005,
+        6005,
+        6005,
+        6005
+      ],
+      "seconds_per_input": {
+        "max": 0.03234002181515379,
+        "mean": 0.02456221506411332,
+        "min": 0.01630372436303059,
+        "std": 0.0065993286464946675
+      },
+      "semantic_upper_bound": {
+        "max": 0.036686400480875264,
+        "mean": 0.02930762500229453,
+        "min": 0.0254140791920435,
+        "std": 0.004467556488513586
+      },
+      "task": "N-MNIST",
+      "unknown_fraction": {
+        "max": 0.0,
+        "mean": 0.0,
+        "min": 0.0,
+        "std": 0.0
+      }
+    }
+  ],
+  "rows_csv_hash": "e87ee1d4f0782eb0108f08b2a0df76ac8de16891270ebb5b252c1ef1d4e8d8e6",
+  "schema_version": "SoftwareFamilyCertificateAggregate/v1",
+  "simultaneous_comparisons": 20,
+  "simultaneous_method": "Bonferroni over every task-family-seed cell",
+  "status": "five-seed conditional software certificates; no physical conformance term"
+}

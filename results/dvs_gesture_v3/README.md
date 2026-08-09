@@ -41,16 +41,21 @@ python experiments/aggregate_dvs_gesture.py
 
 ## Fixed-point repair development study
 
-The canonical repair aggregate is `repair_floor_matched_v3_summary.json`.
+The canonical repair aggregate is `repair_floor_matched_v4_summary.json`.
 Certificate-directed and logit-only repair use the same 97 unlabeled calibration
 recordings, 960 trainable scale/bias parameters, and 280 updates. QAT receives
-all 97 labels, exposes 678,560 parameters, and uses the same update count.
+all 97 labels, exposes 678,560 parameters, and uses the same update count. Full
+target retraining uses the same 97 labels and 280 updates from a random
+initialization. It is therefore a matched-label from-scratch baseline rather
+than retraining on the full original training set.
 
 - Certificate-directed recovery: 91.1% mean, 7.8-point standard deviation.
 - Logit-only recovery: 89.3% mean, 8.4-point standard deviation.
 - Global-threshold recovery: 74.8% mean, 8.6-point standard deviation.
 - Labeled QAT recovery: 99.6% mean, 10.8-point standard deviation.
-- Mean simultaneous bounds: 21.5, 15.1, 33.6, and 22.3 points, respectively.
+- Supervised from-scratch recovery: 6.0% mean, 29.0-point standard deviation.
+- Mean simultaneous bounds: 21.5, 15.1, 33.6, 22.3, and 59.9 points,
+  respectively.
 
 The proposed method clears 70% recovery for every seed but beats logit-only in
 only three of five paired seeds. No method certifies a five-point budget. This
@@ -62,7 +67,7 @@ test accuracy before semantic evaluation.
 Regenerate the superseding repair aggregate with:
 
 ```powershell
-python experiments/aggregate_dvs_repairs.py --include-qat --qat-root artifacts/dvs_gesture_v5_qat_nll --suffix matched_v3
+python experiments/aggregate_dvs_repairs.py --include-qat --qat-root artifacts/dvs_gesture_v5_qat_nll --include-supervised --supervised-root artifacts/dvs_gesture_v7_supervised_retraining --suffix matched_v4
 ```
 
 The earlier `repair_floor_summary.json` and `repair_floor_matched_v2_summary.json`

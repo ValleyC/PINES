@@ -50,6 +50,7 @@ def _check_row(row: dict, budgets: dict) -> list[str]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--audit-report", required=True)
+    parser.add_argument("--source-provenance")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
@@ -60,6 +61,17 @@ def main() -> None:
         report = json.load(handle)
     if report.get("schema_version") != "SHDHybridFamilyFullAuditResult/v1":
         raise ValueError("unsupported full hybrid audit artifact")
+    provenance = None
+    if args.source_provenance:
+        provenance_path = root / args.source_provenance
+        with provenance_path.open("r", encoding="utf-8") as handle:
+            provenance = json.load(handle)
+        if provenance.get("schema_version") != (
+            "SHDHybridAuditScientificSourceProvenance/v2"
+        ):
+            raise ValueError("unsupported scientific source provenance")
+        if provenance.get("audit_report_hash") != sha256_file(report_path):
+            raise ValueError("source provenance references a different audit report")
     config = report["config"]
     arithmetic = config.get("analysis_arithmetic", {})
     required_contract = {
@@ -106,8 +118,25 @@ def main() -> None:
         failures.append("duplicate model-input row identity")
     if len(report_rows) != int(report["sample_count"]):
         failures.append("top-level sample count mismatch")
-    if shard_revisions != {str(report["code_revision"])}:
-        failures.append("shards and aggregate do not share one code revision")
+    revision_match = shard_revisions == {str(report["code_revision"])}
+    revision_supplement_valid = bool(
+        provenance
+        and shard_revisions.issubset(
+            {"uncommitted", str(report["code_revision"])}
+        )
+        and provenance.get("audit_report_code_revision")
+        == str(report["code_revision"])
+        and provenance.get("scientific_core_unchanged_since_audit_revision")
+        and provenance.get(
+            "scientific_driver_functions_unchanged_since_audit_revision"
+        )
+        and int(provenance.get("shard_count", -1)) == len(report["shards"])
+        and provenance.get("config_hash") == report["config_hash"]
+    )
+    if not revision_match and not revision_supplement_valid:
+        failures.append(
+            "mixed shard revision metadata lacks a valid source provenance supplement"
+        )
 
     for seed in config["seeds"]:
         positions = sorted(
@@ -134,6 +163,9 @@ def main() -> None:
         "sample_count": len(report_rows),
         "shard_count": len(seen_shards),
         "code_revision_under_test": report["code_revision"],
+        "shard_code_revision_values": sorted(shard_revisions),
+        "revision_metadata_match": revision_match,
+        "revision_supplement_valid": revision_supplement_valid,
         "required_arithmetic_contract": required_contract,
         "missing_or_mismatched_contract_fields": contract_failures,
         "failure_count": len(failures),

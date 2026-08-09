@@ -171,6 +171,14 @@ def main() -> None:
     parser.add_argument(
         "--output-root", default="artifacts/shd_v59_hybrid_full_audit_v1"
     )
+    parser.add_argument(
+        "--worker-count",
+        type=int,
+        help=(
+            "Override process parallelism without changing the frozen scientific "
+            "configuration. This affects scheduling only."
+        ),
+    )
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[1]
@@ -237,10 +245,17 @@ def main() -> None:
     )
 
     run_started = time.perf_counter()
+    worker_count_this_invocation = 0
     if pending:
-        worker_count = min(
-            int(config["execution"]["worker_count"]), len(pending)
+        requested_worker_count = (
+            int(args.worker_count)
+            if args.worker_count is not None
+            else int(config["execution"]["worker_count"])
         )
+        if requested_worker_count < 1:
+            raise ValueError("worker count must be positive")
+        worker_count = min(requested_worker_count, len(pending))
+        worker_count_this_invocation = worker_count
         with ProcessPoolExecutor(max_workers=worker_count) as executor:
             future_map = {
                 executor.submit(_run_shard, task): (task, path)
@@ -334,6 +349,7 @@ def main() -> None:
         "per_seed": per_seed,
         "rows": rows,
         "wall_seconds_this_invocation": time.perf_counter() - run_started,
+        "worker_count_this_invocation": worker_count_this_invocation,
         "sum_shard_seconds": float(sum(shard["seconds"] for shard in shards)),
         "shards": [
             {

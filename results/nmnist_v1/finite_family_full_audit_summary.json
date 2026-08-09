@@ -1,0 +1,53 @@
+{
+  "audit_samples_per_seed": [
+    6005,
+    6005,
+    6005,
+    6005,
+    6005
+  ],
+  "certified_fraction_max": 0.9801831806827643,
+  "certified_fraction_mean": 0.9766860949208992,
+  "certified_fraction_min": 0.9700249791840133,
+  "certified_fraction_std": 0.004027772397151644,
+  "code_revision": "c837ab82d7de0682be859a122d43e3b615b290a0",
+  "elapsed_seconds_mean": 147.4961014600005,
+  "elapsed_seconds_total": 737.4805073000025,
+  "input_report_hashes": {
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_1701/finite_family_report.json": "5aacdf2fca7ed144cbf1a1f94078eac733b77fa39c4af2ea310b457645a0e7a3",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_2718/finite_family_report.json": "bcd08a538b3844184d7cb25f41ecd0eca68245dd50d7a15db1a4fbf6f1f308ed",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_3141/finite_family_report.json": "7b5203cf25caa7588598415d3bfbb25cafc3baaa492df5d54661831e0aa32f48",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_5772/finite_family_report.json": "95ab917064a6e2ff6e731f95c8dcb2cb58d063330ed3c74cd0f1422b73a8c631",
+    "artifacts/nmnist_v3_full_audit_finite_family/seed_8119/finite_family_report.json": "a85aff2cf73083d5490fe16e5289a9ae1d7db76b0d6fca364564a5243277ddc4"
+  },
+  "member_count": 16,
+  "member_semantics_hashes": [
+    "414b9d77d679005e3ab7049b66099bd5419433ac57c87eabe6e77228bbba68c1",
+    "506328f5f688e853fedf1ba40e3f14333f305df5f5cfeae7db2b7cffe3ff4667",
+    "4d508a4e452afb56ebcb40f2095ee460674fc41e941cdbb4bdcf0392280ae97f",
+    "7db1f1b43f697a8550a62fa03faabc574a8c8e0779457f8362c693c43c65c746",
+    "2d7df78ec6c8db877e3404e66b2585a2350499ec0bebedae44a21fb990960295",
+    "e238fb3035f02e3a53322818408a4b0ab2eab83d7015d7b36ba1f40b46d216a7",
+    "b405ff987a778fd3da38713609359bbf352e36f56fdb18abdb43ea2c89c8af35",
+    "be2c47fd653f36dd52ef81e3bb1412d92b03c26be45db023deb6cf87245d65ff",
+    "ed50d0133275a0dcea83cfa79a182d87299e863842dbc97b1e85017ebd4492f3",
+    "43628b98f57e5dcad68a230461a79b46d52c0fe094ed8d2217b5186331356adf",
+    "c7446c2b53813fbba989999169770f1271e53ba3f02081090fa64fd4c97ec71d",
+    "2b25ae05766213663dd7cea58d31c3722f85b4a6e1df173affbf8a33c030f36e",
+    "0b15e288755ec19a981346126b85513adab80d36108dfaf62aecb653a721070d",
+    "41dc4338bcc2fa000188b3cc0e6a09ce6c70b00f27849d33d4c2fcd9521f03e6",
+    "aa596ec4ed2e62e783164df9cc5949cd063c1a755167b2cb69cbf1ede4c1a652",
+    "7275871ecce0b99d8d3cfe86dc7843f7863b464e3a4e494c8f11abb6e85c9a10"
+  ],
+  "observed_unsound_certificates": 0,
+  "rows_csv_hash": "8c148c650aa46d98748bb4a119b774ee4ef5d712c963de8bf80be121bf80d2be",
+  "schema_version": "NMNISTFiniteFamilyAggregate/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed complete-audit exact finite-family emulator evidence; not physical evidence"
+}

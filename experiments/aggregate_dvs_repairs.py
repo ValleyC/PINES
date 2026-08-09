@@ -30,12 +30,19 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--include-qat", action="store_true")
     parser.add_argument("--qat-root")
+    parser.add_argument("--include-supervised", action="store_true")
+    parser.add_argument("--supervised-root")
     parser.add_argument("--suffix", default="")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     artifact_root = root / "artifacts" / "dvs_gesture_v4_repairs"
     output_root = root / "results" / "dvs_gesture_v3"
     methods = METHODS + (("per_platform_qat",) if args.include_qat else ())
+    methods += (
+        ("supervised_target_retraining",)
+        if args.include_supervised
+        else ()
+    )
     suffix = f"_{args.suffix}" if args.suffix else ""
     summary_path = output_root / f"repair_floor{suffix}_summary.json"
     rows_path = output_root / f"repair_floor{suffix}_rows.csv"
@@ -53,6 +60,9 @@ def main() -> None:
             method_artifact_root = (
                 root / args.qat_root
                 if method == "per_platform_qat" and args.qat_root
+                else root / args.supervised_root
+                if method == "supervised_target_retraining"
+                and args.supervised_root
                 else artifact_root
             )
             path = (
@@ -158,8 +168,12 @@ def main() -> None:
     logit_rows = method_rows["logit_only"]
     global_rows = method_rows["global_threshold"]
     qat_rows = method_rows.get("per_platform_qat")
+    supervised_rows = method_rows.get("supervised_target_retraining")
     summary = {
         "schema_version": (
+            "DVSGestureRepairAggregate/v3"
+            if args.include_supervised
+            else
             "DVSGestureRepairAggregate/v2"
             if args.include_qat
             else "DVSGestureRepairAggregate/v1"
@@ -182,6 +196,7 @@ def main() -> None:
             "gradient_steps": 280,
             "simultaneous_alpha_per_report": 0.005,
             "qat_artifact_root": args.qat_root,
+            "supervised_artifact_root": args.supervised_root,
             "selection_uses_test_labels": False,
             "calibration_audit_disjoint": True,
         },
@@ -228,6 +243,30 @@ def main() -> None:
                     ),
                 }
                 if qat_rows is not None
+                else {}
+            ),
+            **(
+                {
+                    "certificate_minus_supervised_retraining": _stats(
+                        [
+                            float(certificate["accuracy_recovery_fraction"])
+                            - float(supervised["accuracy_recovery_fraction"])
+                            for certificate, supervised in zip(
+                                certificate_rows, supervised_rows
+                            )
+                        ]
+                    ),
+                    "certificate_minus_supervised_retraining_bound": _stats(
+                        [
+                            float(certificate["after_certificate_upper_bound"])
+                            - float(supervised["after_certificate_upper_bound"])
+                            for certificate, supervised in zip(
+                                certificate_rows, supervised_rows
+                            )
+                        ]
+                    ),
+                }
+                if supervised_rows is not None
                 else {}
             ),
         },
@@ -289,9 +328,13 @@ def main() -> None:
 
     labels = ("Cert-directed", "Logit-only", "Global threshold") + (
         ("QAT (97 labels)",) if args.include_qat else ()
+    ) + (
+        ("From scratch (97 labels)",) if args.include_supervised else ()
     )
     colors = ("#7570b3", "#1b9e77", "#d95f02") + (
         ("#1f78b4",) if args.include_qat else ()
+    ) + (
+        ("#e7298a",) if args.include_supervised else ()
     )
     recovery = []
     recovery_error = []

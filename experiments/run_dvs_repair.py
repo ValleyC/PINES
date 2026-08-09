@@ -21,6 +21,7 @@ def main() -> None:
             "logit_only",
             "global_threshold",
             "per_platform_qat",
+            "supervised_target_retraining",
         ),
         required=True,
     )

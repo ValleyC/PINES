@@ -1,0 +1,440 @@
+{
+  "area_cover_valid": true,
+  "certified_input_count": 1459,
+  "certified_input_fraction": 0.3389082462253194,
+  "certified_parameter_fraction_quantiles": {
+    "median": 0.6779496179576053,
+    "q10": 0.0,
+    "q25": 0.09117837199305334,
+    "q75": 1.0,
+    "q90": 1.0
+  },
+  "code_revision": "c837ab82d7de0682be859a122d43e3b615b290a0",
+  "dependence_note": "The same audit inputs are evaluated under all five trained models; therefore pooled model-input rows are not independent Bernoulli trials.",
+  "finite_grid_falsification": {
+    "certified_fraction_of_grid_stable_inputs": 0.5305454545454545,
+    "certified_grid_violation_count": 0,
+    "counterexample_uncertified_count": 1555,
+    "coverage_minimum_grid_margin_spearman": {
+      "correlation": 0.7554976938409657,
+      "p_value": 0.0
+    },
+    "grid_counterexample_input_count": 1555,
+    "grid_identity_count": 2750,
+    "grid_identity_fraction": 0.6387921022067363,
+    "points_per_input": 81,
+    "resolution_per_axis": 9,
+    "stable_but_uncertified_count": 1291
+  },
+  "full_audit_gate_passed": true,
+  "interpretation": "Every certified input is proved invariant across the full joint continuous box. The grid and Sobol designs can falsify but cannot strengthen that proof. Stable-but-uncertified inputs measure analyzer or fixed-budget slack; sampled counterexamples measure genuine observed semantic instability. Because the certificate split was reused during the broader research program, coverage intervals quantify input and training-seed variability but are not a final preregistered population claim.",
+  "joint_grid_sobol_falsification": {
+    "counterexample_union_input_count": 1586,
+    "counterexample_union_uncertified_count": 1586,
+    "joint_identity_count": 2719,
+    "joint_identity_fraction": 0.6315911730545877
+  },
+  "mean_certified_parameter_fraction": 0.5736114427736212,
+  "median_certified_parameter_fraction": 0.6779496179576053,
+  "per_reference_prediction": [
+    {
+      "certified_input_fraction": 0.024691358024691357,
+      "grid_identity_fraction": 0.24279835390946503,
+      "mean_certified_parameter_fraction": 0.16862435936504272,
+      "reference_prediction": 0,
+      "sample_count": 243
+    },
+    {
+      "certified_input_fraction": 0.08666666666666667,
+      "grid_identity_fraction": 0.36666666666666664,
+      "mean_certified_parameter_fraction": 0.3559032889344485,
+      "reference_prediction": 1,
+      "sample_count": 150
+    },
+    {
+      "certified_input_fraction": 0.515695067264574,
+      "grid_identity_fraction": 0.874439461883408,
+      "mean_certified_parameter_fraction": 0.7984880803180483,
+      "reference_prediction": 2,
+      "sample_count": 223
+    },
+    {
+      "certified_input_fraction": 0.33771929824561403,
+      "grid_identity_fraction": 0.7368421052631579,
+      "mean_certified_parameter_fraction": 0.6482221271808702,
+      "reference_prediction": 3,
+      "sample_count": 228
+    },
+    {
+      "certified_input_fraction": 0.35,
+      "grid_identity_fraction": 0.6666666666666666,
+      "mean_certified_parameter_fraction": 0.6281987309398444,
+      "reference_prediction": 4,
+      "sample_count": 180
+    },
+    {
+      "certified_input_fraction": 0.47368421052631576,
+      "grid_identity_fraction": 0.7177033492822966,
+      "mean_certified_parameter_fraction": 0.6923201872991857,
+      "reference_prediction": 5,
+      "sample_count": 209
+    },
+    {
+      "certified_input_fraction": 0.7162162162162162,
+      "grid_identity_fraction": 0.8783783783783784,
+      "mean_certified_parameter_fraction": 0.8794051322220123,
+      "reference_prediction": 6,
+      "sample_count": 222
+    },
+    {
+      "certified_input_fraction": 0.16355140186915887,
+      "grid_identity_fraction": 0.6822429906542056,
+      "mean_certified_parameter_fraction": 0.5106847051590434,
+      "reference_prediction": 7,
+      "sample_count": 214
+    },
+    {
+      "certified_input_fraction": 0.6693877551020408,
+      "grid_identity_fraction": 0.9346938775510204,
+      "mean_certified_parameter_fraction": 0.8856753402184294,
+      "reference_prediction": 8,
+      "sample_count": 245
+    },
+    {
+      "certified_input_fraction": 0.04054054054054054,
+      "grid_identity_fraction": 0.35585585585585583,
+      "mean_certified_parameter_fraction": 0.2893878233613631,
+      "reference_prediction": 9,
+      "sample_count": 222
+    },
+    {
+      "certified_input_fraction": 0.13145539906103287,
+      "grid_identity_fraction": 0.3474178403755869,
+      "mean_certified_parameter_fraction": 0.3481323893376527,
+      "reference_prediction": 10,
+      "sample_count": 213
+    },
+    {
+      "certified_input_fraction": 0.18181818181818182,
+      "grid_identity_fraction": 0.6254545454545455,
+      "mean_certified_parameter_fraction": 0.4663802216584062,
+      "reference_prediction": 11,
+      "sample_count": 275
+    },
+    {
+      "certified_input_fraction": 0.13875598086124402,
+      "grid_identity_fraction": 0.36363636363636365,
+      "mean_certified_parameter_fraction": 0.3316911106655837,
+      "reference_prediction": 12,
+      "sample_count": 209
+    },
+    {
+      "certified_input_fraction": 0.06349206349206349,
+      "grid_identity_fraction": 0.3333333333333333,
+      "mean_certified_parameter_fraction": 0.25792005152015807,
+      "reference_prediction": 13,
+      "sample_count": 189
+    },
+    {
+      "certified_input_fraction": 0.32160804020100503,
+      "grid_identity_fraction": 0.6130653266331658,
+      "mean_certified_parameter_fraction": 0.581407848698071,
+      "reference_prediction": 14,
+      "sample_count": 199
+    },
+    {
+      "certified_input_fraction": 0.6909090909090909,
+      "grid_identity_fraction": 0.9136363636363637,
+      "mean_certified_parameter_fraction": 0.9020859521485862,
+      "reference_prediction": 15,
+      "sample_count": 220
+    },
+    {
+      "certified_input_fraction": 0.6090909090909091,
+      "grid_identity_fraction": 0.8772727272727273,
+      "mean_certified_parameter_fraction": 0.8339903301714954,
+      "reference_prediction": 16,
+      "sample_count": 220
+    },
+    {
+      "certified_input_fraction": 0.049019607843137254,
+      "grid_identity_fraction": 0.5980392156862745,
+      "mean_certified_parameter_fraction": 0.31776145774105796,
+      "reference_prediction": 17,
+      "sample_count": 204
+    },
+    {
+      "certified_input_fraction": 0.8828451882845189,
+      "grid_identity_fraction": 0.9707112970711297,
+      "mean_certified_parameter_fraction": 0.969153380737037,
+      "reference_prediction": 18,
+      "sample_count": 239
+    },
+    {
+      "certified_input_fraction": 0.14427860696517414,
+      "grid_identity_fraction": 0.4925373134328358,
+      "mean_certified_parameter_fraction": 0.45320307625165024,
+      "reference_prediction": 19,
+      "sample_count": 201
+    }
+  ],
+  "per_seed": [
+    {
+      "certified_grid_violation_count": 0,
+      "certified_input_count": 347,
+      "certified_input_fraction": 0.40301974448315914,
+      "certified_input_fraction_exact_95_percent_interval": [
+        0.3700556118284095,
+        0.43664995317920846
+      ],
+      "confirmation_excluding_screen": {
+        "certified_input_count": 333,
+        "certified_input_fraction": 0.4016887816646562,
+        "certified_input_fraction_exact_95_percent_interval": [
+          0.3681143798889805,
+          0.43596472942795306
+        ],
+        "grid_identity_count": 517,
+        "grid_identity_fraction": 0.623642943305187,
+        "joint_grid_sobol_identity_count": 512,
+        "joint_grid_sobol_identity_fraction": 0.617611580217129,
+        "sample_count": 829
+      },
+      "counterexample_uncertified_count": 324,
+      "counterexample_union_uncertified_count": 330,
+      "grid_identity_count": 537,
+      "grid_identity_fraction": 0.6236933797909407,
+      "joint_grid_sobol_identity_count": 531,
+      "joint_grid_sobol_identity_fraction": 0.6167247386759582,
+      "mean_certified_parameter_fraction": 0.6133004019309969,
+      "median_seconds": 49.75901969999995,
+      "sample_count": 861,
+      "seed": 1701,
+      "stable_but_uncertified_count": 190
+    },
+    {
+      "certified_grid_violation_count": 0,
+      "certified_input_count": 236,
+      "certified_input_fraction": 0.27409988385598144,
+      "certified_input_fraction_exact_95_percent_interval": [
+        0.24453998594657672,
+        0.3052147712691259
+      ],
+      "confirmation_excluding_screen": {
+        "certified_input_count": 226,
+        "certified_input_fraction": 0.27261761158021713,
+        "certified_input_fraction_exact_95_percent_interval": [
+          0.24255477662730354,
+          0.3043067854221945
+        ],
+        "grid_identity_count": 513,
+        "grid_identity_fraction": 0.6188178528347407,
+        "joint_grid_sobol_identity_count": 507,
+        "joint_grid_sobol_identity_fraction": 0.6115802171290712,
+        "sample_count": 829
+      },
+      "counterexample_uncertified_count": 327,
+      "counterexample_union_uncertified_count": 334,
+      "grid_identity_count": 534,
+      "grid_identity_fraction": 0.6202090592334495,
+      "joint_grid_sobol_identity_count": 527,
+      "joint_grid_sobol_identity_fraction": 0.6120789779326364,
+      "mean_certified_parameter_fraction": 0.5097435509650113,
+      "median_seconds": 54.32014960000015,
+      "sample_count": 861,
+      "seed": 2718,
+      "stable_but_uncertified_count": 298
+    },
+    {
+      "certified_grid_violation_count": 0,
+      "certified_input_count": 290,
+      "certified_input_fraction": 0.33681765389082463,
+      "certified_input_fraction_exact_95_percent_interval": [
+        0.30527227962711556,
+        0.369484743716504
+      ],
+      "confirmation_excluding_screen": {
+        "certified_input_count": 276,
+        "certified_input_fraction": 0.33293124246079614,
+        "certified_input_fraction_exact_95_percent_interval": [
+          0.30089057365051547,
+          0.366165207959832
+        ],
+        "grid_identity_count": 509,
+        "grid_identity_fraction": 0.6139927623642943,
+        "joint_grid_sobol_identity_count": 504,
+        "joint_grid_sobol_identity_fraction": 0.6079613992762364,
+        "sample_count": 829
+      },
+      "counterexample_uncertified_count": 329,
+      "counterexample_union_uncertified_count": 334,
+      "grid_identity_count": 532,
+      "grid_identity_fraction": 0.6178861788617886,
+      "joint_grid_sobol_identity_count": 527,
+      "joint_grid_sobol_identity_fraction": 0.6120789779326364,
+      "mean_certified_parameter_fraction": 0.5600631561257013,
+      "median_seconds": 50.09154540000054,
+      "sample_count": 861,
+      "seed": 3141,
+      "stable_but_uncertified_count": 242
+    },
+    {
+      "certified_grid_violation_count": 0,
+      "certified_input_count": 304,
+      "certified_input_fraction": 0.3530778164924506,
+      "certified_input_fraction_exact_95_percent_interval": [
+        0.32112315643050465,
+        0.3860421586393514
+      ],
+      "confirmation_excluding_screen": {
+        "certified_input_count": 293,
+        "certified_input_fraction": 0.353437876960193,
+        "certified_input_fraction_exact_95_percent_interval": [
+          0.32086403802634256,
+          0.3870581901229136
+        ],
+        "grid_identity_count": 522,
+        "grid_identity_fraction": 0.6296743063932448,
+        "joint_grid_sobol_identity_count": 512,
+        "joint_grid_sobol_identity_fraction": 0.617611580217129,
+        "sample_count": 829
+      },
+      "counterexample_uncertified_count": 316,
+      "counterexample_union_uncertified_count": 326,
+      "grid_identity_count": 545,
+      "grid_identity_fraction": 0.6329849012775842,
+      "joint_grid_sobol_identity_count": 535,
+      "joint_grid_sobol_identity_fraction": 0.6213704994192799,
+      "mean_certified_parameter_fraction": 0.5916345238593442,
+      "median_seconds": 55.28843760000018,
+      "sample_count": 861,
+      "seed": 5772,
+      "stable_but_uncertified_count": 241
+    },
+    {
+      "certified_grid_violation_count": 0,
+      "certified_input_count": 282,
+      "certified_input_fraction": 0.32752613240418116,
+      "certified_input_fraction_exact_95_percent_interval": [
+        0.29623328707588364,
+        0.3600047580059342
+      ],
+      "confirmation_excluding_screen": {
+        "certified_input_count": 271,
+        "certified_input_fraction": 0.32689987937273823,
+        "certified_input_fraction_exact_95_percent_interval": [
+          0.29502887829695046,
+          0.3600073931696458
+        ],
+        "grid_identity_count": 577,
+        "grid_identity_fraction": 0.6960193003618818,
+        "joint_grid_sobol_identity_count": 574,
+        "joint_grid_sobol_identity_fraction": 0.6924004825090471,
+        "sample_count": 829
+      },
+      "counterexample_uncertified_count": 259,
+      "counterexample_union_uncertified_count": 262,
+      "grid_identity_count": 602,
+      "grid_identity_fraction": 0.6991869918699187,
+      "joint_grid_sobol_identity_count": 599,
+      "joint_grid_sobol_identity_fraction": 0.6957026713124274,
+      "mean_certified_parameter_fraction": 0.5933155809870524,
+      "median_seconds": 49.450816000000486,
+      "sample_count": 861,
+      "seed": 8119,
+      "stable_but_uncertified_count": 320
+    }
+  ],
+  "primary_confirmation_excluding_screen": {
+    "certified_grid_violation_count": 0,
+    "certified_input_count": 1399,
+    "certified_input_fraction": 0.33751507840772016,
+    "certified_joint_falsification_violation_count": 0,
+    "certified_sobol_violation_count": 0,
+    "estimand_note": "Input-cluster uncertainty conditions on these five trained models; training-seed uncertainty conditions on these 829 audit inputs. No single joint population interval is claimed.",
+    "exclusion_rule": "audit positions 0 through 31 per seed were used by the advancement screen",
+    "grid_identity_count": 2638,
+    "grid_identity_fraction": 0.6364294330518697,
+    "input_cluster_bootstrap_95_percent_interval": [
+      0.31290711700844387,
+      0.36260554885404106
+    ],
+    "input_cluster_bootstrap_repetitions": 100000,
+    "input_cluster_bootstrap_seed": 20260808,
+    "joint_grid_sobol_identity_count": 2609,
+    "joint_grid_sobol_identity_fraction": 0.6294330518697225,
+    "passes_20_percent_gate": true,
+    "sample_count": 4145,
+    "trained_model_count": 5,
+    "training_seed_mean_t_95_percent_interval": [
+      0.27955059450913977,
+      0.39547956230630066
+    ],
+    "unique_input_count": 829
+  },
+  "route_assessment": {
+    "claim_all_execution_semantics_axes": false,
+    "claim_final_shd_population_certificate_fraction": false,
+    "claim_physical_certificate": false,
+    "claim_second_event_task": false,
+    "development_tractability_gate_passed": true,
+    "requires_new_preregistered_sequestered_audit": true
+  },
+  "runtime": {
+    "grid_seconds": 54.15855530000408,
+    "median_seconds_per_input": 51.45847529999992,
+    "sobol_seconds": 510.9449595000042,
+    "sum_shard_seconds": 239488.9681366,
+    "wall_seconds_this_invocation": 835.2573563999904
+  },
+  "sample_count": 4305,
+  "schema_version": "SHDHybridFamilyFullAuditSummary/v1",
+  "scope": {
+    "integration": "forward Euler",
+    "relative_threshold_scale_bounds": [
+      -0.01,
+      0.01
+    ],
+    "relative_timestep_bounds": [
+      -0.01,
+      0.01
+    ],
+    "selection": "all 861 frozen certificate-audit inputs per seed",
+    "sequestered_from_all_prior_method_development": false,
+    "target_reset": "reset-to-value",
+    "task": "SHD recurrent SNN"
+  },
+  "screen_comparison": {
+    "full_minus_screen_certified_fraction": -0.02359175377468059,
+    "screen_certified_input_fraction": 0.3625,
+    "screen_sample_count": 160
+  },
+  "seed_count": 5,
+  "sobol_falsification": {
+    "certified_sobol_violation_count": 0,
+    "confirmation_certified_sobol_violation_count": 0,
+    "points_per_input": 1024,
+    "sobol_identity_count": 2722,
+    "sobol_identity_fraction": 0.632288037166086,
+    "sobol_seed": 7319
+  },
+  "source_code_revisions": {
+    "certificate_audit": "c837ab82d7de0682be859a122d43e3b615b290a0",
+    "certificate_shards": [
+      "c837ab82d7de0682be859a122d43e3b615b290a0",
+      "uncommitted"
+    ],
+    "grid_validation": "c837ab82d7de0682be859a122d43e3b615b290a0",
+    "revision_metadata_match": false,
+    "revision_supplement_valid": true,
+    "sobol_validation": "c837ab82d7de0682be859a122d43e3b615b290a0"
+  },
+  "source_report_hashes": {
+    "artifacts/shd_v68_hybrid_full_audit_soundness_corrected_v1/hybrid_family_full_audit.json": "0d67dc5bc1dd7e6496a3a0296b030253eacca71943fee8d6147e77bb40c43ea1",
+    "artifacts/shd_v68_hybrid_full_audit_soundness_corrected_v1/scientific_source_provenance.json": "b37d3cc9e792a0d21c0313028ea4be84817361ad56195d5901db462705a43a5c",
+    "artifacts/shd_v69_hybrid_full_audit_grid_soundness_corrected_v1/hybrid_audit_grid_validation.json": "4e84e15ee4c930123f23130f5b43bab8e481fe0481260e0385b23a06ed434764",
+    "artifacts/shd_v70_hybrid_full_audit_sobol_soundness_corrected_v1/hybrid_audit_sobol_validation.json": "5d5192f4726cce9179d948eab907a0727ee4e034ff2e7caaf803cf9edfb6eb30",
+    "results/shd_v1/hybrid_family_audit_summary.json": "cf91401ea523c15991d30f7cf5eb5ac8655f2924b77ba6bd5e0c66cc50780c98"
+  },
+  "status": "five-seed confirmation-style all-input audit plus canonical grid and Sobol falsification diagnostics; not a sequestered final audit"
+}

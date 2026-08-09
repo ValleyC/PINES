@@ -218,6 +218,7 @@ def run_dvs_repair(
         "logit_only",
         "global_threshold",
         "per_platform_qat",
+        "supervised_target_retraining",
     }:
         raise ValueError("unsupported DVS repair method")
     conditions = primary_semantic_conditions()
@@ -418,7 +419,8 @@ def run_dvs_repair(
         selected = {"best_calibration_disagreements": best_disagreement}
     else:
         model = build_dvs_conv_srnn(sensor_width, sensor_height, train_config)
-        model.load_state_dict(checkpoint["state_dict"])
+        if method == "per_platform_qat":
+            model.load_state_dict(checkpoint["state_dict"])
         model.to(device)
         optimizer = torch.optim.AdamW(
             model.parameters(),
@@ -510,7 +512,9 @@ def run_dvs_repair(
         best_model = model
         best_config = train_config
         selected = {
-            "initialization": "source",
+            "initialization": (
+                "source" if method == "per_platform_qat" else "random"
+            ),
             "best_calibration_accuracy": best_accuracy,
             "best_calibration_loss": best_loss,
         }
@@ -597,7 +601,10 @@ def run_dvs_repair(
             ["global_threshold_scale"]
             if method == "global_threshold"
             else ["all_weights", "conv_and_hidden_bias"]
-            if method == "per_platform_qat"
+            if method in {
+                "per_platform_qat",
+                "supervised_target_retraining",
+            }
             else [
                 "per_channel_incoming_weight_scale",
                 "per_hidden_output_weight_scale",
@@ -608,6 +615,9 @@ def run_dvs_repair(
             "source-initialized supervised target-semantics QAT with NLL on "
             "aggregated window probabilities"
             if method == "per_platform_qat"
+            else "random-initialized supervised target-semantics retraining with "
+            "NLL on aggregated window probabilities"
+            if method == "supervised_target_retraining"
             else "label-free hard-semantics global threshold search"
             if method == "global_threshold"
             else "restricted label-free target-semantics calibration"

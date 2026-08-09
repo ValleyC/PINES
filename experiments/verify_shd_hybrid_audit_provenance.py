@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import platform
 import subprocess
@@ -22,6 +23,19 @@ def _git(root: Path, *arguments: str) -> str:
     ).strip()
 
 
+def _function_manifest(source: str, names: tuple[str, ...]) -> dict[str, str]:
+    tree = ast.parse(source)
+    definitions = {
+        node.name: ast.get_source_segment(source, node)
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    missing = [name for name in names if not definitions.get(name)]
+    if missing:
+        raise ValueError(f"driver functions missing from source: {missing}")
+    return {name: sha256_json(definitions[name]) for name in names}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -30,6 +44,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--config", default="configs/experiments/shd_hybrid_full_audit_v3.json"
+    )
+    parser.add_argument(
+        "--audit-report",
+        default=(
+            "artifacts/shd_v68_hybrid_full_audit_soundness_corrected_v1/"
+            "hybrid_family_full_audit.json"
+        ),
     )
     parser.add_argument(
         "--output",
@@ -43,6 +64,8 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     audit_root = root / args.audit_root
     config_path = root / args.config
+    audit_report_path = root / args.audit_report
+    audit_report = json.loads(audit_report_path.read_text(encoding="utf-8"))
     config = json.loads(config_path.read_text(encoding="utf-8"))
     configured_seeds = [int(seed) for seed in config["seeds"]]
     configured_shards_per_seed = int(config["execution"]["shards_per_seed"])
@@ -71,11 +94,28 @@ def main() -> None:
     if shard_config_hashes != {config_hash}:
         raise ValueError("current config does not match every immutable shard")
 
-    source_paths = sorted((root / "src" / "pines").rglob("*.py"))
+    source_paths = [
+        root / path
+        for path in (
+            "src/pines/abstract.py",
+            "src/pines/affine.py",
+            "src/pines/artifacts.py",
+            "src/pines/emulator.py",
+            "src/pines/models.py",
+            "src/pines/protocol.py",
+            "src/pines/semantics.py",
+            "src/pines/statistics.py",
+            "src/pines/torch_emulator.py",
+            "src/pines/benchmarks/semantic_matrix.py",
+            "src/pines/benchmarks/shd.py",
+        )
+    ]
     driver_path = root / "experiments" / "run_shd_hybrid_family_full_audit.py"
-    source_paths.append(driver_path)
     relative_sources = [path.relative_to(root).as_posix() for path in source_paths]
     head = _git(root, "rev-parse", "HEAD")
+    audit_revision = str(audit_report["code_revision"])
+    if len(audit_revision) != 40:
+        raise ValueError("audit report does not contain a Git revision")
     dirty_dependencies = _git(
         root, "diff", "--name-only", head, "--", *relative_sources
     ).splitlines()
@@ -84,25 +124,53 @@ def main() -> None:
             "scientific source differs from recorded HEAD: "
             + ", ".join(dirty_dependencies)
         )
+    changed_since_audit = _git(
+        root,
+        "diff",
+        "--name-only",
+        audit_revision,
+        head,
+        "--",
+        *relative_sources,
+    ).splitlines()
+    if changed_since_audit:
+        raise ValueError(
+            "scientific core changed after the audit revision: "
+            + ", ".join(changed_since_audit)
+        )
     source_hashes = {
         relative: sha256_file(root / relative) for relative in relative_sources
     }
+    driver_relative = driver_path.relative_to(root).as_posix()
+    driver_functions = ("_box_and_certifier", "_run_shard", "_validated_shard")
+    audit_driver = _git(root, "show", f"{audit_revision}:{driver_relative}")
+    current_driver = driver_path.read_text(encoding="utf-8")
+    audit_driver_functions = _function_manifest(audit_driver, driver_functions)
+    current_driver_functions = _function_manifest(current_driver, driver_functions)
+    if audit_driver_functions != current_driver_functions:
+        raise ValueError("scientific driver functions changed after the audit")
 
     shard_revisions = sorted({str(shard["code_revision"]) for shard in shards})
     report = {
-        "schema_version": "SHDHybridAuditScientificSourceProvenance/v1",
+        "schema_version": "SHDHybridAuditScientificSourceProvenance/v2",
         "status": (
             "independent post-run provenance supplement for worker shards whose "
             "Git revision lookup failed"
         ),
         "audit_root": args.audit_root.replace("\\", "/"),
+        "audit_report": args.audit_report.replace("\\", "/"),
+        "audit_report_hash": sha256_file(audit_report_path),
+        "audit_report_code_revision": audit_revision,
         "shard_count": len(shard_paths),
         "expected_shard_count": expected_total,
         "shard_code_revision_values": shard_revisions,
         "git_head": head,
         "scientific_sources_match_git_head": True,
+        "scientific_core_unchanged_since_audit_revision": True,
         "scientific_source_hashes": source_hashes,
         "scientific_source_manifest_hash": sha256_json(source_hashes),
+        "scientific_driver_function_hashes": current_driver_functions,
+        "scientific_driver_functions_unchanged_since_audit_revision": True,
         "config_path": args.config.replace("\\", "/"),
         "config_hash": config_hash,
         "config_hash_matches_every_shard": True,
@@ -114,10 +182,10 @@ def main() -> None:
             "scipy": scipy.__version__,
         },
         "assumption": (
-            "The long-lived worker processes imported these dependency files before "
-            "the first shard. The certifier package and audit driver remain byte-for-byte "
-            "at Git HEAD; the only scientific run-time configuration is independently "
-            "identified by the hash embedded in every shard."
+            "Worker subprocesses that could not query Git recorded uncommitted. The "
+            "scientific dependency closure and the three driver functions that construct "
+            "and execute each shard are unchanged from the aggregate report revision. "
+            "Scheduling-only driver changes do not alter scientific results."
         ),
     }
     write_json_immutable(root / args.output, report)

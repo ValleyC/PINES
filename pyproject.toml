@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Anonymous Authors"}]
-dependencies = ["numpy>=2.0"]
+dependencies = ["numpy>=1.26,<2.6"]
 
 [project.optional-dependencies]
 dev = [
@@ -20,7 +20,12 @@ dev = [
     "matplotlib>=3.9",
     "scipy>=1.14",
 ]
-benchmarks = ["h5py>=3.11", "matplotlib>=3.9", "scipy>=1.14"]
+benchmarks = [
+    "h5py>=3.11",
+    "matplotlib>=3.9",
+    "scipy>=1.14",
+]
+datasets = ["tonic>=1.6,<1.7"]
 nir = ["nir>=1.0"]
 torch = ["torch>=2.5"]
 

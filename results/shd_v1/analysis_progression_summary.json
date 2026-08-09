@@ -1,0 +1,43 @@
+{
+  "box_hash": "b8235c15db4603388093233785d81111f94faa1a0e73fe31f40f3a6cb8959827",
+  "code_revision": "c837ab82d7de0682be859a122d43e3b615b290a0",
+  "contract": "reset-to-value with joint plus/minus one-percent timestep and threshold ranges",
+  "dataset_index": 6,
+  "input_report_hashes": {
+    "artifacts/shd_v31_guard_guided_affine/seed_1701/reset_to_value_adaptive_affine.json": "d9e7bdd8f360e338bbbcd5a4a60f4321e306b5d1ea6e36535cc01eefe3e69571",
+    "artifacts/shd_v50_rounding_guard_residuals/seed_1701/reset_to_value_guard_cuts.json": "84b9b52945613480d978e7fe8b74d1fcc7daf0a65a75def1916a0eef763e8d16",
+    "artifacts/shd_v56_residual_polygon_branches_all/seed_1701/reset_to_value_polygon_branches.json": "d737e7af2749e9482946859aa2c77c5a1424f1fb7dd04f221bb7f1d20e757cdc"
+  },
+  "interpretation": "Shared affine boxes preserve semantic dependence but leave guard ambiguity. Polygonal cuts close most of the parameter area. Exact local enumeration of the remaining guard branches completes the certificate for the same input and contract.",
+  "model_hash": "a3c56d1d56c161f62455f3df21e37d36ebc2e85239a34778b911e15b82877b77",
+  "rows": [
+    {
+      "analysis": "shared affine boxes",
+      "certified_parameter_fraction": 0.8634643554687573,
+      "full_certificate": false,
+      "p99_active_branches": 0,
+      "seconds": 98.95234900014475,
+      "unresolved_regions": 1984
+    },
+    {
+      "analysis": "polygonal guard cuts",
+      "certified_parameter_fraction": 0.9975570698674644,
+      "full_certificate": false,
+      "p99_active_branches": 0,
+      "seconds": 221.18450689991005,
+      "unresolved_regions": 3365
+    },
+    {
+      "analysis": "polygonal cuts and local branch closure",
+      "certified_parameter_fraction": 1.0,
+      "full_certificate": true,
+      "p99_active_branches": 3,
+      "seconds": 324.4624063000083,
+      "unresolved_regions": 0
+    }
+  ],
+  "rows_csv_hash": "a5569accf757f841df30d0f193f7933a805b528cc8b59130b21106a521e3edfb",
+  "schema_version": "SHDAnalysisProgressionAggregate/v1",
+  "seed": 1701,
+  "status": "sound same-input method-development comparison; not a population certificate"
+}

@@ -1,0 +1,4 @@
+analysis,certified_parameter_fraction,full_certificate,seconds,unresolved_regions,p99_active_branches
+shared affine boxes,0.8634643554687573,False,98.95234900014475,1984,0
+polygonal guard cuts,0.9975570698674644,False,221.18450689991005,3365,0
+polygonal cuts and local branch closure,1.0,True,324.4624063000083,0,3

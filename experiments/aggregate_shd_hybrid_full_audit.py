@@ -73,6 +73,7 @@ def main() -> None:
     parser.add_argument("--audit-report", required=True)
     parser.add_argument("--grid-report", required=True)
     parser.add_argument("--sobol-report", required=True)
+    parser.add_argument("--source-provenance")
     parser.add_argument(
         "--screen-summary",
         default="results/shd_v1/hybrid_family_audit_summary.json",
@@ -100,6 +101,17 @@ def main() -> None:
         sobol = json.load(handle)
     with screen_path.open("r", encoding="utf-8") as handle:
         screen = json.load(handle)
+    provenance = None
+    if args.source_provenance:
+        provenance_path = root / args.source_provenance
+        with provenance_path.open("r", encoding="utf-8") as handle:
+            provenance = json.load(handle)
+        if provenance.get("schema_version") != (
+            "SHDHybridAuditScientificSourceProvenance/v2"
+        ):
+            raise ValueError("unsupported scientific source provenance")
+        if provenance.get("audit_report_hash") != sha256_file(audit_path):
+            raise ValueError("source provenance references a different audit report")
     if audit.get("schema_version") != "SHDHybridFamilyFullAuditResult/v1":
         raise ValueError("unsupported full hybrid audit report")
     if grid.get("schema_version") != "SHDHybridAuditGridValidation/v1":
@@ -120,8 +132,25 @@ def main() -> None:
         if shard.get("config_hash") != audit["config_hash"]:
             raise ValueError(f"audit shard config mismatch: {shard_path}")
         shard_revisions.add(shard.get("code_revision"))
-    if shard_revisions != {audit["code_revision"]}:
-        raise ValueError("audit shards do not share the report code revision")
+    revision_match = shard_revisions == {audit["code_revision"]}
+    revision_supplement_valid = bool(
+        provenance
+        and shard_revisions.issubset(
+            {"uncommitted", str(audit["code_revision"])}
+        )
+        and provenance.get("audit_report_code_revision")
+        == str(audit["code_revision"])
+        and provenance.get("scientific_core_unchanged_since_audit_revision")
+        and provenance.get(
+            "scientific_driver_functions_unchanged_since_audit_revision"
+        )
+        and int(provenance.get("shard_count", -1)) == len(audit["shards"])
+        and provenance.get("config_hash") == audit["config_hash"]
+    )
+    if not revision_match and not revision_supplement_valid:
+        raise ValueError(
+            "mixed shard revision metadata lacks a valid source provenance supplement"
+        )
 
     audit_rows = {
         (row["seed"], row["audit_position"], row["dataset_index"]): row
@@ -152,6 +181,10 @@ def main() -> None:
     samples = len(audit_rows)
     certified = sum(row["certified"] for row in audit_rows.values())
     stable = sum(row["grid_identity"] for row in grid_rows.values())
+    joint_identity = sum(
+        grid_rows[key]["grid_identity"] and sobol_rows[key]["sobol_identity"]
+        for key in audit_rows
+    )
     violations = sum(
         audit_rows[key]["certified"] and not grid_rows[key]["grid_identity"]
         for key in audit_rows
@@ -162,6 +195,14 @@ def main() -> None:
     )
     counterexample_uncertified = sum(
         not audit_rows[key]["certified"] and not grid_rows[key]["grid_identity"]
+        for key in audit_rows
+    )
+    counterexample_union_uncertified = sum(
+        not audit_rows[key]["certified"]
+        and not (
+            grid_rows[key]["grid_identity"]
+            and sobol_rows[key]["sobol_identity"]
+        )
         for key in audit_rows
     )
     confidence = 0.95
@@ -246,6 +287,11 @@ def main() -> None:
         seed_samples = len(keys)
         seed_certified = sum(audit_rows[key]["certified"] for key in keys)
         seed_stable = sum(grid_rows[key]["grid_identity"] for key in keys)
+        seed_joint_identity = sum(
+            grid_rows[key]["grid_identity"]
+            and sobol_rows[key]["sobol_identity"]
+            for key in keys
+        )
         labels.append(str(seed))
         seed_confirmation_keys = [
             key
@@ -288,6 +334,18 @@ def main() -> None:
                 ),
                 "counterexample_uncertified_count": sum(
                     not grid_rows[key]["grid_identity"] for key in keys
+                ),
+                "joint_grid_sobol_identity_count": seed_joint_identity,
+                "joint_grid_sobol_identity_fraction": (
+                    seed_joint_identity / seed_samples
+                ),
+                "counterexample_union_uncertified_count": sum(
+                    not audit_rows[key]["certified"]
+                    and not (
+                        grid_rows[key]["grid_identity"]
+                        and sobol_rows[key]["sobol_identity"]
+                    )
+                    for key in keys
                 ),
                 "confirmation_excluding_screen": {
                     "sample_count": len(seed_confirmation_keys),
@@ -455,6 +513,14 @@ def main() -> None:
                 confirmation_sobol_violations
             ),
         },
+        "joint_grid_sobol_falsification": {
+            "joint_identity_count": joint_identity,
+            "joint_identity_fraction": joint_identity / samples,
+            "counterexample_union_input_count": samples - joint_identity,
+            "counterexample_union_uncertified_count": (
+                counterexample_union_uncertified
+            ),
+        },
         "screen_comparison": {
             "screen_sample_count": int(screen["sample_count"]),
             "screen_certified_input_fraction": float(
@@ -488,12 +554,23 @@ def main() -> None:
             str(screen_path.relative_to(root)).replace("\\", "/"): sha256_file(
                 screen_path
             ),
+            **(
+                {
+                    str(provenance_path.relative_to(root)).replace(
+                        "\\", "/"
+                    ): sha256_file(provenance_path)
+                }
+                if provenance is not None
+                else {}
+            ),
         },
         "source_code_revisions": {
             "certificate_audit": audit["code_revision"],
             "certificate_shards": sorted(shard_revisions),
             "grid_validation": grid["code_revision"],
             "sobol_validation": sobol["code_revision"],
+            "revision_metadata_match": revision_match,
+            "revision_supplement_valid": revision_supplement_valid,
         },
         "code_revision": code_revision(root),
         "route_assessment": {

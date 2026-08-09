@@ -1,4 +1,36 @@
-# Implementation status — 2026-08-08
+# Implementation status — 2026-08-09
+
+## Evidence update, 2026-08-09
+
+All planned non-hardware result cells for the six-page manuscript are now
+filled. The soundness-corrected SHD continuous reset-family audit covers 4,305
+model-input pairs across five seeds. It certifies 1,459 pairs, or 33.89%. The
+union of an independent 9 by 9 grid and a 1,024-point Sobol design finds
+counterexamples for 1,586 noncertified pairs, or 36.84%, and leaves 1,260 pairs,
+or 29.27%, unresolved. Neither search contradicts a certified input. Exact
+fraction and leaf accounting passes an independent verifier over all 500 shard
+artifacts. Mean simultaneous semantic risk is 70.56 points and median analysis
+time is 51.46 seconds per input.
+
+Exact finite-family results are complete on the full frozen audits. Mean
+certified fractions are 38.72% for SHD, 57.69% for DVS Gesture, and 97.67% for
+N-MNIST. Mean simultaneous bounds are 65.90, 56.19, and 2.93 points. All five
+N-MNIST seeds accept the five-point budget. The recurrent tasks reject all
+three budgets because the declared family contains many genuine prediction
+changes.
+
+The matched repair matrix is also complete. Certificate-directed repair
+recovers 72.1% and 89.7% on the two SHD targets and 91.1% on DVS Gesture. It
+does not consistently outperform logit-only distillation, and no method
+restores a five-point certificate. The repair result therefore supports a
+post-rejection opportunity and mandatory recertification, not superiority of
+the current repair objective.
+
+The software evidence supports the semantics-contract and sound-certificate
+formulation. It does not pass the full submission contract. Physical
+conformance is absent, recurrent fixed-target slack exceeds the frozen
+tightness gates, DVS Gesture remains development evidence, and a clean external
+reproduction package is not yet complete.
 
 ## Implemented and verified
 

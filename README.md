@@ -31,11 +31,16 @@ state/input domain is exhausted without a counterexample.
 ## Quick start
 
 ```powershell
-python -m pip install -e .
+python -m pip install -e ".[dev,benchmarks,torch]"
 python -m pytest
 python experiments/run_toy_study.py --output artifacts/toy-study
 pines --help
 ```
+
+Install `.[datasets]` only when rebuilding the raw event-dataset caches. Tonic
+1.6 requires NumPy below 2, so the resolver will select a compatible NumPy
+version for that preprocessing environment. The recorded manuscript runs use
+the hash-verified processed arrays and their separately recorded environment.
 
 Physical certificates require an unlabeled canary run and a complete hardware
 manifest. Without one, reports are explicitly conditional on the emulator.
@@ -44,19 +49,29 @@ manifest. Without one, reports are explicitly conditional on the emulator.
 
 This repository covers finite-horizon digital classification SNNs. Analog
 mismatch, continual learning, control, and energy claims are out of scope.
-The current family engine is exact for an explicitly enumerated bounded family;
-its relational affine/polygon/branch engine also proves targeted continuous
-timestep--threshold families for recurrent float-state models. A frozen
-five-seed confirmation audit is being recomputed after proof-integrity hardening.
-The first completed seed certifies 347/861 SHD inputs (40.30%); the other four
-seeds and canonical grid/Sobol falsification remain in progress. The previous
-1,398/4,145 pooled headline and its binomial interval are superseded.
-Separately, a source-hash-verified member-wise analysis certifies all 16
-integration/timing/reset/synaptic-delay combinations over a joint plus/minus 1%
-timestep--threshold box for one label-free selected SHD input at 256 polygon
-leaves per member. This establishes full-family feasibility and identifies
-proof-budget bottlenecks, but it is selected-input development evidence rather
-than population coverage.
-Broader numeric-axis coverage, DVS full-model certification, and the two
-physical campaigns remain gated research milestones rather than represented as
-completed results.
+The current family engine is exact for an explicitly enumerated bounded family.
+Its relational affine, polygon, and local-branch engine also proves targeted
+continuous timestep and threshold families for recurrent float-state models.
+The soundness-corrected five-seed SHD reset-family audit is complete over 4,305
+model-input pairs. It certifies 33.89%, finds explicit grid or Sobol
+counterexamples for 36.84%, and leaves 29.27% unresolved. The simultaneous
+software bound is 70.56 points on average, so every seed rejects the one, two,
+and five-point budgets. Independent 9 by 9 grid and 1,024-point Sobol searches
+find no contradiction to any certified input. Median analysis time is 51.46
+seconds per input.
+
+Exact finite-family enumeration certifies 38.72% of SHD inputs, 57.69% of DVS
+Gesture inputs, and 97.67% of N-MNIST inputs. The corresponding simultaneous
+mean bounds are 65.90, 56.19, and 2.93 points. Only the feedforward N-MNIST
+control accepts the five-point budget for every seed. A separate
+source-hash-verified analysis certifies all 16 discrete members over a joint
+plus or minus 1% timestep and threshold box for one label-free selected SHD
+input at 256 polygon leaves per member. This is selected-input development
+evidence rather than population coverage.
+
+Matched repair experiments recover more than 70% of the lost accuracy on
+average in the three reported conditions, but the certificate-directed
+objective does not consistently beat logit-only distillation and no repaired
+model obtains a five-point certificate. DVS Gesture remains development
+evidence because official test accuracy influenced reference-pipeline
+selection. The two physical campaigns remain incomplete.
