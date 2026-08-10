@@ -1,16 +1,18 @@
 # Contributing
 
-Changes to operational semantics require a schema-version decision, scalar and
-vector transition tests, at least one handcrafted trace, and randomized
-differential coverage. Changes to a frozen protocol create a new protocol file;
-existing physical evidence is never relabeled under a revised protocol.
+This repository is frozen as an anonymous review artifact. Changes that affect
+reported evidence must create a new versioned result instead of overwriting an
+existing artifact.
 
-Before review, run:
+Before proposing a change, run:
 
 ```powershell
 python -m pytest
+python experiments/verify_manuscript_results.py
 pines reproduce --config configs/toy_study.json --output-dir artifacts/local-toy
 ```
 
-Evidence and reports are immutable. Choose a new output directory or run ID
-instead of overwriting an artifact.
+Changes to execution semantics require a schema-version decision, scalar and
+vector transition tests, at least one handcrafted trace, and randomized
+differential coverage. Hardware evidence additionally requires a complete
+manifest and immutable capture hashes.

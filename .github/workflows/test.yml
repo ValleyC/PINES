@@ -16,4 +16,5 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[dev,torch]"
       - run: python -m pytest
+      - run: python experiments/verify_manuscript_results.py
       - run: pines reproduce --config configs/toy_study.json --output-dir artifacts/ci-toy
