@@ -4,8 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-from pines.benchmarks.shd import PackedSHD
-from pines.benchmarks.shd_repair import SHDRepairConfig, run_shd_repair
+from pines.benchmarks.dvs_gesture import PackedDVSGesture
+from pines.benchmarks.dvs_repair import DVSGestureRepairConfig, run_dvs_repair
 
 
 def main() -> None:
@@ -14,38 +14,28 @@ def main() -> None:
         "--seeds", type=int, nargs="+", default=[1701, 2718, 3141, 5772, 8119]
     )
     parser.add_argument(
-        "--conditions",
-        nargs="+",
-        default=["reset_to_value", "floor_rounding_saturation"],
+        "--conditions", nargs="+", default=["floor_rounding_saturation"]
     )
     parser.add_argument(
-        "--methods",
-        nargs="+",
-        default=[
-            "certificate_directed",
-            "logit_only",
-            "global_threshold",
-            "per_platform_qat",
-            "supervised_target_retraining",
-        ],
-    )
-    parser.add_argument("--data-root", default="data/processed/shd_v1")
-    parser.add_argument("--artifact-root", default="artifacts/shd_v1_final")
-    parser.add_argument(
-        "--semantic-root", default="artifacts/shd_v74_semantics_cast_faithful_v1"
-    )
-    parser.add_argument(
-        "--output-root", default="artifacts/shd_v75_repairs_cast_faithful_v1"
+        "--methods", nargs="+", default=["certificate_directed", "logit_only"]
     )
     parser.add_argument("--epochs", type=int, default=40)
     parser.add_argument("--margin-weight", type=float, default=1.0)
     parser.add_argument("--logit-weight", type=float, default=1.0)
+    parser.add_argument("--data-root", default="data/processed/dvs_gesture_v2")
+    parser.add_argument("--artifact-root", default="artifacts/dvs_gesture_v3")
+    parser.add_argument(
+        "--semantic-root", default="artifacts/dvs_gesture_v3_semantics"
+    )
+    parser.add_argument(
+        "--output-root", default="artifacts/dvs_gesture_repair_matrix"
+    )
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[1]
-    train_store = PackedSHD(root / args.data_root / "train.npz")
-    test_store = PackedSHD(root / args.data_root / "test.npz")
-    config = SHDRepairConfig(
+    train_store = PackedDVSGesture(root / args.data_root / "train.npz")
+    test_store = PackedDVSGesture(root / args.data_root / "test.npz")
+    config = DVSGestureRepairConfig(
         epochs=args.epochs,
         margin_weight=args.margin_weight,
         logit_weight=args.logit_weight,
@@ -66,18 +56,17 @@ def main() -> None:
                 )
                 report_path = output / "repair_report.json"
                 if report_path.exists():
-                    with report_path.open("r", encoding="utf-8") as handle:
-                        existing = json.load(handle)
+                    report = json.loads(report_path.read_text(encoding="utf-8"))
                     if (
-                        int(existing.get("seed", seed)) != seed
-                        or existing.get("condition") != condition
-                        or existing.get("method") != method
+                        int(report["random_seed"]) != seed
+                        or report["condition"] != condition
+                        or report["method"] != method
                     ):
                         raise ValueError(f"existing repair cell mismatch: {report_path}")
                     status = "resumed"
                 else:
-                    report = run_shd_repair(
-                        seed_dir / "model.npz",
+                    report = run_dvs_repair(
+                        seed_dir / "checkpoint.pt",
                         train_store,
                         test_store,
                         seed_dir / "split_indices.npz",
@@ -95,7 +84,7 @@ def main() -> None:
                     )
                 completed += 1
                 print(
-                    f"repair cell {completed}/{total} seed={seed} "
+                    f"DVS repair cell {completed}/{total} seed={seed} "
                     f"condition={condition} method={method} {status}",
                     flush=True,
                 )

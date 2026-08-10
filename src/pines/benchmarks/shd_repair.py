@@ -12,6 +12,7 @@ from typing import Any
 import numpy as np
 
 from ..artifacts import array_hash, code_revision, sha256_file, write_json_immutable
+from ..differentiable_repair import reference_margin_deficit
 from ..models import DenseRecurrentSNN
 from ..semantics import (
     ExecutionSemantics,
@@ -29,13 +30,15 @@ from .shd import PackedSHD, _SurrogateSpike
 
 @dataclass(frozen=True)
 class SHDRepairConfig:
-    schema_version: str = "SHDRepair/v5"
+    schema_version: str = "SHDRepair/v6"
     epochs: int = 40
     batch_size: int = 128
     learning_rate: float = 0.02
     weight_decay: float = 1e-5
     gradient_clip: float = 1.0
-    logit_weight: float = 0.05
+    margin_weight: float = 1.0
+    logit_weight: float = 1.0
+    reference_margin_weight: float = 1.0
     spike_weight: float = 0.02
     state_weight: float = 0.005
     regularization_weight: float = 1e-4
@@ -46,6 +49,20 @@ class SHDRepairConfig:
     guard_selection_weight: float = 0.1
     family_radius: float = 0.01
     family_grid_resolution: int = 2
+
+
+def _checkpoint_selection_key(
+    method: str,
+    *,
+    disagreement: int,
+    selection_score: float,
+    margin_deficit: float,
+) -> tuple[float, ...]:
+    """Return the method-specific checkpoint ordering used during repair."""
+
+    if method == "margin_distilled":
+        return float(disagreement), float(margin_deficit)
+    return (float(selection_score),)
 
 
 def _seed_everything(seed: int) -> None:
@@ -62,7 +79,10 @@ def _seed_everything(seed: int) -> None:
 def _quantize_ste(value: Any, numeric: Any) -> Any:
     import torch
 
-    if not numeric.is_fixed:
+    if numeric.kind == "float32":
+        hard = value.to(torch.float32).to(value.dtype)
+        return value + (hard - value).detach()
+    if numeric.kind == "float64":
         return value
     scale = float(1 << numeric.fractional_bits)
     scaled = value * scale
@@ -96,33 +116,33 @@ def build_repairable_srnn(
             super().__init__()
             self.register_buffer(
                 "base_input_weights",
-                torch.tensor(model.input_weights.copy(), dtype=torch.float32),
+                torch.tensor(model.input_weights.copy(), dtype=torch.float64),
             )
             self.register_buffer(
                 "base_recurrent_weights",
-                torch.tensor(model.recurrent_weights.copy(), dtype=torch.float32),
+                torch.tensor(model.recurrent_weights.copy(), dtype=torch.float64),
             )
             self.register_buffer(
                 "output_weights",
-                torch.tensor(model.output_weights.copy(), dtype=torch.float32),
+                torch.tensor(model.output_weights.copy(), dtype=torch.float64),
             )
             self.register_buffer(
-                "reset_value", torch.tensor(model.reset_value.copy(), dtype=torch.float32)
+                "reset_value", torch.tensor(model.reset_value.copy(), dtype=torch.float64)
             )
             self.log_threshold = torch.nn.Parameter(
-                torch.log(torch.tensor(model.threshold.copy(), dtype=torch.float32))
+                torch.log(torch.tensor(model.threshold.copy(), dtype=torch.float64))
             )
             self.log_tau = torch.nn.Parameter(
-                torch.log(torch.tensor(model.tau_mem.copy(), dtype=torch.float32))
+                torch.log(torch.tensor(model.tau_mem.copy(), dtype=torch.float64))
             )
             self.bias = torch.nn.Parameter(
-                torch.tensor(model.bias.copy(), dtype=torch.float32)
+                torch.tensor(model.bias.copy(), dtype=torch.float64)
             )
             self.log_incoming_scale = torch.nn.Parameter(
-                torch.zeros(model.hidden_size, dtype=torch.float32)
+                torch.zeros(model.hidden_size, dtype=torch.float64)
             )
             self.log_output_scale = torch.nn.Parameter(
-                torch.zeros(model.hidden_size, dtype=torch.float32)
+                torch.zeros(model.hidden_size, dtype=torch.float64)
             )
             self.last_guard_trace = None
 
@@ -135,6 +155,7 @@ def build_repairable_srnn(
         ):
             if timestep_scale <= 0 or threshold_scale <= 0:
                 raise ValueError("execution-family scales must be positive")
+            events = events.to(dtype=self.base_input_weights.dtype)
             threshold = (
                 torch.exp(self.log_threshold).clamp(0.05, 20.0)
                 * threshold_scale
@@ -248,25 +269,25 @@ def build_supervised_target_srnn(
         def __init__(self) -> None:
             super().__init__()
             self.input_weights = torch.nn.Parameter(
-                torch.tensor(model.input_weights.copy(), dtype=torch.float32)
+                torch.tensor(model.input_weights.copy(), dtype=torch.float64)
             )
             self.recurrent_weights = torch.nn.Parameter(
-                torch.tensor(model.recurrent_weights.copy(), dtype=torch.float32)
+                torch.tensor(model.recurrent_weights.copy(), dtype=torch.float64)
             )
             self.output_weights = torch.nn.Parameter(
-                torch.tensor(model.output_weights.copy(), dtype=torch.float32)
+                torch.tensor(model.output_weights.copy(), dtype=torch.float64)
             )
             self.bias = torch.nn.Parameter(
-                torch.tensor(model.bias.copy(), dtype=torch.float32)
+                torch.tensor(model.bias.copy(), dtype=torch.float64)
             )
             self.log_threshold = torch.nn.Parameter(
-                torch.log(torch.tensor(model.threshold.copy(), dtype=torch.float32))
+                torch.log(torch.tensor(model.threshold.copy(), dtype=torch.float64))
             )
             self.log_tau = torch.nn.Parameter(
-                torch.log(torch.tensor(model.tau_mem.copy(), dtype=torch.float32))
+                torch.log(torch.tensor(model.tau_mem.copy(), dtype=torch.float64))
             )
             self.register_buffer(
-                "reset_value", torch.tensor(model.reset_value.copy(), dtype=torch.float32)
+                "reset_value", torch.tensor(model.reset_value.copy(), dtype=torch.float64)
             )
             if initialization == "random":
                 torch.nn.init.xavier_uniform_(self.input_weights)
@@ -277,6 +298,7 @@ def build_supervised_target_srnn(
                 torch.nn.init.zeros_(self.bias)
 
         def forward(self, events):
+            events = events.to(dtype=self.input_weights.dtype)
             threshold = torch.exp(self.log_threshold).clamp(0.05, 20.0)
             tau = torch.exp(self.log_tau).clamp(0.25, 100.0)
             w_in = _quantize_ste(self.input_weights, semantics.weight_format)
@@ -463,6 +485,7 @@ def run_shd_repair(
 
     supported_methods = {
         "certificate_directed",
+        "margin_distilled",
         "guard_margin",
         "family_margin",
         "logit_only",
@@ -549,6 +572,7 @@ def run_shd_repair(
         selected = {"global_threshold_scale": best_scale}
     elif method in {
         "certificate_directed",
+        "margin_distilled",
         "guard_margin",
         "family_margin",
         "logit_only",
@@ -560,6 +584,10 @@ def run_shd_repair(
         elif method == "family_margin":
             selection_criterion = (
                 "reference prediction disagreement at every sampled family point"
+            )
+        elif method == "margin_distilled":
+            selection_criterion = (
+                "reference prediction disagreement, then source-margin deficit"
             )
         teacher = _collect_reference_trace(
             source_model,
@@ -576,11 +604,15 @@ def run_shd_repair(
             weight_decay=config.weight_decay,
         )
         rng = np.random.default_rng(seed)
-        best_disagreement = len(calibration_indices) + 1
+        optimization_positions = np.arange(len(calibration_indices))
+        selection_positions = optimization_positions
+        best_disagreement = len(selection_positions) + 1
         best_selection_score = float("inf")
+        best_selection_margin_deficit = float("inf")
+        best_selection_key = (float("inf"),)
         best_state = copy.deepcopy(module.state_dict())
         for epoch in range(config.epochs):
-            order = rng.permutation(len(calibration_indices))
+            order = rng.permutation(optimization_positions)
             total_loss = 0.0
             seen = 0
             for start in range(0, len(order), config.batch_size):
@@ -644,13 +676,22 @@ def run_shd_repair(
                     logits, states, spikes, _ = module(events)
                     guard_trace = module.last_guard_trace
                     assert guard_trace is not None
-                    margin_loss = torch.nn.functional.cross_entropy(
-                        logits, teacher_predictions
-                    )
+                    if method == "margin_distilled":
+                        margin_loss = reference_margin_deficit(
+                            logits, teacher_logits, teacher_predictions
+                        )
+                    else:
+                        margin_loss = torch.nn.functional.cross_entropy(
+                            logits, teacher_predictions
+                        )
                     logit_loss = torch.nn.functional.smooth_l1_loss(
                         logits, teacher_logits
                     ) / (torch.mean(torch.abs(teacher_logits)) + 1e-6)
-                if method in {"certificate_directed", "guard_margin"}:
+                if method in {
+                    "certificate_directed",
+                    "guard_margin",
+                    "margin_distilled",
+                }:
                     spike_loss = torch.mean(torch.abs(spikes - teacher_spikes))
                     state_loss = torch.mean(torch.abs(states - teacher_states)) / (
                         torch.mean(torch.abs(teacher_states)) + 1e-6
@@ -675,9 +716,17 @@ def run_shd_repair(
                 )
                 if method == "logit_only":
                     loss = logit_loss + config.regularization_weight * regularization
+                elif method == "margin_distilled":
+                    loss = (
+                        logit_loss
+                        + config.reference_margin_weight * margin_loss
+                        + config.spike_weight * spike_loss
+                        + config.state_weight * state_loss
+                        + config.regularization_weight * regularization
+                    )
                 else:
                     loss = (
-                        margin_loss
+                        config.margin_weight * margin_loss
                         + config.logit_weight * logit_loss
                         + config.spike_weight * spike_loss
                         + config.state_weight * state_loss
@@ -694,13 +743,13 @@ def run_shd_repair(
                 seen += len(positions)
             module.eval()
             calibration_predictions: list[np.ndarray] = []
+            selection_margin_sum = 0.0
             guard_near_count = 0
             guard_total_count = 0
             with torch.no_grad():
-                for start in range(0, len(calibration_indices), config.batch_size):
-                    sample_indices = calibration_indices[
-                        start : start + config.batch_size
-                    ]
+                for start in range(0, len(selection_positions), config.batch_size):
+                    positions = selection_positions[start : start + config.batch_size]
+                    sample_indices = calibration_indices[positions]
                     events = torch.as_tensor(
                         train_store.frames(sample_indices), device=device
                     )
@@ -732,6 +781,24 @@ def run_shd_repair(
                         calibration_predictions.append(
                             torch.argmax(logits, dim=1).cpu().numpy()
                         )
+                        if method == "margin_distilled":
+                            teacher_logits = torch.as_tensor(
+                                teacher["final_logits"][positions],
+                                device=device,
+                            )
+                            teacher_predictions = torch.as_tensor(
+                                reference_calibration[positions],
+                                dtype=torch.long,
+                                device=device,
+                            )
+                            selection_margin_sum += float(
+                                reference_margin_deficit(
+                                    logits,
+                                    teacher_logits,
+                                    teacher_predictions,
+                                    reduction="sum",
+                                ).item()
+                            )
             if method == "family_margin":
                 calibration_predictions_array = np.concatenate(
                     calibration_predictions, axis=1
@@ -740,7 +807,7 @@ def run_shd_repair(
                     np.count_nonzero(
                         np.any(
                             calibration_predictions_array
-                            != reference_calibration[None, :],
+                            != reference_calibration[selection_positions][None, :],
                             axis=0,
                         )
                     )
@@ -752,7 +819,8 @@ def run_shd_repair(
                 )
                 disagreement = int(
                     np.count_nonzero(
-                        calibration_predictions_array != reference_calibration
+                        calibration_predictions_array
+                        != reference_calibration[selection_positions]
                     )
                 )
                 guard_near_fraction = guard_near_count / guard_total_count
@@ -763,12 +831,24 @@ def run_shd_repair(
                     * len(calibration_indices)
                     * guard_near_fraction
                 )
+            selection_margin_deficit = (
+                selection_margin_sum / len(selection_positions)
+                if method == "margin_distilled"
+                else 0.0
+            )
+            selection_key = _checkpoint_selection_key(
+                method,
+                disagreement=disagreement,
+                selection_score=selection_score,
+                margin_deficit=selection_margin_deficit,
+            )
             record = {
                 "epoch": epoch + 1,
                 "loss": total_loss / seen,
                 "calibration_disagreements": disagreement,
                 "guard_near_fraction": guard_near_fraction,
                 "selection_score": selection_score,
+                "selection_margin_deficit": selection_margin_deficit,
             }
             history.append(record)
             print(
@@ -776,8 +856,11 @@ def run_shd_repair(
                 f"loss={record['loss']:.4f} disagreements={disagreement}",
                 flush=True,
             )
-            if selection_score < best_selection_score:
+            if selection_key < best_selection_key:
+                best_selection_key = selection_key
                 best_selection_score = selection_score
+                if method == "margin_distilled":
+                    best_selection_margin_deficit = selection_margin_deficit
                 best_disagreement = disagreement
                 best_state = copy.deepcopy(module.state_dict())
             module.train()
@@ -788,6 +871,11 @@ def run_shd_repair(
         selected = {
             "best_calibration_disagreements": best_disagreement,
             "best_selection_score": best_selection_score,
+            "best_selection_margin_deficit": (
+                best_selection_margin_deficit
+                if method == "margin_distilled"
+                else None
+            ),
             "threshold_ratio_mean": float(
                 np.mean(best_model.threshold / source_model.threshold)
             ),
@@ -944,6 +1032,7 @@ def run_shd_repair(
         permitted_changes = ["global_threshold_scale"]
     elif method in {
         "certificate_directed",
+        "margin_distilled",
         "guard_margin",
         "family_margin",
         "logit_only",

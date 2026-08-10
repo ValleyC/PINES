@@ -10,6 +10,7 @@ from typing import Any
 import numpy as np
 
 from ..artifacts import array_hash, code_revision, sha256_file, write_json_immutable
+from ..differentiable_repair import reference_margin_deficit
 from ..semantics import ExecutionSemantics
 from ..statistics import clopper_pearson_upper
 from .dvs_gesture import (
@@ -24,13 +25,15 @@ from .shd import _seed_everything
 
 @dataclass(frozen=True)
 class DVSGestureRepairConfig:
-    schema_version: str = "DVSGestureRepair/v2"
+    schema_version: str = "DVSGestureRepair/v3"
     epochs: int = 40
     batch_size: int = 16
     learning_rate: float = 0.02
     weight_decay: float = 1e-5
     gradient_clip: float = 1.0
-    logit_weight: float = 0.05
+    margin_weight: float = 1.0
+    logit_weight: float = 1.0
+    reference_margin_weight: float = 1.0
     regularization_weight: float = 1e-4
     supervised_learning_rate: float = 1e-3
     simultaneous_family_size: int = 10
@@ -215,6 +218,7 @@ def run_dvs_repair(
 
     if method not in {
         "certificate_directed",
+        "margin_distilled",
         "logit_only",
         "global_threshold",
         "per_platform_qat",
@@ -265,6 +269,10 @@ def run_dvs_repair(
     optimization_steps = 0
     label_budget = 0
     selection_criterion = "reference prediction disagreement"
+    if method == "margin_distilled":
+        selection_criterion = (
+            "reference prediction disagreement, then source-margin deficit"
+        )
 
     if method == "global_threshold":
         best_model = None
@@ -303,7 +311,7 @@ def run_dvs_repair(
             "best_calibration_disagreements": best_disagreement,
         }
         trainable_parameters = 1
-    elif method in {"certificate_directed", "logit_only"}:
+    elif method in {"certificate_directed", "margin_distilled", "logit_only"}:
         model = build_dvs_conv_srnn(sensor_width, sensor_height, train_config)
         model.load_state_dict(checkpoint["state_dict"])
         model = make_restricted_dvs_repairable(model).to(device)
@@ -332,6 +340,7 @@ def run_dvs_repair(
             np.count_nonzero(initial_prediction != reference_calibration)
         )
         best_state = copy.deepcopy(model.state_dict())
+        best_margin_deficit = float("inf")
         history.append(
             {
                 "epoch": 0,
@@ -367,8 +376,18 @@ def run_dvs_repair(
                     margins = selected_scores - torch.max(masked, dim=1).values
                     margin_loss = torch.nn.functional.softplus(-margins).mean()
                     loss = (
-                        margin_loss
+                        config.margin_weight * margin_loss
                         + config.logit_weight * logit_loss
+                        + config.regularization_weight
+                        * _log_scale_regularization(model).to(device)
+                    )
+                elif method == "margin_distilled":
+                    margin_loss = reference_margin_deficit(
+                        logits, teacher_logits, teacher_predictions
+                    )
+                    loss = (
+                        logit_loss
+                        + config.reference_margin_weight * margin_loss
                         + config.regularization_weight
                         * _log_scale_regularization(model).to(device)
                     )
@@ -388,7 +407,7 @@ def run_dvs_repair(
                 optimization_steps += 1
                 total_loss += float(loss.detach()) * len(positions)
                 seen += len(positions)
-            calibration_prediction, _ = _predict(
+            calibration_prediction, calibration_logits = _predict(
                 model,
                 train_store,
                 calibration_indices,
@@ -399,10 +418,23 @@ def run_dvs_repair(
             disagreement = int(
                 np.count_nonzero(calibration_prediction != reference_calibration)
             )
+            if method == "margin_distilled":
+                margin_deficit = float(
+                    reference_margin_deficit(
+                        torch.as_tensor(calibration_logits, device=device),
+                        torch.as_tensor(reference_calibration_logits, device=device),
+                        torch.as_tensor(
+                            reference_calibration, dtype=torch.long, device=device
+                        ),
+                    ).item()
+                )
+            else:
+                margin_deficit = 0.0
             record = {
                 "epoch": epoch + 1,
                 "loss": total_loss / seen,
                 "calibration_disagreements": disagreement,
+                "selection_margin_deficit": margin_deficit,
             }
             history.append(record)
             print(
@@ -410,13 +442,22 @@ def run_dvs_repair(
                 f"loss={record['loss']:.4f} disagreements={disagreement}",
                 flush=True,
             )
-            if disagreement < best_disagreement:
+            if (disagreement, margin_deficit) < (
+                best_disagreement,
+                best_margin_deficit if method == "margin_distilled" else 0.0,
+            ):
                 best_disagreement = disagreement
+                best_margin_deficit = margin_deficit
                 best_state = copy.deepcopy(model.state_dict())
         model.load_state_dict(best_state)
         best_model = materialize_dvs_repair(model)
         best_config = train_config
-        selected = {"best_calibration_disagreements": best_disagreement}
+        selected = {
+            "best_calibration_disagreements": best_disagreement,
+            "best_selection_margin_deficit": (
+                best_margin_deficit if method == "margin_distilled" else None
+            ),
+        }
     else:
         model = build_dvs_conv_srnn(sensor_width, sensor_height, train_config)
         if method == "per_platform_qat":

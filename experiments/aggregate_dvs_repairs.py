@@ -28,6 +28,9 @@ def _stats(values: list[float]) -> dict[str, float]:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--certificate-root")
+    parser.add_argument("--logit-root")
+    parser.add_argument("--global-root")
     parser.add_argument("--include-qat", action="store_true")
     parser.add_argument("--qat-root")
     parser.add_argument("--include-supervised", action="store_true")
@@ -44,6 +47,15 @@ def main() -> None:
         else ()
     )
     suffix = f"_{args.suffix}" if args.suffix else ""
+    method_roots = {
+        "certificate_directed": root / args.certificate_root
+        if args.certificate_root
+        else artifact_root,
+        "logit_only": root / args.logit_root if args.logit_root else artifact_root,
+        "global_threshold": root / args.global_root
+        if args.global_root
+        else artifact_root,
+    }
     summary_path = output_root / f"repair_floor{suffix}_summary.json"
     rows_path = output_root / f"repair_floor{suffix}_rows.csv"
     figure_pdf = root / "paper" / "figures" / f"dvs_repair_floor{suffix}.pdf"
@@ -63,7 +75,7 @@ def main() -> None:
                 else root / args.supervised_root
                 if method == "supervised_target_retraining"
                 and args.supervised_root
-                else artifact_root
+                else method_roots[method]
             )
             path = (
                 method_artifact_root
@@ -169,6 +181,29 @@ def main() -> None:
     global_rows = method_rows["global_threshold"]
     qat_rows = method_rows.get("per_platform_qat")
     supervised_rows = method_rows.get("supervised_target_retraining")
+    certificate_logit_win_count = sum(
+        float(certificate["accuracy_recovery_fraction"])
+        > float(logit["accuracy_recovery_fraction"])
+        for certificate, logit in zip(certificate_rows, logit_rows)
+    )
+    certificate_minus_logit_recovery = 100.0 * float(
+        np.mean(
+            [
+                float(certificate["accuracy_recovery_fraction"])
+                - float(logit["accuracy_recovery_fraction"])
+                for certificate, logit in zip(certificate_rows, logit_rows)
+            ]
+        )
+    )
+    certificate_minus_logit_bound = 100.0 * float(
+        np.mean(
+            [
+                float(certificate["after_certificate_upper_bound"])
+                - float(logit["after_certificate_upper_bound"])
+                for certificate, logit in zip(certificate_rows, logit_rows)
+            ]
+        )
+    )
     summary = {
         "schema_version": (
             "DVSGestureRepairAggregate/v3"
@@ -199,6 +234,19 @@ def main() -> None:
             "supervised_artifact_root": args.supervised_root,
             "selection_uses_test_labels": False,
             "calibration_audit_disjoint": True,
+            "method_artifact_roots": {
+                method: str(
+                    (
+                        root / args.qat_root
+                        if method == "per_platform_qat" and args.qat_root
+                        else root / args.supervised_root
+                        if method == "supervised_target_retraining"
+                        and args.supervised_root
+                        else method_roots[method]
+                    ).relative_to(root)
+                )
+                for method in methods
+            },
         },
         "per_method": per_method,
         "paired_recovery_differences": {
@@ -305,20 +353,20 @@ def main() -> None:
             ),
         },
         "formulation_assessment": (
-            "Restricted label-free calibration generalizes its accuracy-recovery effect to "
-            "a convolutional/recurrent SNN and clears 70 percent for every seed. It beats "
-            "logit-only in only three of five paired seeds and has a substantially looser "
-            "audit bound. Labeled QAT has the strongest mean recovery when included, but "
-            "its certificate is as loose as certificate-directed repair. The repair "
-            "mechanism is supported, but neither objective superiority nor a tight "
-            "certificate is supported. This remains development rather than sequestered evidence."
+            "Restricted label-free calibration clears 70 percent recovery for every seed "
+            f"and beats logit-only in {certificate_logit_win_count}/5 paired seeds. Its "
+            f"mean recovery is {certificate_minus_logit_recovery:.1f} points higher, while "
+            f"its audit bound is {certificate_minus_logit_bound:.1f} points looser. Labeled "
+            "QAT has the strongest mean recovery when included. The balanced objective "
+            "supports a distinct recovery advantage, but not universal bound dominance or "
+            "a five-point certificate. This remains development rather than sequestered evidence."
             if args.include_qat
-            else "Restricted label-free calibration generalizes its accuracy-recovery effect to "
-            "a convolutional/recurrent SNN: certificate-directed repair clears 70 percent "
-            "for every seed and has the best mean recovery. It beats logit-only in only "
-            "three of five paired seeds and has a substantially looser audit bound. The "
-            "repair mechanism is supported, but neither objective superiority nor a tight "
-            "certificate is supported. This remains development rather than sequestered evidence."
+            else "Restricted label-free calibration clears 70 percent recovery for every "
+            f"seed and beats logit-only in {certificate_logit_win_count}/5 paired seeds. "
+            f"Its mean recovery is {certificate_minus_logit_recovery:.1f} points higher, "
+            f"while its audit bound is {certificate_minus_logit_bound:.1f} points looser. "
+            "This supports a distinct recovery advantage, but not universal bound dominance "
+            "or a five-point certificate. The result remains development evidence."
         ),
         "input_report_hashes": report_hashes,
         "rows_csv_hash": sha256_file(rows_path),

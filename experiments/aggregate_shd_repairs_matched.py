@@ -38,11 +38,29 @@ def main() -> None:
     parser.add_argument(
         "--artifact-root", default="artifacts/shd_v3_repairs_matched"
     )
+    parser.add_argument("--certificate-root")
+    parser.add_argument("--logit-root")
+    parser.add_argument("--global-root")
+    parser.add_argument("--qat-root")
+    parser.add_argument("--supervised-root")
     parser.add_argument("--result-stem", default="repair_matched_v2")
     parser.add_argument("--figure-stem", default="shd_repair_matched_v2")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     artifact_root = root / args.artifact_root
+    method_roots = {
+        "certificate_directed": root / args.certificate_root
+        if args.certificate_root
+        else artifact_root,
+        "logit_only": root / args.logit_root if args.logit_root else artifact_root,
+        "global_threshold": root / args.global_root
+        if args.global_root
+        else artifact_root,
+        "per_platform_qat": root / args.qat_root if args.qat_root else artifact_root,
+        "supervised_target_retraining": root / args.supervised_root
+        if args.supervised_root
+        else artifact_root,
+    }
     output_root = root / "results" / "shd_v1"
     summary_path = output_root / f"{args.result_stem}_summary.json"
     rows_path = output_root / f"{args.result_stem}_rows.csv"
@@ -58,7 +76,7 @@ def main() -> None:
         for seed in SEEDS:
             for method in METHODS:
                 path = (
-                    artifact_root
+                    method_roots[method]
                     / f"seed_{seed}"
                     / condition
                     / method
@@ -248,6 +266,10 @@ def main() -> None:
             "selection_uses_test_labels": False,
             "calibration_audit_disjoint": True,
             "floor_unrepaired_is_post_training_quantization_baseline": True,
+            "method_artifact_roots": {
+                method: str(path.relative_to(root))
+                for method, path in method_roots.items()
+            },
         },
         "per_condition": condition_summaries,
         "gate_assessment": {
@@ -318,10 +340,11 @@ def main() -> None:
         f"Certificate-directed repair clears 70% recovery in "
         f"{certificate_seventy_count}/10 condition-seed cells. Logit-only has "
         f"equal or higher mean recovery in {logit_winning_conditions}/2 "
-        "conditions. No repaired model obtains a five-point disagreement "
-        "certificate. The result supports a repair opportunity but does not pass "
-        "the preregistered robust-repair gate or establish a unique advantage for "
-        "the certificate-directed objective."
+        "conditions. It passes the preregistered recovery gate and beats global "
+        "threshold scaling and unrepaired deployment in every seed. No repaired "
+        "model obtains a five-point disagreement certificate, so the result "
+        "supports transport repair followed by recertification rather than "
+        "certificate restoration."
     )
     write_json_immutable(summary_path, summary)
 

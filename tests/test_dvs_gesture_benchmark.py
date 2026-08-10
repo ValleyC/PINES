@@ -102,6 +102,31 @@ def test_restricted_dvs_repair_starts_with_identical_forward() -> None:
     assert trainable == 25
 
 
+def test_restricted_dvs_surrogate_forward_preserves_hard_execution() -> None:
+    torch.manual_seed(9)
+    config = DVSGestureTrainConfig(
+        conv1_channels=2,
+        conv2_channels=3,
+        hidden_size=5,
+        epochs=1,
+        batch_size=2,
+    )
+    model = build_dvs_conv_srnn(16, 16, config, output_size=4)
+    model = make_restricted_dvs_repairable(model)
+    events = torch.as_tensor(
+        (np.random.default_rng(7).random((2, 5, 2, 16, 16)) < 0.05).astype(
+            np.float32
+        )
+    )
+    fixed = NumericFormat("fixed", 12, 6)
+    semantics = ExecutionSemantics(state_format=fixed, weight_format=fixed)
+    model.eval()
+    exact = model(events, semantics)
+    model.train()
+    surrogate = model(events, semantics, surrogate_gradients=True)
+    torch.testing.assert_close(surrogate.detach(), exact.detach(), rtol=0, atol=0)
+
+
 def test_packed_dvs_selects_windows_without_changing_sample_identity(tmp_path) -> None:
     import json
 

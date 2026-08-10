@@ -18,6 +18,7 @@ def main() -> None:
         "--method",
         choices=(
             "certificate_directed",
+            "margin_distilled",
             "logit_only",
             "global_threshold",
             "per_platform_qat",
@@ -26,6 +27,8 @@ def main() -> None:
         required=True,
     )
     parser.add_argument("--epochs", type=int, default=40)
+    parser.add_argument("--margin-weight", type=float, default=1.0)
+    parser.add_argument("--logit-weight", type=float, default=1.0)
     parser.add_argument("--data-root", default="data/processed/dvs_gesture_v2")
     parser.add_argument("--artifact-root", default="artifacts/dvs_gesture_v3")
     parser.add_argument(
@@ -57,7 +60,11 @@ def main() -> None:
         args.method,
         output_dir,
         root,
-        DVSGestureRepairConfig(epochs=args.epochs),
+        DVSGestureRepairConfig(
+            epochs=args.epochs,
+            margin_weight=args.margin_weight,
+            logit_weight=args.logit_weight,
+        ),
         seed=args.seed,
     )
     print(f"before_loss={report['before']['accuracy_loss']:.4f}")

@@ -69,7 +69,10 @@ class DifferentiableSurrogateRepair:
         history: list[float] = []
 
         def quantize_ste(value, numeric):
-            if not numeric.is_fixed:
+            if numeric.kind == "float32":
+                hard = value.to(torch.float32).to(value.dtype)
+                return value + (hard - value).detach()
+            if numeric.kind == "float64":
                 return value
             scale = float(1 << numeric.fractional_bits)
             scaled = value * scale
@@ -187,3 +190,51 @@ class DifferentiableSurrogateRepair:
             bias=bias.detach().numpy(),
         )
         return DifferentiableRepairCandidate(repaired, tuple(history), steps)
+
+
+def reference_margin_deficit(
+    logits,
+    reference_logits,
+    reference_predictions,
+    *,
+    reduction: str = "mean",
+):
+    """Return a scale-normalized deficit in the source decision margin.
+
+    The loss is zero once the target execution matches or exceeds the source
+    margin.  Unlike hard pseudo-label cross-entropy, it does not force
+    low-confidence source decisions toward arbitrarily high confidence.
+    """
+
+    import torch
+
+    if logits.shape != reference_logits.shape:
+        raise ValueError("target and reference logits must have the same shape")
+    if logits.ndim != 2:
+        raise ValueError("logits must have shape [batch, classes]")
+    if reference_predictions.shape != (logits.shape[0],):
+        raise ValueError("reference_predictions must have shape [batch]")
+    rows = torch.arange(logits.shape[0], device=logits.device)
+
+    target_selected = logits[rows, reference_predictions]
+    target_others = logits.clone()
+    target_others[rows, reference_predictions] = -torch.inf
+    target_margin = target_selected - torch.max(target_others, dim=1).values
+
+    reference_selected = reference_logits[rows, reference_predictions]
+    reference_others = reference_logits.clone()
+    reference_others[rows, reference_predictions] = -torch.inf
+    reference_margin = (
+        reference_selected - torch.max(reference_others, dim=1).values
+    ).detach()
+    normalized = torch.relu(reference_margin - target_margin) / (
+        1.0 + torch.abs(reference_margin)
+    )
+    losses = normalized.square()
+    if reduction == "none":
+        return losses
+    if reduction == "sum":
+        return losses.sum()
+    if reduction == "mean":
+        return losses.mean()
+    raise ValueError("reduction must be 'none', 'sum', or 'mean'")

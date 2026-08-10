@@ -59,13 +59,46 @@ def array_hash(array: np.ndarray) -> str:
 
 
 def code_revision(root: str | Path | None = None) -> str:
+    """Return the commit id and disclose modified execution code.
+
+    Generated reports and documentation are intentionally excluded from the
+    dirty check. A manuscript rebuild must not change the revision attached to
+    an otherwise identical experiment. Source, experiment runners, semantics
+    schemas, hardware descriptions, and configuration files are included.
+    Official evidence should contain a plain commit id. The ``+dirty`` suffix
+    makes development evidence honest when any executable input is uncommitted.
+    """
+
+    execution_paths = (
+        "src",
+        "experiments",
+        "configs",
+        "schemas",
+        "hardware",
+        "rtl",
+        "pyproject.toml",
+    )
     try:
-        return subprocess.check_output(
+        revision = subprocess.check_output(
             ["git", "rev-parse", "HEAD"],
             cwd=root,
             text=True,
             stderr=subprocess.DEVNULL,
         ).strip()
+        status = subprocess.check_output(
+            [
+                "git",
+                "status",
+                "--porcelain=v1",
+                "--untracked-files=all",
+                "--",
+                *execution_paths,
+            ],
+            cwd=root,
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        return f"{revision}+dirty" if status.strip() else revision
     except (OSError, subprocess.CalledProcessError):
         return "uncommitted"
 
@@ -98,4 +131,3 @@ def write_json_immutable(path: str | Path, value: Any) -> Path:
     finally:
         temporary_path.unlink(missing_ok=True)
     return destination
-
