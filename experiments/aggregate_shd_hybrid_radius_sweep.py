@@ -188,7 +188,7 @@ def main() -> None:
     labels = [
         f"$\\pm${float(row['radius_percent']):g}%" for row in rows
     ]
-    fig, axis = plt.subplots(figsize=(3.45, 1.85), constrained_layout=True)
+    fig, axis = plt.subplots(figsize=(3.45, 1.35), constrained_layout=True)
     axis.barh(
         positions,
         certified,
@@ -240,7 +240,7 @@ def main() -> None:
     axis.set_axisbelow(True)
     axis.legend(
         loc="upper center",
-        bbox_to_anchor=(0.5, 1.24),
+        bbox_to_anchor=(0.5, 1.20),
         ncol=3,
         frameon=False,
         fontsize=6.8,
