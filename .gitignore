@@ -2,11 +2,18 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
 .coverage
+coverage.xml
 htmlcov/
 .venv/
 dist/
 build/
+.idea/
+.vscode/
+.DS_Store
 data/
 artifacts/*
 !artifacts/.gitkeep
@@ -23,3 +30,5 @@ tmp/
 paper/
 manuscript/
 transport_manuscript/
+hardware/captures/
+hardware/bitstreams/
