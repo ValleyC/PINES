@@ -357,7 +357,7 @@ def main() -> None:
             f"and beats logit-only in {certificate_logit_win_count}/5 paired seeds. Its "
             f"mean recovery is {certificate_minus_logit_recovery:.1f} points higher, while "
             f"its audit bound is {certificate_minus_logit_bound:.1f} points looser. Labeled "
-            "QAT has the strongest mean recovery when included. The balanced objective "
+            "QAT has the strongest mean recovery when included. The task-tuned objective "
             "supports a distinct recovery advantage, but not universal bound dominance or "
             "a five-point certificate. This remains development rather than sequestered evidence."
             if args.include_qat
