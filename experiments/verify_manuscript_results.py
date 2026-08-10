@@ -92,12 +92,14 @@ def load(path: str) -> dict[str, Any]:
         return json.load(handle)
 
 
-def file_hash(path: str) -> str:
-    digest = hashlib.sha256()
-    with (ROOT / path).open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def file_hash_candidates(path: str) -> set[str]:
+    data = (ROOT / path).read_bytes()
+    lf = data.replace(b"\r\n", b"\n")
+    crlf = lf.replace(b"\n", b"\r\n")
+    return {
+        hashlib.sha256(candidate).hexdigest()
+        for candidate in (data, lf, crlf)
+    }
 
 
 def point(value: float) -> float:
@@ -112,11 +114,12 @@ def close(actual: float, expected: float, label: str, tolerance: float = 0.051) 
 def verify_hashes() -> None:
     for summary_path, rows_path in SUMMARY_ROWS.items():
         summary = load(summary_path)
-        observed = file_hash(rows_path)
         expected = summary.get("rows_csv_hash")
-        if observed != expected:
+        observed = file_hash_candidates(rows_path)
+        if expected not in observed:
             raise AssertionError(
-                f"row hash mismatch for {rows_path}: {observed} != {expected}"
+                f"row hash mismatch for {rows_path}: expected {expected}, "
+                f"observed candidates {sorted(observed)}"
             )
 
 
