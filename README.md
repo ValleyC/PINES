@@ -77,9 +77,14 @@ plus or minus 1% timestep and threshold box for one label-free selected SHD
 input at 256 polygon leaves per member. This is selected-input development
 evidence rather than population coverage.
 
-Matched repair experiments recover more than 70% of the lost accuracy on
-average in the three reported conditions, but the certificate-directed
-objective does not consistently beat logit-only distillation and no repaired
-model obtains a five-point certificate. DVS Gesture remains development
-evidence because official test accuracy influenced reference-pipeline
-selection. The two physical campaigns remain incomplete.
+The executor-faithful, task-tuned repair objective recovers 80.6%, 91.0%, and
+94.9% of the lost accuracy on SHD reset-to-value, SHD floor-fixed-point, and
+DVS Gesture floor-fixed-point targets. All 15 seed-condition cells clear 70%
+recovery. It improves mean recovery over matched logit-only distillation in all
+three conditions and tightens the mean bound by 0.84 and 0.88 points on the two
+SHD targets. Its DVS mean bound remains 2.30 points looser. No repaired model
+obtains a five-point certificate, so the evidence supports label-free transport
+repair followed by mandatory recertification rather than guaranteed certificate
+restoration. DVS
+Gesture remains development evidence because official test accuracy influenced
+reference-pipeline selection. The two physical campaigns remain incomplete.

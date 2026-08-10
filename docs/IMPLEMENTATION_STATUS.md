@@ -1,4 +1,4 @@
-# Implementation status — 2026-08-09
+# Implementation status, 2026-08-09
 
 ## Evidence update, 2026-08-09
 
@@ -29,12 +29,14 @@ N-MNIST seeds accept the five-point budget. The recurrent tasks reject all
 three budgets because the declared family contains many genuine prediction
 changes.
 
-The matched repair matrix is also complete. Certificate-directed repair
-recovers 72.1% and 89.7% on the two SHD targets and 91.1% on DVS Gesture. It
-does not consistently outperform logit-only distillation, and no method
-restores a five-point certificate. The repair result therefore supports a
-post-rejection opportunity and mandatory recertification, not superiority of
-the current repair objective.
+The executor-faithful matched repair matrix is complete. Task-tuned
+certificate-directed repair recovers 80.6% and 91.0% on the two SHD targets
+and 94.9% on DVS Gesture. Every seed clears 70% recovery in every condition,
+and mean recovery exceeds matched logit-only distillation in all three. Its
+audit bound is tighter for both SHD targets but looser for DVS, and no method
+restores a five-point certificate. The result therefore supports a distinct
+label-free repair benefit followed by mandatory recertification, not universal
+metric dominance or guaranteed certificate restoration.
 
 The software evidence supports the semantics-contract and sound-certificate
 formulation. It does not pass the full submission contract. Physical
@@ -56,7 +58,7 @@ reproduction package is not yet complete.
 - Differentiable certificate-mass repair plus hard per-neuron threshold, tau,
   bias, and incoming-scale refinement with strict calibration/audit separation.
 - Immutable report contracts, command-line workflows, NIR and SpiNNaker2
-  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 122
+  conversion adapters, hardware manifest validation, fresh Virtex-7 RTL, and 132
   passing software tests.
 - Matched repair baselines with explicit label, sample, optimizer-step,
   trainable-parameter, runtime, selection, split, and artifact provenance.
@@ -68,18 +70,17 @@ reproduction package is not yet complete.
   replication because its reference pipeline was selected using official test
   accuracy before semantic targets were run.
 - Five-seed SHD matched repair study on reset-to-value and floor-rounded
-  fixed-point execution under the cast-faithful executor. Certificate-directed
-  repair recovers 72.1% and 89.7% of lost accuracy, respectively; nine of its
-  ten cells clear 70%, with reset seed 8119 recovering only 23.1%. It beats no
-  repair and global scaling in every cell, but logit-only has higher mean
-  recovery in both conditions and labeled QAT is strongest on the genuine
-  fixed-point comparison. No repaired method/seed/condition cell accepts a
-  five-point budget.
-- Five-seed DVS Gesture floor-rounded repair development study. Restricted
-  certificate-directed calibration recovers 91.1% of lost accuracy with every
-  seed above 79.5%, versus 89.3% for logit-only, 74.8% for global scaling, and
-  99.6% for 97-label QAT. It beats logit-only in only three paired seeds and its
-  21.5-point mean bound is substantially looser than logit-only's 15.1 points.
+  fixed-point execution under the cast-faithful executor. Task-tuned
+  certificate-directed repair recovers 80.6% and 91.0% of lost accuracy,
+  respectively, and all ten cells clear 70%. It beats no repair and global
+  scaling in every cell and exceeds logit-only mean recovery in both
+  conditions. Labeled QAT remains strongest on the fixed-point comparison. No
+  repaired method, seed, or condition accepts a five-point budget.
+- Five-seed DVS Gesture floor-rounded repair development study. Restricted,
+  task-tuned certificate-directed calibration recovers 94.9% of lost accuracy
+  with every seed above 89.1%, versus 89.3% for logit-only, 74.8% for global
+  scaling, and 99.6% for 97-label QAT. It beats logit-only in four paired seeds,
+  while its 17.4-point mean bound remains 2.3 points looser than logit-only.
 - Full-audit SHD finite-family analysis: 38.72% mean member-wise coverage over
   the 16-member family, exactly matching enumerated agreement and passing the
   declared 20% gate. The preserved 18.79% predecessor merged logits across
@@ -211,22 +212,20 @@ reproduction package is not yet complete.
   grid, reset retains 60.31% sampled identity, integration 68.91%, timing and
   delay each 69.06%, reset plus delay 46.72%, integration plus timing 55.47%,
   and the full family 31.09%. Every primary-axis seed remains above 56.25%.
-- Five-seed post-repair reset-family diagnostic: certificate-directed repair
-  raises sampled family identity from 63.88% to 76.14% on all 861 frozen audit
-  inputs per seed and improves every seed, but logit-only reaches 76.33%. These
-  values use the cast-faithful executor and repaired models and supersede the
-  earlier full-float32 and 128-input diagnostics. The proposed-minus-logit
-  paired input-cluster interval is [-1.51, 1.14] points and the seed-level
-  interval is [-3.05, 2.68], so neither objective is superior. A
+- Five-seed post-repair reset-family diagnostic: task-tuned
+  certificate-directed repair reaches 77.21% sampled family identity on all
+  861 frozen audit inputs per seed, versus 76.96% for corrected logit-only.
+  The 0.26-point mean advantage has mixed per-seed signs and is diagnostic
+  rather than proof of a continuous
+  family certificate. A
   single-seed sound branch-set test on the earlier models completes
   no representative repaired-model cell; at the finest partition, repair
   reduces rather than increases the reached proof depth.
-- Five-seed floor-fixed-point family diagnostic: sampled 9-by-9 identity rises
-  from 18.58% without repair to 75.42% after certificate-directed repair on all
-  861 audit inputs per seed, a 56.84-point paired gain that is positive in every
-  seed. Logit-only reaches 76.52% and the labeled target fine-tune 79.42%. This
-  condition's proposed-minus-logit intervals are [-2.42, 0.23] points over input
-  clusters and [-3.33, 1.14] over seeds. This is not yet a sound
+- Five-seed floor-fixed-point family diagnostic: task-tuned
+  certificate-directed repair reaches 78.14% sampled 9-by-9 identity on all 861
+  audit inputs per seed, versus 76.77% for corrected logit-only. The 1.37-point
+  gain is positive in every seed, but it does not establish continuous-family
+  superiority. This is not yet a sound
   continuous certificate because fixed-point local branching is unimplemented.
 - Single-seed proof-aware repair kill test: a selected pointwise guard-margin
   penalty reaches timestep 44.42 at 128-by-128 partitioning, partially above

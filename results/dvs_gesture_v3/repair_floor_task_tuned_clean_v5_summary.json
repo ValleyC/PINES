@@ -1,0 +1,318 @@
+{
+  "code_revision": "7a3614ba6defa02c7e270f07acdff68d6c64622d",
+  "condition": "floor_rounding_saturation",
+  "formulation_assessment": "Restricted label-free calibration clears 70 percent recovery for every seed and beats logit-only in 4/5 paired seeds. Its mean recovery is 5.6 points higher, while its audit bound is 2.3 points looser. Labeled QAT has the strongest mean recovery when included. The task-tuned objective supports a distinct recovery advantage, but not universal bound dominance or a five-point certificate. This remains development rather than sequestered evidence.",
+  "gate_assessment": {
+    "certificate_directed_all_seeds_recover_at_least_70_percent": true,
+    "certificate_directed_beats_global_threshold_every_seed": true,
+    "certificate_directed_beats_logit_only_every_seed": false,
+    "certificate_directed_beats_logit_only_mean_recovery": true,
+    "certificate_directed_certifies_five_point_budget_any_seed": false,
+    "no_observed_bound_violation": true
+  },
+  "input_report_hashes": {
+    "seed_1701__certificate_directed": "1891111d659ad0d99a33fb8bd39cda870f0e9e4f75de78442fe85116ba242cac",
+    "seed_1701__global_threshold": "d0127d466b9740ae4c3b54e4563b567ec1064c781571939e31aabd5834058a4b",
+    "seed_1701__logit_only": "b96c8b86c6c821a77e2a2c21af718e0379ea70476d2f4b96f63cfebad9317187",
+    "seed_1701__per_platform_qat": "53b788f44db4243702eb0ff2d7d710cf181d86540f820e58912c0608b2b56501",
+    "seed_1701__supervised_target_retraining": "579e46cf600131007d9ba334fc794e50c8d31ec56aefb02af767772212598758",
+    "seed_2718__certificate_directed": "0d2642db0d6004dbb7ed44644f750e78d41f7c59ac334b8f2b5a7a3fd261b965",
+    "seed_2718__global_threshold": "f602cd68b5feaadaeadf30b0d4730cd65219ba729ad90ce93eae7041b1b1dd2a",
+    "seed_2718__logit_only": "16678d64e548d8080f6e1c5b38fd81be688b7f9edb505cd8d36e7764047bd839",
+    "seed_2718__per_platform_qat": "708ce3d5d742f1096b5eca6cbe76e6f7ffe30a1385f0aa3906f93c8f2357ba86",
+    "seed_2718__supervised_target_retraining": "ad69c7bcd810ca919e455041ac4cb911e003f1c34c3fe41845cd875b6b87cb60",
+    "seed_3141__certificate_directed": "2e0c63c4e111b04487b8d4a00f0ff26cd53219824a9a9c2ccd8e52071acfeed8",
+    "seed_3141__global_threshold": "626364bb7379a43d32ebdaf4015b961311117c8a22303e5bfd5d4e56c89b6600",
+    "seed_3141__logit_only": "a66cad4809ba617fb13ddfd62e4eb1bb418873876d4a47e68fecaad3aa5b125d",
+    "seed_3141__per_platform_qat": "ebbaca220036d2c94b1a88f0b936e84cab9c7e506bcbabc1fb45b2879c4ceb83",
+    "seed_3141__supervised_target_retraining": "5e157c288db3ba2e3ee3503aa9826f2622d4eeef942ccbf6628793b4cd661567",
+    "seed_5772__certificate_directed": "2acddc320d81c5ab7f22a9c8657b56b08a1d4d009b914624f3d7c1cdaa8051bd",
+    "seed_5772__global_threshold": "1d020fda1f54cfcbbb7e9278e3dbddadd5d0b4ead6ed430154695b4530cece97",
+    "seed_5772__logit_only": "685e7ee9fcc0b7095927f6787f5c676ecaa3b52fa4f8d0a2fa02adfa17f9e656",
+    "seed_5772__per_platform_qat": "5e100660814bc8654fe8873e929971045315f562db4a491176a93a18eb28ef70",
+    "seed_5772__supervised_target_retraining": "97501fb50867f68dcbda8136334e1a9ebb952352c38a607a7a89636191b13562",
+    "seed_8119__certificate_directed": "96d8cae57fff1afceb18456cb38b5690ed7c29c9acf352648448855b95d04e6a",
+    "seed_8119__global_threshold": "2f40bfa3cb1dc7383e86842254093386d212307a9c34967aefa6ed42b6c52bc0",
+    "seed_8119__logit_only": "9ab0b0f0cac304cef569985010c5d55aae3eda5080af616b68fa304fa84bf1f8",
+    "seed_8119__per_platform_qat": "0fdbc1487fa769f8cc0fab1db39f8b6e3830ce35ad07627127d6d684ef7e7445",
+    "seed_8119__supervised_target_retraining": "2ff5df5eb1694c462f26de60af174827b8de88a54de488cb8aa3707208f00553"
+  },
+  "methods": [
+    "certificate_directed",
+    "logit_only",
+    "global_threshold",
+    "per_platform_qat",
+    "supervised_target_retraining"
+  ],
+  "paired_recovery_differences": {
+    "certificate_minus_global_threshold": {
+      "max": 0.3095238095238094,
+      "mean": 0.20125650820919705,
+      "min": 0.0650406504065042,
+      "std": 0.09916315226943075
+    },
+    "certificate_minus_labeled_qat": {
+      "max": 0.04065040650406493,
+      "mean": -0.046884556002980915,
+      "min": -0.17460317460317443,
+      "std": 0.09240520733098702
+    },
+    "certificate_minus_labeled_qat_bound": {
+      "max": 0.012352905773774348,
+      "mean": -0.049017337968822364,
+      "min": -0.08687223772039399,
+      "std": 0.0383530643559842
+    },
+    "certificate_minus_logit": {
+      "max": 0.1269841269841273,
+      "mean": 0.05556259165133688,
+      "min": -0.008130081300813052,
+      "std": 0.053770724688300235
+    },
+    "certificate_minus_logit_bound": {
+      "max": 0.05092346399793235,
+      "mean": 0.02298465440420296,
+      "min": -0.025991261119588938,
+      "std": 0.029116232359286842
+    },
+    "certificate_minus_supervised_retraining": {
+      "max": 1.285714285714286,
+      "mean": 0.8888136625838653,
+      "min": 0.6016260162601628,
+      "std": 0.2705356909124644
+    },
+    "certificate_minus_supervised_retraining_bound": {
+      "max": -0.3634625693813989,
+      "mean": -0.42477524155386687,
+      "min": -0.5031348095614523,
+      "std": 0.05180092137776208
+    }
+  },
+  "per_method": [
+    {
+      "accuracy_recovery": {
+        "max": 1.0357142857142856,
+        "mean": 0.949047640575704,
+        "min": 0.8915662650602407,
+        "std": 0.0568014046280404
+      },
+      "after_accuracy_loss": {
+        "max": 0.03409090909090917,
+        "mean": 0.017424242424242432,
+        "min": -0.011363636363636354,
+        "std": 0.017066485342528512
+      },
+      "after_bound_slack": {
+        "max": 0.20739239047801555,
+        "mean": 0.1521256641889604,
+        "min": 0.10961060436761921,
+        "std": 0.038820953703184675
+      },
+      "after_certificate_upper_bound": {
+        "max": 0.2187560268416519,
+        "mean": 0.17409536115865737,
+        "min": 0.14370151345852838,
+        "std": 0.03272229717340938
+      },
+      "elapsed_seconds": {
+        "max": 83.10713499999838,
+        "mean": 79.60368317999819,
+        "min": 76.9839542000118,
+        "std": 2.269608694505356
+      },
+      "label_budget": 0,
+      "method": "certificate_directed",
+      "optimization_steps": 280,
+      "seeds_certified_at_five_point_budget": 0,
+      "seeds_recovering_at_least_70_percent": 5,
+      "trainable_parameters": 960
+    },
+    {
+      "accuracy_recovery": {
+        "max": 0.967479674796748,
+        "mean": 0.8934850489243671,
+        "min": 0.7777777777777776,
+        "std": 0.08399229658992036
+      },
+      "after_accuracy_loss": {
+        "max": 0.053030303030303094,
+        "mean": 0.03333333333333335,
+        "min": 0.015151515151515138,
+        "std": 0.019015000603047214
+      },
+      "after_bound_slack": {
+        "max": 0.16712055653117125,
+        "mean": 0.11777737342112102,
+        "min": 0.09067121042822529,
+        "std": 0.029454401882000814
+      },
+      "after_certificate_upper_bound": {
+        "max": 0.1822720716826864,
+        "mean": 0.15111070675445437,
+        "min": 0.11618566059441146,
+        "std": 0.025719035016246117
+      },
+      "elapsed_seconds": {
+        "max": 86.64395570009947,
+        "mean": 85.20370203997008,
+        "min": 83.94350299984217,
+        "std": 1.310229135772766
+      },
+      "label_budget": 0,
+      "method": "logit_only",
+      "optimization_steps": 280,
+      "seeds_certified_at_five_point_budget": 0,
+      "seeds_recovering_at_least_70_percent": 5,
+      "trainable_parameters": 960
+    },
+    {
+      "accuracy_recovery": {
+        "max": 0.8943089430894308,
+        "mean": 0.7477911323665068,
+        "min": 0.6692307692307693,
+        "std": 0.08572274887615548
+      },
+      "after_accuracy_loss": {
+        "max": 0.16287878787878785,
+        "mean": 0.09015151515151518,
+        "min": 0.04924242424242431,
+        "std": 0.04330458359705391
+      },
+      "after_bound_slack": {
+        "max": 0.3690378114385997,
+        "mean": 0.24602634003844487,
+        "min": 0.14693731708259705,
+        "std": 0.09187829254118551
+      },
+      "after_certificate_upper_bound": {
+        "max": 0.45615902355981186,
+        "mean": 0.33617785518996,
+        "min": 0.23057375117892237,
+        "std": 0.08251282617666543
+      },
+      "elapsed_seconds": {
+        "max": 15.304913300089538,
+        "mean": 14.303258879994974,
+        "min": 13.609827399952337,
+        "std": 0.7801336703787609
+      },
+      "label_budget": 0,
+      "method": "global_threshold",
+      "optimization_steps": 0,
+      "seeds_certified_at_five_point_budget": 0,
+      "seeds_recovering_at_least_70_percent": 4,
+      "trainable_parameters": 1
+    },
+    {
+      "accuracy_recovery": {
+        "max": 1.1428571428571428,
+        "mean": 0.995932196578685,
+        "min": 0.9156626506024094,
+        "std": 0.1075453560446323
+      },
+      "after_accuracy_loss": {
+        "max": 0.037878787878787845,
+        "mean": 0.007575757575757592,
+        "min": -0.045454545454545414,
+        "std": 0.037783972241022715
+      },
+      "after_bound_slack": {
+        "max": 0.21975107363794055,
+        "mean": 0.1897793657941464,
+        "min": 0.16333267774329246,
+        "std": 0.020564156802844864
+      },
+      "after_certificate_upper_bound": {
+        "max": 0.26520561909248597,
+        "mean": 0.22311269912747972,
+        "min": 0.1822720716826864,
+        "std": 0.02972120137961858
+      },
+      "elapsed_seconds": {
+        "max": 90.29116680007428,
+        "mean": 86.19667436005548,
+        "min": 83.72315170010552,
+        "std": 2.699141693266152
+      },
+      "label_budget": 97,
+      "method": "per_platform_qat",
+      "optimization_steps": 280,
+      "seeds_certified_at_five_point_budget": 0,
+      "seeds_recovering_at_least_70_percent": 5,
+      "trainable_parameters": 678560
+    },
+    {
+      "accuracy_recovery": {
+        "max": 0.35772357723577225,
+        "mean": 0.06023397799183865,
+        "min": -0.38095238095238104,
+        "std": 0.28953620115706574
+      },
+      "after_accuracy_loss": {
+        "max": 0.3560606060606061,
+        "mean": 0.3204545454545455,
+        "min": 0.2992424242424243,
+        "std": 0.023746103058571916
+      },
+      "after_bound_slack": {
+        "max": 0.3475938987775564,
+        "mean": 0.2784160572579787,
+        "min": 0.24484582764516005,
+        "std": 0.04113254012160809
+      },
+      "after_certificate_upper_bound": {
+        "max": 0.6468363230199807,
+        "mean": 0.5988706027125242,
+        "min": 0.57280648085169,
+        "std": 0.02878610814487673
+      },
+      "elapsed_seconds": {
+        "max": 637.9743359999993,
+        "mean": 558.3007415399974,
+        "min": 531.9909196999943,
+        "std": 45.62997897261295
+      },
+      "label_budget": 97,
+      "method": "supervised_target_retraining",
+      "optimization_steps": 280,
+      "seeds_certified_at_five_point_budget": 0,
+      "seeds_recovering_at_least_70_percent": 0,
+      "trainable_parameters": 678560
+    }
+  ],
+  "protocol": {
+    "audit_samples_per_seed": 104,
+    "calibration_audit_disjoint": true,
+    "calibration_samples_per_seed": 97,
+    "gradient_epochs": 40,
+    "gradient_steps": 280,
+    "label_budgets": {
+      "certificate_directed": 0,
+      "global_threshold": 0,
+      "logit_only": 0,
+      "per_platform_qat": 97,
+      "supervised_target_retraining": 97
+    },
+    "method_artifact_roots": {
+      "certificate_directed": "artifacts\\dvs_gesture_v9_balanced_clean_da9c0f9_v1",
+      "global_threshold": "artifacts\\dvs_gesture_v4_repairs",
+      "logit_only": "artifacts\\dvs_gesture_v4_repairs",
+      "per_platform_qat": "artifacts\\dvs_gesture_v5_qat_nll",
+      "supervised_target_retraining": "artifacts\\dvs_gesture_v7_supervised_retraining"
+    },
+    "qat_artifact_root": "artifacts/dvs_gesture_v5_qat_nll",
+    "selection_uses_test_labels": false,
+    "simultaneous_alpha_per_report": 0.005,
+    "supervised_artifact_root": "artifacts/dvs_gesture_v7_supervised_retraining"
+  },
+  "rows_csv_hash": "56088e46d39e4948af399914d721e699633b46698e369d9c2840d7219335a4bc",
+  "schema_version": "DVSGestureRepairAggregate/v3",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "five-seed software development evidence; official test data helped select the reference pipeline before target semantics were frozen"
+}

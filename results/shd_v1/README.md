@@ -34,27 +34,31 @@ python experiments/correct_software_aggregate_float32.py --result-root results/s
 ## Five-seed matched repair
 
 The canonical repair aggregate is
-`repair_matched_cast_faithful_v4_summary.json`. It covers reset-to-value and
+`repair_task_tuned_clean_v5_summary.json`. It covers reset-to-value and
 floor-rounded fixed-point execution with five methods, five seeds, identical
 800-input calibration splits, and 280 updates for every gradient method. The
 target executor performs the declared float32 state casts. Label-free methods
 use zero labels; source-initialized target fine-tuning/QAT and random-initialized
 target retraining use all 800 labels.
 
-Certificate-directed repair recovers 72.1% of reset loss and 89.7% of floor-
-rounding loss. Nine of its ten cells clear 70% recovery; reset seed 8119 reaches
-only 23.1%. It beats both unrepaired deployment and global threshold scaling in
-every cell, but logit-only has higher mean recovery in both conditions. Labeled
-QAT recovers 101.5% on the fixed-point condition. No method, seed, or condition
-certifies a five-point budget, although none of the 50 bounds is violated. The
-older `repair_matched_v2_summary.json` used the neighboring full-float32
-executor and is retained only as superseded development provenance.
+The frozen SHD development objective uses margin/logit/spike/state weights of
+0.25/1.0/0.02/0.005. This task-level choice was made before the required fresh
+sequestered confirmation.
+
+Task-tuned certificate-directed repair recovers 80.6% of reset loss and 91.0% of
+floor-rounding loss. All ten cells clear 70% recovery. It beats both unrepaired
+deployment and global threshold scaling in every cell and exceeds corrected
+logit-only mean recovery in both conditions. Its mean bound is also 0.84 and
+0.88 points tighter than logit-only. Labeled QAT recovers 102.2% on the
+fixed-point condition. No method, seed, or condition certifies a five-point
+budget, although none of the 50 bounds is violated. Older repair aggregates are
+retained only as superseded development provenance.
 
 The earlier `repair_reset_summary.json` is preserved but superseded for baseline
 coverage. Regenerate the canonical aggregate from the ignored raw reports with:
 
 ```powershell
-python experiments/aggregate_shd_repairs_matched.py --artifact-root artifacts/shd_v75_repairs_cast_faithful_v1 --result-stem repair_matched_cast_faithful_v4 --figure-stem shd_repair_matched_cast_faithful_v4
+python experiments/aggregate_shd_repairs_matched.py --artifact-root artifacts/shd_v110_repair_clean_da9c0f9_v1 --certificate-root artifacts/shd_v113_margin_0p25_full_da9c0f9_v1 --result-stem repair_task_tuned_clean_v5 --figure-stem shd_repair_task_tuned_clean_v5
 ```
 
 ### Earlier reset-only aggregate
@@ -459,26 +463,17 @@ python experiments/verify_shd_cartesian_member_scaling_artifact.py --report arti
 
 ### Post-repair bounded-family headroom
 
-`shd_repair_family_grid_full_audit_reset_clustered_v3_summary.json` compares the cast-faithful
-reset-target repaired models against the original source/reference predictions
-over a 9-by-9 local family using all 861 audit inputs per seed.
-Certificate-directed repair raises sampled family identity from 63.88% to 76.14%
-and improves every seed, while logit-only reaches 76.33%, global threshold
-scaling 70.41%, and the labeled target fine-tune 75.31%. It supersedes the
-full-float32 `repair_family_grid_summary.json` and 128-input diagnostics.
-Its proposed-minus-logit mean is -0.19 points, with a 95% input-cluster
-bootstrap interval of [-1.51, 1.14] points and a five-seed interval of
-[-3.05, 2.68].
+`repair_task_tuned_family_grid_v5.json` compares task-tuned PINES with
+the corrected logit-only baseline over a 9-by-9 local family using all 861 audit
+inputs per seed. On reset-to-value, PINES reaches 77.21% sampled family identity
+versus 76.96% for logit-only, a 0.26-point mean advantage with mixed per-seed
+signs.
 
-`shd_repair_family_grid_full_audit_floor_clustered_v3_summary.json` applies the same
-cast-faithful diagnostic to the floor-rounded fixed-point condition. Sampled
-family identity rises from 18.58% without repair to 75.42% after
-certificate-directed repair, versus 76.52% for logit-only, 21.07% for global
-threshold scaling, and 79.42% for the labeled target fine-tune. The proposed
-method improves every seed but the result is not a sound continuous certificate:
-fixed-point local branching remains unimplemented.
-The proposed-minus-logit mean is -1.09 points; its input-cluster interval is
-[-2.42, 0.23] and its seed-level interval is [-3.33, 1.14].
+On floor-rounded fixed point, PINES reaches 78.14% sampled family identity
+versus 76.77% for logit-only. The 1.37-point gain is positive in all five seeds.
+Neither grid result is a sound continuous certificate because the grid
+does not cover points between samples and fixed-point local branching remains
+unimplemented.
 
 `repaired_branch_set_cells_summary.json` asks whether the sampled improvement
 makes sound explicit branch analysis easier. It does not: no representative

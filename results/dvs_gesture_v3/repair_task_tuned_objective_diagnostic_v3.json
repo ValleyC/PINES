@@ -1,0 +1,128 @@
+{
+  "by_condition": [
+    {
+      "condition": "floor_rounding_saturation",
+      "paired_differences": {
+        "pines_minus_logit_only": {
+          "accuracy_recovery_fraction": {
+            "maximum": 0.1269841269841273,
+            "mean": 0.05556259165133688,
+            "minimum": -0.008130081300813052,
+            "sample_standard_deviation": 0.053770724688300235
+          },
+          "audit_disagreement_rate": {
+            "maximum": 0.038461538461538464,
+            "mean": 0.01730769230769231,
+            "minimum": -0.019230769230769232,
+            "sample_standard_deviation": 0.021926450482675733
+          }
+        }
+      },
+      "per_method": [
+        {
+          "accuracy_recovery_fraction": {
+            "maximum": 1.0357142857142856,
+            "mean": 0.949047640575704,
+            "minimum": 0.8915662650602407,
+            "sample_standard_deviation": 0.0568014046280404
+          },
+          "audit_disagreement_rate": {
+            "maximum": 0.11538461538461539,
+            "mean": 0.08076923076923079,
+            "minimum": 0.057692307692307696,
+            "sample_standard_deviation": 0.02507385540462557
+          },
+          "calibration_disagreement_rate": {
+            "maximum": 0.0,
+            "mean": 0.0,
+            "minimum": 0.0,
+            "sample_standard_deviation": 0.0
+          },
+          "cells_recovering_at_least_70_percent": 5,
+          "certificate_upper_bound": {
+            "maximum": 0.2187560268416519,
+            "mean": 0.17409536115865737,
+            "minimum": 0.14370151345852838,
+            "sample_standard_deviation": 0.03272229717340938
+          },
+          "generalization_gap": {
+            "maximum": 0.11538461538461539,
+            "mean": 0.08076923076923079,
+            "minimum": 0.057692307692307696,
+            "sample_standard_deviation": 0.02507385540462557
+          },
+          "method": "pines"
+        },
+        {
+          "accuracy_recovery_fraction": {
+            "maximum": 0.967479674796748,
+            "mean": 0.8934850489243671,
+            "minimum": 0.7777777777777776,
+            "sample_standard_deviation": 0.08399229658992036
+          },
+          "audit_disagreement_rate": {
+            "maximum": 0.08653846153846154,
+            "mean": 0.06346153846153846,
+            "minimum": 0.038461538461538464,
+            "sample_standard_deviation": 0.018743835278478775
+          },
+          "calibration_disagreement_rate": {
+            "maximum": 0.010309278350515464,
+            "mean": 0.008247422680412371,
+            "minimum": 0.0,
+            "sample_standard_deviation": 0.004610449438143897
+          },
+          "cells_recovering_at_least_70_percent": 5,
+          "certificate_upper_bound": {
+            "maximum": 0.1822720716826864,
+            "mean": 0.15111070675445437,
+            "minimum": 0.11618566059441146,
+            "sample_standard_deviation": 0.025719035016246117
+          },
+          "generalization_gap": {
+            "maximum": 0.07622918318794607,
+            "mean": 0.055214115781126095,
+            "minimum": 0.028152260111023,
+            "sample_standard_deviation": 0.018516190267823657
+          },
+          "method": "logit_only"
+        }
+      ]
+    }
+  ],
+  "code_revision": "3b3aef4480777dcfe105a36c086cac7f93fe7037",
+  "conditions": [
+    "floor_rounding_saturation"
+  ],
+  "input_report_hashes": {
+    "floor_rounding_saturation__seed_1701__logit_only": "b96c8b86c6c821a77e2a2c21af718e0379ea70476d2f4b96f63cfebad9317187",
+    "floor_rounding_saturation__seed_1701__pines": "1891111d659ad0d99a33fb8bd39cda870f0e9e4f75de78442fe85116ba242cac",
+    "floor_rounding_saturation__seed_2718__logit_only": "16678d64e548d8080f6e1c5b38fd81be688b7f9edb505cd8d36e7764047bd839",
+    "floor_rounding_saturation__seed_2718__pines": "0d2642db0d6004dbb7ed44644f750e78d41f7c59ac334b8f2b5a7a3fd261b965",
+    "floor_rounding_saturation__seed_3141__logit_only": "a66cad4809ba617fb13ddfd62e4eb1bb418873876d4a47e68fecaad3aa5b125d",
+    "floor_rounding_saturation__seed_3141__pines": "2e0c63c4e111b04487b8d4a00f0ff26cd53219824a9a9c2ccd8e52071acfeed8",
+    "floor_rounding_saturation__seed_5772__logit_only": "685e7ee9fcc0b7095927f6787f5c676ecaa3b52fa4f8d0a2fa02adfa17f9e656",
+    "floor_rounding_saturation__seed_5772__pines": "2acddc320d81c5ab7f22a9c8657b56b08a1d4d009b914624f3d7c1cdaa8051bd",
+    "floor_rounding_saturation__seed_8119__logit_only": "9ab0b0f0cac304cef569985010c5d55aae3eda5080af616b68fa304fa84bf1f8",
+    "floor_rounding_saturation__seed_8119__pines": "96d8cae57fff1afceb18456cb38b5690ed7c29c9acf352648448855b95d04e6a"
+  },
+  "method_roots": {
+    "logit_only": {
+      "path": "artifacts\\dvs_gesture_v4_repairs",
+      "report_method": "logit_only"
+    },
+    "pines": {
+      "path": "artifacts\\dvs_gesture_v9_balanced_clean_da9c0f9_v1",
+      "report_method": "certificate_directed"
+    }
+  },
+  "schema_version": "RepairObjectiveDiagnostic/v1",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "status": "matched label-free repair diagnostic on untouched audit splits"
+}
