@@ -1,0 +1,35 @@
+{
+  "schema_version": "SHDHybridRadiusSweep/v1",
+  "task": "SHD",
+  "condition": "reset_to_value",
+  "sample_count_per_seed": 16,
+  "grid_resolution_per_axis": 9,
+  "variants": [
+    {
+      "relative_radius": 0.0025,
+      "config": "configs/experiments/shd_hybrid_radius_0025_v1.json",
+      "audit_report": "artifacts/shd_v91_hybrid_radius_0025_v1/hybrid_family_audit.json",
+      "grid_report": "artifacts/shd_v95_hybrid_radius_grid_0025_v1/hybrid_audit_grid_validation.json"
+    },
+    {
+      "relative_radius": 0.005,
+      "config": "configs/experiments/shd_hybrid_radius_0050_v1.json",
+      "audit_report": "artifacts/shd_v92_hybrid_radius_0050_v1/hybrid_family_audit.json",
+      "grid_report": "artifacts/shd_v96_hybrid_radius_grid_0050_v1/hybrid_audit_grid_validation.json"
+    },
+    {
+      "relative_radius": 0.01,
+      "config": "configs/experiments/shd_hybrid_radius_0100_v1.json",
+      "audit_report": "artifacts/shd_v93_hybrid_radius_0100_v1/hybrid_family_audit.json",
+      "grid_report": "artifacts/shd_v97_hybrid_radius_grid_0100_v1/hybrid_audit_grid_validation.json"
+    },
+    {
+      "relative_radius": 0.02,
+      "config": "configs/experiments/shd_hybrid_radius_0200_v1.json",
+      "audit_report": "artifacts/shd_v94_hybrid_radius_0200_v1/hybrid_family_audit.json",
+      "grid_report": "artifacts/shd_v98_hybrid_radius_grid_0200_v1/hybrid_audit_grid_validation.json"
+    }
+  ],
+  "interpretation": "All width points use the same first 16 frozen certificate-audit inputs per seed, sound analyzer, proof budgets, and finite-grid resolution."
+}
+

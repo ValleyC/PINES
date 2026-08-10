@@ -1,0 +1,31 @@
+{
+  "schema_version": "SHDHybridFamilyAudit/v1",
+  "condition": "reset_to_value",
+  "relative_timestep_radius": 0.02,
+  "relative_threshold_radius": 0.02,
+  "seeds": [1701, 2718, 3141, 5772, 8119],
+  "audit_selection": {
+    "split": "certificate_audit",
+    "rule": "first indices in frozen split order",
+    "sample_count_per_seed": 16,
+    "uses_predictions_for_selection": false,
+    "uses_labels_for_selection": false
+  },
+  "certificate_budgets": {
+    "maximum_polygon_leaves": 64,
+    "maximum_local_branches": 64,
+    "maximum_guard_band_splits": 8
+  },
+  "development_provenance": {
+    "source": "reviewer-requested continuous-width sensitivity study",
+    "input_selection_and_budgets_match_across_all_widths": true
+  },
+  "advance_gate": {
+    "minimum_mean_certified_input_fraction": 0.0,
+    "require_every_seed_nonzero": false,
+    "require_zero_area_cover_failures": true,
+    "next_stage": "none"
+  },
+  "interpretation": "Five-seed sensitivity point with frozen inputs and budgets. It measures certificate tightness and runtime as the declared continuous contract widens."
+}
+
