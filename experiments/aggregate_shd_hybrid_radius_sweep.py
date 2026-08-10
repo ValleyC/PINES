@@ -175,8 +175,6 @@ def main() -> None:
         "rows_csv_hash": sha256_file(rows_path),
         "code_revision": code_revision(root),
     }
-    write_json_immutable(summary_path, summary)
-
     certified = np.asarray(
         [float(row["certified_fraction"]) for row in rows]
     ) * 100.0
@@ -251,6 +249,7 @@ def main() -> None:
     )
     fig.savefig(figure_path, bbox_inches="tight")
     plt.close(fig)
+    write_json_immutable(summary_path, summary)
 
 
 if __name__ == "__main__":
