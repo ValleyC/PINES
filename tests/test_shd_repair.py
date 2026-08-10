@@ -6,11 +6,18 @@ import torch
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd_repair import (
     _checkpoint_selection_key,
+    SHDRepairConfig,
     build_repairable_srnn,
     build_supervised_target_srnn,
     _export_supervised,
 )
 from pines.torch_emulator import TorchEmulator
+
+
+def test_shd_repair_uses_frozen_development_objective_weights() -> None:
+    config = SHDRepairConfig()
+    assert config.margin_weight == 0.25
+    assert config.logit_weight == 1.0
 
 
 def test_checkpoint_selection_preserves_method_specific_ordering() -> None:

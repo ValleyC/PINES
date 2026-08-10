@@ -30,13 +30,13 @@ from .shd import PackedSHD, _SurrogateSpike
 
 @dataclass(frozen=True)
 class SHDRepairConfig:
-    schema_version: str = "SHDRepair/v6"
+    schema_version: str = "SHDRepair/v7"
     epochs: int = 40
     batch_size: int = 128
     learning_rate: float = 0.02
     weight_decay: float = 1e-5
     gradient_clip: float = 1.0
-    margin_weight: float = 1.0
+    margin_weight: float = 0.25
     logit_weight: float = 1.0
     reference_margin_weight: float = 1.0
     spike_weight: float = 0.02

@@ -38,7 +38,7 @@ def main() -> None:
         "--output-root", default="artifacts/shd_v75_repairs_cast_faithful_v1"
     )
     parser.add_argument("--epochs", type=int, default=40)
-    parser.add_argument("--margin-weight", type=float, default=1.0)
+    parser.add_argument("--margin-weight", type=float, default=0.25)
     parser.add_argument("--logit-weight", type=float, default=1.0)
     args = parser.parse_args()
 
