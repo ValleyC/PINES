@@ -5,6 +5,7 @@ import csv
 import json
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 from pines.artifacts import code_revision, sha256_file, write_json_immutable
@@ -124,7 +125,8 @@ def main() -> None:
     output_root.mkdir(parents=True, exist_ok=True)
     rows_path = output_root / "hybrid_radius_sweep_rows.csv"
     summary_path = output_root / "hybrid_radius_sweep_summary.json"
-    if rows_path.exists() or summary_path.exists():
+    figure_path = output_root / "shd_hybrid_radius_sweep.pdf"
+    if rows_path.exists() or summary_path.exists() or figure_path.exists():
         raise FileExistsError("hybrid radius-sweep aggregate already exists")
 
     with rows_path.open("x", newline="", encoding="utf-8") as handle:
@@ -175,7 +177,81 @@ def main() -> None:
     }
     write_json_immutable(summary_path, summary)
 
+    certified = np.asarray(
+        [float(row["certified_fraction"]) for row in rows]
+    ) * 100.0
+    falsified = np.asarray(
+        [float(row["grid_falsified_fraction"]) for row in rows]
+    ) * 100.0
+    unresolved = np.asarray(
+        [float(row["stable_unresolved_fraction"]) for row in rows]
+    ) * 100.0
+    positions = np.arange(len(rows))
+    labels = [
+        f"$\\pm${float(row['radius_percent']):g}%" for row in rows
+    ]
+    fig, axis = plt.subplots(figsize=(3.45, 1.85), constrained_layout=True)
+    axis.barh(
+        positions,
+        certified,
+        color="#4477AA",
+        edgecolor="white",
+        linewidth=0.4,
+        label="Certified",
+    )
+    axis.barh(
+        positions,
+        falsified,
+        left=certified,
+        color="#CC6677",
+        edgecolor="white",
+        linewidth=0.4,
+        label="Falsified",
+    )
+    axis.barh(
+        positions,
+        unresolved,
+        left=certified + falsified,
+        color="#BBBBBB",
+        edgecolor="white",
+        linewidth=0.4,
+        label="Unresolved",
+    )
+    for row_index, segments in enumerate(
+        zip(certified, falsified, unresolved, strict=True)
+    ):
+        offset = 0.0
+        for value in segments:
+            if value >= 9.0:
+                axis.text(
+                    offset + value / 2.0,
+                    row_index,
+                    f"{value:.0f}",
+                    ha="center",
+                    va="center",
+                    fontsize=6.5,
+                    color="black",
+                )
+            offset += value
+    axis.set_yticks(positions, labels)
+    axis.invert_yaxis()
+    axis.set_xlim(0.0, 100.0)
+    axis.set_xlabel("Audit inputs (\\%)", fontsize=7.5)
+    axis.tick_params(axis="both", labelsize=7)
+    axis.grid(axis="x", alpha=0.2, linewidth=0.5)
+    axis.set_axisbelow(True)
+    axis.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.24),
+        ncol=3,
+        frameon=False,
+        fontsize=6.8,
+        handlelength=1.2,
+        columnspacing=1.0,
+    )
+    fig.savefig(figure_path, bbox_inches="tight")
+    plt.close(fig)
+
 
 if __name__ == "__main__":
     main()
-
