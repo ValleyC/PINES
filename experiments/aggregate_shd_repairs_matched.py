@@ -323,24 +323,38 @@ def main() -> None:
         float(row["accuracy_recovery_fraction"]) >= 0.70
         for row in certificate_rows
     )
-    logit_winning_conditions = sum(
+    certificate_recovery_wins = sum(
         next(
-            method
-            for method in item["per_method"]
-            if method["method"] == "logit_only"
-        )["accuracy_recovery"]["mean"]
-        >= next(
             method
             for method in item["per_method"]
             if method["method"] == "certificate_directed"
         )["accuracy_recovery"]["mean"]
+        > next(
+            method
+            for method in item["per_method"]
+            if method["method"] == "logit_only"
+        )["accuracy_recovery"]["mean"]
+        for item in condition_summaries
+    )
+    certificate_bound_wins = sum(
+        next(
+            method
+            for method in item["per_method"]
+            if method["method"] == "certificate_directed"
+        )["after_certificate_upper_bound"]["mean"]
+        < next(
+            method
+            for method in item["per_method"]
+            if method["method"] == "logit_only"
+        )["after_certificate_upper_bound"]["mean"]
         for item in condition_summaries
     )
     summary["formulation_assessment"] = (
         f"Certificate-directed repair clears 70% recovery in "
-        f"{certificate_seventy_count}/10 condition-seed cells. Logit-only has "
-        f"equal or higher mean recovery in {logit_winning_conditions}/2 "
-        "conditions. It passes the preregistered recovery gate and beats global "
+        f"{certificate_seventy_count}/10 condition-seed cells. It exceeds "
+        f"logit-only mean recovery in {certificate_recovery_wins}/2 conditions "
+        f"and has the tighter mean post-repair bound in {certificate_bound_wins}/2. "
+        "It passes the preregistered recovery gate and beats global "
         "threshold scaling and unrepaired deployment in every seed. No repaired "
         "model obtains a five-point disagreement certificate, so the result "
         "supports transport repair followed by recertification rather than "
