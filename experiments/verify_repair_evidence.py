@@ -127,7 +127,7 @@ def main() -> None:
         "--dvs-summary",
         default=(
             "results/dvs_gesture_v3/"
-            "repair_floor_task_tuned_clean_v4_summary.json"
+            "repair_floor_task_tuned_clean_v5_summary.json"
         ),
     )
     parser.add_argument(
