@@ -224,7 +224,7 @@ def main() -> None:
                 axis.text(
                     offset + value / 2.0,
                     row_index,
-                    f"{value:.0f}",
+                    f"{value:.1f}",
                     ha="center",
                     va="center",
                     fontsize=6.5,
@@ -234,7 +234,7 @@ def main() -> None:
     axis.set_yticks(positions, labels)
     axis.invert_yaxis()
     axis.set_xlim(0.0, 100.0)
-    axis.set_xlabel("Audit inputs (\\%)", fontsize=7.5)
+    axis.set_xlabel("Audit inputs (%)", fontsize=7.5)
     axis.tick_params(axis="both", labelsize=7)
     axis.grid(axis="x", alpha=0.2, linewidth=0.5)
     axis.set_axisbelow(True)

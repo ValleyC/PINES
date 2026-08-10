@@ -18,7 +18,7 @@ The first research release implements:
   counterexample search;
 - exact one-sided Clopper--Pearson disagreement bounds with simultaneous
   confidence correction and physical conformance composition;
-- label-free, certificate-directed threshold/leak calibration with disjoint
+- label-free transport calibration and mandatory recertification with disjoint
   calibration and audit sets;
 - immutable JSON reports, command-line workflows, optional NIR/SpiNNaker2
   adapters, and a fresh parameterized RTL neuron;
@@ -59,6 +59,14 @@ software bound is 70.56 points on average, so every seed rejects the one, two,
 and five-point budgets. Independent 9 by 9 grid and 1,024-point Sobol searches
 find no contradiction to any certified input. Median analysis time is 51.46
 seconds per input.
+
+A matched five-seed width study fixes 80 model-input pairs and all proof
+budgets while jointly varying timestep and threshold uncertainty. Certified
+fractions are 73.75%, 68.75%, 37.50%, and 0% at plus or minus 0.25%, 0.5%, 1%,
+and 2%. Independent 9 by 9 grids find concrete changes for 26.25%, 28.75%,
+32.50%, and 42.50%. The remaining stable but unresolved fractions are 0%,
+2.50%, 30.00%, and 57.50%, which separates observed semantic instability from
+proof or resource conservatism.
 
 Exact finite-family enumeration certifies 38.72% of SHD inputs, 57.69% of DVS
 Gesture inputs, and 97.67% of N-MNIST inputs. The corresponding simultaneous

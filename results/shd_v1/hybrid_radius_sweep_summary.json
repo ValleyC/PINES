@@ -1,0 +1,95 @@
+{
+  "code_revision": "1445471408259f396a5a9a51d9aa5e3d2c8444cc",
+  "config_hash": "041399a363433841ef5a7712e029df630704c507fbb0c69ca9d17f78f1302167",
+  "input_report_hashes": {
+    "audit_0.0025": "8fc99add50192f8a546923b84dd97f42d2e4109df07c7ef0643e68d30fa96580",
+    "audit_0.005": "e6d77779a08206847efd92fb13975262860399fe2b37f2f988883cc3eb087d19",
+    "audit_0.01": "13e68525686f392881fd3a44376612ff6c437a64b00b7806b35e351d56d8ee70",
+    "audit_0.02": "2c52064cfb4cb0a6cc44129b8fca9d7dafe67895252cede0d6332e9619e610f2",
+    "grid_0.0025": "23992188242cfa9734cf2cb48cbedf23f9a2d9d0bbca9d417e22d169a2720ee4",
+    "grid_0.005": "7ef26e63260d3b9cd5960241f365fccfd584ec2d5f42ded7a1a83caf94a65632",
+    "grid_0.01": "b48f4adec7d1f44d05785c7465d04d83d73efdb905de0c43ef213a7afb9464fc",
+    "grid_0.02": "f740623b383413c002c0de4ca8fc1b1490a41ef351d103cac40362db3b26c278"
+  },
+  "interpretation": "Certified fraction measures complete proof at the fixed resource budget. Grid falsification provides concrete changed executions. Stable unresolved inputs isolate proof or resource conservatism.",
+  "monotonicity_checks": {
+    "certified_fraction_nonincreasing": true,
+    "grid_identity_nonincreasing": true
+  },
+  "rows": [
+    {
+      "certified_fraction": 0.7375,
+      "grid_falsified_fraction": 0.2625,
+      "grid_identity_fraction": 0.7375,
+      "maximum_seed_certified_fraction": 0.8125,
+      "mean_certified_parameter_fraction": 0.7911093622338244,
+      "median_seconds_per_input": 3.723114150001493,
+      "minimum_seed_certified_fraction": 0.625,
+      "p90_seconds_per_input": 26.561435790003454,
+      "proof_gap": 0.0,
+      "radius_percent": 0.25,
+      "relative_radius": 0.0025,
+      "samples": 80,
+      "seed_count": 5,
+      "stable_unresolved_fraction": 0.0
+    },
+    {
+      "certified_fraction": 0.6875,
+      "grid_falsified_fraction": 0.2875,
+      "grid_identity_fraction": 0.7125,
+      "maximum_seed_certified_fraction": 0.75,
+      "mean_certified_parameter_fraction": 0.7669974983031513,
+      "median_seconds_per_input": 16.974549599995953,
+      "minimum_seed_certified_fraction": 0.625,
+      "p90_seconds_per_input": 49.444480330002264,
+      "proof_gap": 0.025,
+      "radius_percent": 0.5,
+      "relative_radius": 0.005,
+      "samples": 80,
+      "seed_count": 5,
+      "stable_unresolved_fraction": 0.025
+    },
+    {
+      "certified_fraction": 0.375,
+      "grid_falsified_fraction": 0.325,
+      "grid_identity_fraction": 0.675,
+      "maximum_seed_certified_fraction": 0.4375,
+      "mean_certified_parameter_fraction": 0.64696738490292,
+      "median_seconds_per_input": 48.42482485000073,
+      "minimum_seed_certified_fraction": 0.3125,
+      "p90_seconds_per_input": 60.86486531000264,
+      "proof_gap": 0.3,
+      "radius_percent": 1.0,
+      "relative_radius": 0.01,
+      "samples": 80,
+      "seed_count": 5,
+      "stable_unresolved_fraction": 0.3
+    },
+    {
+      "certified_fraction": 0.0,
+      "grid_falsified_fraction": 0.425,
+      "grid_identity_fraction": 0.575,
+      "maximum_seed_certified_fraction": 0.0,
+      "mean_certified_parameter_fraction": 0.1670960930836332,
+      "median_seconds_per_input": 24.631007399999362,
+      "minimum_seed_certified_fraction": 0.0,
+      "p90_seconds_per_input": 48.2925403799993,
+      "proof_gap": 0.575,
+      "radius_percent": 2.0,
+      "relative_radius": 0.02,
+      "samples": 80,
+      "seed_count": 5,
+      "stable_unresolved_fraction": 0.575
+    }
+  ],
+  "rows_csv_hash": "b46aa9e7b4048bd77fee21b088c2020288c2c5c88b7b4286934384211d9756bf",
+  "schema_version": "SHDHybridRadiusSweepAggregate/v1",
+  "scope": {
+    "condition": "reset_to_value",
+    "grid_resolution_per_axis": 9,
+    "sample_count_per_seed": 16,
+    "selection": "same first frozen certificate-audit inputs for every radius, without prediction or label selection",
+    "task": "SHD"
+  },
+  "status": "five-seed matched-input continuous-width sensitivity study with sound certification and independent finite-grid falsification"
+}

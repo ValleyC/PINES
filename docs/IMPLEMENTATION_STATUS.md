@@ -12,6 +12,16 @@ fraction and leaf accounting passes an independent verifier over all 500 shard
 artifacts. Mean simultaneous semantic risk is 70.56 points and median analysis
 time is 51.46 seconds per input.
 
+A reviewer-driven continuous-width study holds 80 SHD model-input pairs, five
+seeds, and every proof budget fixed while widening joint timestep and threshold
+uncertainty. At plus or minus 0.25%, 0.5%, 1%, and 2%, the certified,
+grid-falsified, and stable-but-unresolved fractions are 73.75/26.25/0,
+68.75/28.75/2.50, 37.50/32.50/30.00, and 0/42.50/57.50 percent. Median runtime
+is 3.72, 16.97, 48.42, and 24.63 seconds per input. The lower final runtime
+reflects early budget exhaustion rather than improved tractability. This study
+quantifies both genuine semantic changes and the analyzer's practical
+tightness limit as the declared contract widens.
+
 Exact finite-family results are complete on the full frozen audits. Mean
 certified fractions are 38.72% for SHD, 57.69% for DVS Gesture, and 97.67% for
 N-MNIST. Mean simultaneous bounds are 65.90, 56.19, and 2.93 points. All five

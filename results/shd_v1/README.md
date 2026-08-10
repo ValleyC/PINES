@@ -120,6 +120,25 @@ python experiments/run_shd_continuous_radius_sweep.py --seed 1701
 python experiments/aggregate_shd_continuous_radius_sweep.py
 ```
 
+### Hybrid continuous-width sensitivity
+
+The current hybrid analyzer is evaluated on the same first 16 frozen audit
+inputs from each of five seeds at joint radii of 0.25%, 0.5%, 1%, and 2%. All
+widths use 64 polygon leaves, 64 local branches, and eight guard cuts. Certified
+fractions decrease from 73.75% to 68.75%, 37.50%, and 0%. Independent 9 by 9
+grids find concrete changes in 26.25%, 28.75%, 32.50%, and 42.50%, leaving 0%,
+2.50%, 30.00%, and 57.50% stable but unresolved. The tracked aggregate is
+`hybrid_radius_sweep_summary.json`, and `shd_hybrid_radius_sweep.pdf` visualizes
+the outcome partition.
+
+Each width is run with its matching `shd_hybrid_radius_*_v1.json` configuration,
+then checked using `validate_shd_hybrid_audit_grid.py`. Regenerate the tracked
+aggregate with:
+
+```powershell
+python experiments/aggregate_shd_hybrid_radius_sweep.py
+```
+
 ### Recurrence intervention
 
 Zeroing only the trained recurrent matrix, while retaining the same SHD inputs
