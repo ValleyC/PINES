@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import beta, spearmanr, t
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def _exact_interval(successes: int, samples: int, confidence: float) -> list[float]:
@@ -110,7 +110,7 @@ def main() -> None:
             "SHDHybridAuditScientificSourceProvenance/v2"
         ):
             raise ValueError("unsupported scientific source provenance")
-        if provenance.get("audit_report_hash") != sha256_file(audit_path):
+        if provenance.get("audit_report_description") != file_reference(audit_path):
             raise ValueError("source provenance references a different audit report")
     if audit.get("schema_version") != "SHDHybridFamilyFullAuditResult/v1":
         raise ValueError("unsupported full hybrid audit report")
@@ -118,18 +118,18 @@ def main() -> None:
         raise ValueError("unsupported hybrid grid validation report")
     if sobol.get("schema_version") != "SHDHybridAuditSobolValidation/v1":
         raise ValueError("unsupported hybrid Sobol validation report")
-    if grid["audit_report_hash"] != sha256_file(audit_path):
+    if grid["audit_report_description"] != file_reference(audit_path):
         raise ValueError("grid validation does not reference the supplied audit")
-    if sobol["audit_report_hash"] != sha256_file(audit_path):
+    if sobol["audit_report_description"] != file_reference(audit_path):
         raise ValueError("Sobol validation does not reference the supplied audit")
     shard_revisions = set()
     for shard_record in audit["shards"]:
         shard_path = root / shard_record["path"]
-        if sha256_file(shard_path) != shard_record["hash"]:
-            raise ValueError(f"audit shard hash mismatch: {shard_path}")
+        if file_reference(shard_path) != shard_record["reference"]:
+            raise ValueError(f"audit shard reference mismatch: {shard_path}")
         with shard_path.open("r", encoding="utf-8") as handle:
             shard = json.load(handle)
-        if shard.get("config_hash") != audit["config_hash"]:
+        if shard.get("config_reference") != audit["config_reference"]:
             raise ValueError(f"audit shard config mismatch: {shard_path}")
         shard_revisions.add(shard.get("code_revision"))
     revision_match = shard_revisions == {audit["code_revision"]}
@@ -145,7 +145,7 @@ def main() -> None:
             "scientific_driver_functions_unchanged_since_audit_revision"
         )
         and int(provenance.get("shard_count", -1)) == len(audit["shards"])
-        and provenance.get("config_hash") == audit["config_hash"]
+        and provenance.get("config_reference") == audit["config_reference"]
     )
     if not revision_match and not revision_supplement_valid:
         raise ValueError(
@@ -541,24 +541,24 @@ def main() -> None:
             "grid_seconds": float(grid["seconds"]),
             "sobol_seconds": float(sobol["seconds"]),
         },
-        "source_report_hashes": {
-            str(audit_path.relative_to(root)).replace("\\", "/"): sha256_file(
+        "source_report_descriptions": {
+            str(audit_path.relative_to(root)).replace("\\", "/"): file_reference(
                 audit_path
             ),
-            str(grid_path.relative_to(root)).replace("\\", "/"): sha256_file(
+            str(grid_path.relative_to(root)).replace("\\", "/"): file_reference(
                 grid_path
             ),
-            str(sobol_path.relative_to(root)).replace("\\", "/"): sha256_file(
+            str(sobol_path.relative_to(root)).replace("\\", "/"): file_reference(
                 sobol_path
             ),
-            str(screen_path.relative_to(root)).replace("\\", "/"): sha256_file(
+            str(screen_path.relative_to(root)).replace("\\", "/"): file_reference(
                 screen_path
             ),
             **(
                 {
                     str(provenance_path.relative_to(root)).replace(
                         "\\", "/"
-                    ): sha256_file(provenance_path)
+                    ): file_reference(provenance_path)
                 }
                 if provenance is not None
                 else {}
@@ -595,7 +595,7 @@ def main() -> None:
             "claim."
         ),
     }
-    write_json_immutable(output_path, summary)
+    write_json(output_path, summary)
 
     labels.append("all")
     certified_values.append(confirmation_certified / confirmation_samples)

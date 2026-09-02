@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .artifacts import array_hash, write_json_immutable
+from .artifacts import array_description, write_json
 from .certificates import CertificateEngine, SemanticsFamily
 from .emulator import ScalarInterpreter, VectorizedEmulator
 from .models import DenseRecurrentSNN
@@ -51,21 +51,21 @@ def run_toy_study(output_dir: str | Path, samples: int = 256, seed: int = 11) ->
         delta=0.05,
         decision_budget=0.05,
         dataset_split="synthetic-audit",
-        checkpoint_hash=model.model_hash,
+        checkpoint_file=model.model_description,
         seed_manifest={"model": 7, "inputs": seed},
         repository_root=Path(__file__).resolve().parents[2],
     )
     report_path = output / "certificate.json"
     report.write(report_path)
-    write_json_immutable(
+    write_json(
         output / "manifest.json",
         {
             "schema_version": "ToyStudy/v1",
-            "model_hash": model.model_hash,
-            "data_hash": array_hash(inputs),
+            "model_description": model.model_description,
+            "data_description": array_description(inputs),
             "sample_count": samples,
             "seed": seed,
-            "certificate_hash": report.report_hash,
+            "certificate": report_path.name,
             "note": "synthetic software smoke study; not manuscript evidence",
         },
     )
@@ -82,4 +82,3 @@ def reproduce_from_config(config_path: str | Path, output_dir: str | Path) -> Pa
         samples=int(config.get("samples", 256)),
         seed=int(config.get("seed", 11)),
     )
-

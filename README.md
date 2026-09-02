@@ -21,13 +21,15 @@ during double-blind review.
 - `experiments/` contains the runners, aggregators, and evidence verifiers for
   the reported results.
 - `results/` contains only the final software results used in the manuscript.
-- `schemas/` defines the immutable certificate, repair, semantics, and hardware
+- `schemas/` defines the certificate, repair, semantics, and hardware
   manifest formats.
 - `rtl/` contains the parameterized Virtex-7-oriented RTL and its verification
   harness.
 - `hardware/` contains the physical-run manifest instructions.
-- `tests/` contains unit, differential, statistics, and artifact-integrity
-  tests.
+- `hardware/bundles/` contains compact, attributed hardware handoff bundles
+  for the frozen models and unlabeled canary inputs.
+- `tests/` contains unit, differential, statistics, data-layout, and hardware
+  arithmetic tests.
 
 The manuscript-to-artifact map is in [`results/README.md`](results/README.md).
 
@@ -53,14 +55,25 @@ manuscript evidence.
 ## Manuscript evidence
 
 The retained CSV and JSON files contain the final aggregate values reported in
-Tables I through IV and Figure 2. Each summary records hashes for its row file
+Tables I through IV and Figure 2. Each summary records the source row file
 and upstream reports. Large datasets, trained checkpoints, per-input prediction
 arrays, and raw event caches are excluded from Git because of size and dataset
-licensing. The frozen configurations and recorded hashes identify those inputs.
+licensing. The frozen configurations identify those inputs.
 
 Table V is reserved for physical SpiNNaker2 and Virtex-7 results. The software
 repository includes backend adapters, RTL, schemas, and a hardware runbook, but
 does not present uncollected hardware measurements as completed evidence.
+
+The SHD FPGA handoff is documented in
+[`hardware/bundles/shd_floor_q8q16_v1/README.md`](hardware/bundles/shd_floor_q8q16_v1/README.md).
+It contains all five frozen source models, their final certificate-directed
+repairs for the floor-rounded fixed-point target, 861 unlabeled audit inputs,
+integer memory images, emulator predictions, cycle-level smoke traces, and
+plain experiment manifests. Verify it with:
+
+```powershell
+python experiments/verify_shd_hardware_bundle.py
+```
 
 ## Scope
 

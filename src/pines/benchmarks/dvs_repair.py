@@ -9,14 +9,14 @@ from typing import Any
 
 import numpy as np
 
-from ..artifacts import array_hash, code_revision, sha256_file, write_json_immutable
+from ..artifacts import array_description, code_revision, file_reference, write_json
 from ..differentiable_repair import reference_margin_deficit
 from ..semantics import ExecutionSemantics
 from ..statistics import clopper_pearson_upper
 from .dvs_gesture import (
     DVSGestureTrainConfig,
     PackedDVSGesture,
-    _model_hash,
+    _model_description,
     build_dvs_conv_srnn,
 )
 from .semantic_matrix import primary_semantic_conditions
@@ -561,12 +561,12 @@ def run_dvs_repair(
         }
 
     best_model.eval()
-    repaired_hash = _model_hash(best_model)
+    repaired_description = _model_description(best_model)
     repaired_checkpoint = {
         "schema_version": "DVSGestureRepairedCheckpoint/v1",
         "state_dict": best_model.state_dict(),
-        "model_hash": repaired_hash,
-        "source_model_hash": checkpoint["model_hash"],
+        "model_description": repaired_description,
+        "source_model": checkpoint["model_description"],
         "method": method,
         "condition": condition,
         "config": asdict(best_config),
@@ -615,19 +615,19 @@ def run_dvs_repair(
         "schema_version": "DVSGestureRepairExperiment/v1",
         "method": method,
         "condition": condition,
-        "source_model_hash": checkpoint["model_hash"],
-        "repaired_model_hash": repaired_hash,
-        "target_semantics_hash": target.semantics_hash,
-        "source_checkpoint_hash": sha256_file(checkpoint_path),
-        "repaired_checkpoint_hash": sha256_file(checkpoint_output),
-        "semantic_predictions_hash": sha256_file(semantic_predictions_path),
-        "split_indices_hash": sha256_file(split_indices_path),
-        "predictions_artifact_hash": sha256_file(predictions_output),
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
-        "calibration_indices_hash": array_hash(calibration_indices),
-        "audit_indices_hash": array_hash(audit_indices),
-        "test_indices_hash": array_hash(test_indices),
+        "source_model": checkpoint["model_description"],
+        "repaired_model": repaired_description,
+        "target_semantics": target.semantics_description,
+        "source_checkpoint_file": file_reference(checkpoint_path),
+        "repaired_checkpoint_file": file_reference(checkpoint_output),
+        "semantic_predictions_file": file_reference(semantic_predictions_path),
+        "split_indices_file": file_reference(split_indices_path),
+        "predictions_file": file_reference(predictions_output),
+        "train_store": train_store.data_description,
+        "test_store": test_store.data_description,
+        "calibration_indices": array_description(calibration_indices),
+        "audit_indices": array_description(audit_indices),
+        "test_indices": array_description(test_indices),
         "calibration_samples": len(calibration_indices),
         "audit_samples": len(audit_indices),
         "test_samples": len(test_indices),
@@ -692,5 +692,5 @@ def run_dvs_repair(
         "torch_version": torch.__version__,
         "code_revision": code_revision(repository_root),
     }
-    write_json_immutable(report_path, report)
+    write_json(report_path, report)
     return report

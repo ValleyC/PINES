@@ -34,7 +34,7 @@ sampled post-repair diagnostic.
 
 ## Verification
 
-- `verify_manuscript_results.py` checks retained row-file hashes and the rounded
+- `verify_manuscript_results.py` checks the rounded
   values used in the manuscript.
 - `verify_repair_evidence.py` checks repair artifact identity and method
   comparisons.

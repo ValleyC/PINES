@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 
-from ..artifacts import array_hash, code_revision, sha256_file, write_json_immutable
+from ..artifacts import array_description, code_revision, file_reference, write_json
 from ..models import DenseRecurrentSNN
 from ..semantics import (
     ExecutionSemantics,
@@ -176,7 +176,7 @@ def run_shd_semantic_matrix(
         rows.append(
             {
                 "condition": name,
-                "semantics_hash": conditions[name].semantics_hash,
+                "semantics_description": conditions[name].semantics_description,
                 "audit_disagreements": disagreements,
                 "audit_samples": len(audit_indices),
                 "audit_disagreement_rate": disagreement_rate,
@@ -205,13 +205,13 @@ def run_shd_semantic_matrix(
     summary = {
         "schema_version": f"{benchmark}SemanticMatrix/v1",
         "benchmark": benchmark,
-        "model_hash": model.model_hash,
-        "model_artifact_hash": sha256_file(model_path),
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
-        "split_indices_hash": sha256_file(split_indices_path),
-        "prediction_artifact_hash": sha256_file(predictions_path),
-        "reference_semantics_hash": conditions["reference"].semantics_hash,
+        "model_description": model.model_description,
+        "model_file": file_reference(model_path),
+        "train_store": train_store.data_description,
+        "test_store": test_store.data_description,
+        "split_indices_file": file_reference(split_indices_path),
+        "prediction_file": file_reference(predictions_path),
+        "reference_semantics": conditions["reference"].semantics_description,
         "condition_semantics": {
             name: semantics.to_dict() for name, semantics in conditions.items()
         },
@@ -237,5 +237,5 @@ def run_shd_semantic_matrix(
             "Software-only prospective audit; conditional on emulator and not a physical certificate."
         ),
     }
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
     return summary

@@ -28,9 +28,7 @@
   },
   "screen_provenance": {
     "config": "configs/experiments/shd_hybrid_audit_v1.json",
-    "config_hash": "257ead26de109bf76e8a68bcafea2270db5199fb60d3f9d91290054a22a3b763",
     "report": "artifacts/shd_v57_hybrid_audit_v1/hybrid_family_audit.json",
-    "report_hash": "317bd1662069f950b37de97aeffd3ab06bf3536248f8c61ae0835ef9b8a037b7",
     "sample_count": 160,
     "certified_input_fraction": 0.3625,
     "advance_gate_passed": true,
@@ -40,7 +38,7 @@
     "worker_count": 8,
     "shards_per_seed": 100,
     "blas_threads_per_worker": 1,
-    "resume_only_from_hash_validated_immutable_shards": true
+    "resume_completed_shards": true
   },
   "full_audit_gate": {
     "minimum_certified_input_fraction": 0.2,

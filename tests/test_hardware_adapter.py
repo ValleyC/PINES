@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from pines.adapters.hardware import load_hardware_capture
-from pines.artifacts import sha256_file
 
 
 def _write_manifest(path, capture, *, independent=True):
@@ -17,15 +16,15 @@ def _write_manifest(path, capture, *, independent=True):
                 "backend": "virtex7",
                 "backend_serial": "test-board",
                 "adapter_version": "test-1",
-                "firmware_hash": "a" * 64,
-                "bitstream_hash": "b" * 64,
-                "semantics_hash": "c" * 64,
-                "model_hash": "d" * 64,
-                "dataset_hash": "e" * 64,
-                "seed_hash": "f" * 64,
+                "firmware_version": "test-firmware-1",
+                "bitstream_file": "test.bit",
+                "semantics_description": "floor Q8/Q16 target",
+                "model_description": "small recurrent SNN",
+                "dataset_name": "test samples",
+                "seed": "7",
                 "run_id": "run-1",
                 "timestamp_utc": "2026-08-07T12:00:00Z",
-                "capture_hash": sha256_file(capture),
+                "capture_file": capture.name,
                 "independent_pairing": independent,
             }
         ),

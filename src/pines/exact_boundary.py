@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import heapq
 from dataclasses import dataclass
 
@@ -18,7 +17,7 @@ class ThresholdTraceCell:
     lower_scale: float
     upper_scale: float
     prediction: int
-    trace_hash: str
+    trace_key: str
 
 
 @dataclass(frozen=True)
@@ -143,7 +142,7 @@ class ExactThresholdBoundaryOracle:
         )
         pending: list[tuple[int, int]] = [(lower_order, upper_order)]
         cells: list[ThresholdTraceCell] = []
-        trace_hashes: set[str] = set()
+        trace_keys: dict[bytes, str] = {}
         observed_predictions: set[int] = set()
         execution_count = 0
 
@@ -157,7 +156,7 @@ class ExactThresholdBoundaryOracle:
                     observed_predictions=tuple(sorted(observed_predictions)),
                     threshold_scale_bounds=(lower_scale, upper_scale),
                     cells=tuple(cells),
-                    unique_trace_count=len(trace_hashes),
+                    unique_trace_count=len(trace_keys),
                     execution_count=execution_count,
                     uncovered_representable_values=uncovered,
                     counterexample_scale=None,
@@ -178,14 +177,16 @@ class ExactThresholdBoundaryOracle:
                 raise AssertionError("executed trace does not contain its query scale")
             covered_start = max(start, valid_start)
             covered_end = min(end, valid_end)
-            trace_hash = hashlib.sha256(trace.spikes.tobytes()).hexdigest()
-            trace_hashes.add(trace_hash)
+            packed_trace = np.packbits(trace.spikes != 0).tobytes()
+            trace_key = trace_keys.setdefault(
+                packed_trace, f"trace-{len(trace_keys) + 1:06d}"
+            )
             observed_predictions.add(trace.prediction)
             cell = ThresholdTraceCell(
                 lower_scale=_float_from_positive_order(covered_start),
                 upper_scale=_float_from_positive_order(covered_end),
                 prediction=trace.prediction,
-                trace_hash=trace_hash,
+                trace_key=trace_key,
             )
             cells.append(cell)
             if trace.prediction != reference_prediction:
@@ -202,7 +203,7 @@ class ExactThresholdBoundaryOracle:
                     observed_predictions=tuple(sorted(observed_predictions)),
                     threshold_scale_bounds=(lower_scale, upper_scale),
                     cells=tuple(cells),
-                    unique_trace_count=len(trace_hashes),
+                    unique_trace_count=len(trace_keys),
                     execution_count=execution_count,
                     uncovered_representable_values=uncovered,
                     counterexample_scale=query_scale,
@@ -221,7 +222,7 @@ class ExactThresholdBoundaryOracle:
             observed_predictions=tuple(sorted(observed_predictions)),
             threshold_scale_bounds=(lower_scale, upper_scale),
             cells=tuple(cells),
-            unique_trace_count=len(trace_hashes),
+            unique_trace_count=len(trace_keys),
             execution_count=execution_count,
             uncovered_representable_values=0,
             counterexample_scale=None,

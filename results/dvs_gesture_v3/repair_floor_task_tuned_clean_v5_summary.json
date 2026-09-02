@@ -10,33 +10,6 @@
     "certificate_directed_certifies_five_point_budget_any_seed": false,
     "no_observed_bound_violation": true
   },
-  "input_report_hashes": {
-    "seed_1701__certificate_directed": "1891111d659ad0d99a33fb8bd39cda870f0e9e4f75de78442fe85116ba242cac",
-    "seed_1701__global_threshold": "d0127d466b9740ae4c3b54e4563b567ec1064c781571939e31aabd5834058a4b",
-    "seed_1701__logit_only": "b96c8b86c6c821a77e2a2c21af718e0379ea70476d2f4b96f63cfebad9317187",
-    "seed_1701__per_platform_qat": "53b788f44db4243702eb0ff2d7d710cf181d86540f820e58912c0608b2b56501",
-    "seed_1701__supervised_target_retraining": "579e46cf600131007d9ba334fc794e50c8d31ec56aefb02af767772212598758",
-    "seed_2718__certificate_directed": "0d2642db0d6004dbb7ed44644f750e78d41f7c59ac334b8f2b5a7a3fd261b965",
-    "seed_2718__global_threshold": "f602cd68b5feaadaeadf30b0d4730cd65219ba729ad90ce93eae7041b1b1dd2a",
-    "seed_2718__logit_only": "16678d64e548d8080f6e1c5b38fd81be688b7f9edb505cd8d36e7764047bd839",
-    "seed_2718__per_platform_qat": "708ce3d5d742f1096b5eca6cbe76e6f7ffe30a1385f0aa3906f93c8f2357ba86",
-    "seed_2718__supervised_target_retraining": "ad69c7bcd810ca919e455041ac4cb911e003f1c34c3fe41845cd875b6b87cb60",
-    "seed_3141__certificate_directed": "2e0c63c4e111b04487b8d4a00f0ff26cd53219824a9a9c2ccd8e52071acfeed8",
-    "seed_3141__global_threshold": "626364bb7379a43d32ebdaf4015b961311117c8a22303e5bfd5d4e56c89b6600",
-    "seed_3141__logit_only": "a66cad4809ba617fb13ddfd62e4eb1bb418873876d4a47e68fecaad3aa5b125d",
-    "seed_3141__per_platform_qat": "ebbaca220036d2c94b1a88f0b936e84cab9c7e506bcbabc1fb45b2879c4ceb83",
-    "seed_3141__supervised_target_retraining": "5e157c288db3ba2e3ee3503aa9826f2622d4eeef942ccbf6628793b4cd661567",
-    "seed_5772__certificate_directed": "2acddc320d81c5ab7f22a9c8657b56b08a1d4d009b914624f3d7c1cdaa8051bd",
-    "seed_5772__global_threshold": "1d020fda1f54cfcbbb7e9278e3dbddadd5d0b4ead6ed430154695b4530cece97",
-    "seed_5772__logit_only": "685e7ee9fcc0b7095927f6787f5c676ecaa3b52fa4f8d0a2fa02adfa17f9e656",
-    "seed_5772__per_platform_qat": "5e100660814bc8654fe8873e929971045315f562db4a491176a93a18eb28ef70",
-    "seed_5772__supervised_target_retraining": "97501fb50867f68dcbda8136334e1a9ebb952352c38a607a7a89636191b13562",
-    "seed_8119__certificate_directed": "96d8cae57fff1afceb18456cb38b5690ed7c29c9acf352648448855b95d04e6a",
-    "seed_8119__global_threshold": "2f40bfa3cb1dc7383e86842254093386d212307a9c34967aefa6ed42b6c52bc0",
-    "seed_8119__logit_only": "9ab0b0f0cac304cef569985010c5d55aae3eda5080af616b68fa304fa84bf1f8",
-    "seed_8119__per_platform_qat": "0fdbc1487fa769f8cc0fab1db39f8b6e3830ce35ad07627127d6d684ef7e7445",
-    "seed_8119__supervised_target_retraining": "2ff5df5eb1694c462f26de60af174827b8de88a54de488cb8aa3707208f00553"
-  },
   "methods": [
     "certificate_directed",
     "logit_only",
@@ -305,7 +278,6 @@
     "simultaneous_alpha_per_report": 0.005,
     "supervised_artifact_root": "artifacts/dvs_gesture_v7_supervised_retraining"
   },
-  "rows_csv_hash": "56088e46d39e4948af399914d721e699633b46698e369d9c2840d7219335a4bc",
   "schema_version": "DVSGestureRepairAggregate/v3",
   "seeds": [
     1701,

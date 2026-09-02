@@ -102,9 +102,5 @@
     "certificate_audit": "d68168ceb1cce1d7026706f1d7820a94de6d26f8",
     "grid_validation": "d68168ceb1cce1d7026706f1d7820a94de6d26f8"
   },
-  "source_report_hashes": {
-    "artifacts/shd_v57_hybrid_audit_v1/hybrid_family_audit.json": "317bd1662069f950b37de97aeffd3ab06bf3536248f8c61ae0835ef9b8a037b7",
-    "artifacts/shd_v58_hybrid_audit_grid_v1/hybrid_audit_grid_validation.json": "b9104d9a61dfc981aafe2f0fd9d2860ad33d18afa60d5092dc3f8ac514f35a35"
-  },
   "status": "frozen five-seed screen plus independent finite-grid falsification; the screen passed and triggered the separately frozen full audit"
 }

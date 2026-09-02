@@ -11,7 +11,7 @@ from typing import Any
 
 import numpy as np
 
-from ..artifacts import array_hash, code_revision, sha256_file, write_json_immutable
+from ..artifacts import array_description, code_revision, file_reference, write_json
 from ..differentiable_repair import reference_margin_deficit
 from ..models import DenseRecurrentSNN
 from ..semantics import (
@@ -452,7 +452,7 @@ def _evaluate_candidate(
         np.mean(test_predictions == test_store.labels[test_indices])
     )
     return {
-        "model_hash": candidate.model_hash,
+        "model_description": candidate.model_description,
         "audit_disagreements": disagreements,
         "audit_disagreement_rate": disagreements / len(audit_indices),
         "certificate_upper_bound": clopper_pearson_upper(
@@ -1060,12 +1060,12 @@ def run_shd_repair(
         "schema_version": "SHDRepairExperiment/v3",
         "method": method,
         "condition": condition,
-        "target_semantics_hash": target.semantics_hash,
-        "source_model_hash": source_model.model_hash,
-        "repaired_model_hash": best_model.model_hash,
-        "source_model_artifact_hash": sha256_file(model_path),
-        "repaired_model_artifact_hash": sha256_file(model_output_path),
-        "predictions_artifact_hash": sha256_file(predictions_output_path),
+        "target_semantics": target.semantics_description,
+        "source_model": source_model.model_description,
+        "repaired_model": best_model.model_description,
+        "source_model_file": file_reference(model_path),
+        "repaired_model_file": file_reference(model_output_path),
+        "predictions_file": file_reference(predictions_output_path),
         "calibration_samples": len(calibration_indices),
         "audit_samples": len(audit_indices),
         "label_budget": label_budget,
@@ -1095,13 +1095,13 @@ def run_shd_repair(
         if method != "global_threshold"
         else 1,
         "random_seed": seed,
-        "calibration_indices_hash": array_hash(calibration_indices),
-        "audit_indices_hash": array_hash(audit_indices),
-        "test_indices_hash": array_hash(test_indices),
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
-        "split_indices_artifact_hash": sha256_file(split_indices_path),
-        "semantic_predictions_artifact_hash": sha256_file(
+        "calibration_indices": array_description(calibration_indices),
+        "audit_indices": array_description(audit_indices),
+        "test_indices": array_description(test_indices),
+        "train_store": train_store.data_description,
+        "test_store": test_store.data_description,
+        "split_indices_file": file_reference(split_indices_path),
+        "semantic_predictions_file": file_reference(
             semantic_predictions_path
         ),
         "config": asdict(config),
@@ -1123,5 +1123,5 @@ def run_shd_repair(
         "torch_version": torch.__version__,
         "code_revision": code_revision(repository_root),
     }
-    write_json_immutable(report_path, report)
+    write_json(report_path, report)
     return report

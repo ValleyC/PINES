@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-import hashlib
-
 import numpy as np
 
 
-def packed_trace_hashes(spikes: np.ndarray) -> np.ndarray:
-    """Return one stable binary trace digest per batch element."""
+def packed_trace_keys(spikes: np.ndarray) -> np.ndarray:
+    """Return each packed binary trace as a directly comparable value."""
 
     values = np.asarray(spikes)
     if values.ndim != 3:
         raise ValueError("spikes must have shape [batch, time, neurons]")
     binary = values != 0
-    packed = np.packbits(binary.reshape(binary.shape[0], -1), axis=1)
-    return np.asarray(
-        [hashlib.sha256(row.tobytes()).digest() for row in packed], dtype="|S32"
+    packed = np.ascontiguousarray(
+        np.packbits(binary.reshape(binary.shape[0], -1), axis=1)
     )
+    return packed.view(np.dtype((np.void, packed.shape[1]))).reshape(-1)
 
 
 def nested_grid_flat_indices(
@@ -36,7 +34,7 @@ def nested_grid_flat_indices(
 
 
 def summarize_branch_grid(
-    trace_hashes: np.ndarray,
+    trace_keys: np.ndarray,
     predictions: np.ndarray,
     *,
     max_resolution: int,
@@ -44,11 +42,11 @@ def summarize_branch_grid(
 ) -> dict[str, float | int]:
     """Summarize sampled trajectory and decision multiplicity per input."""
 
-    traces = np.asarray(trace_hashes)
+    traces = np.asarray(trace_keys)
     labels = np.asarray(predictions)
     expected_points = max_resolution * max_resolution
     if traces.ndim != 2 or labels.shape != traces.shape:
-        raise ValueError("trace hashes and predictions must share [grid point, input]")
+        raise ValueError("trace keys and predictions must share [grid point, input]")
     if traces.shape[0] != expected_points:
         raise ValueError("first dimension does not match the maximum square grid")
     selected = nested_grid_flat_indices(max_resolution, resolution)

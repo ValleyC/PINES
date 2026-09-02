@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def _load(path: Path) -> dict:
@@ -35,9 +35,9 @@ def main() -> None:
     branch = _load(branch_path)
     cover_row = cover["rows"][0]
     branch_rows = branch["rows"]
-    if branch["residual_geometry_hash"] != cover["residual_polygon_artifact_hash"]:
+    if branch["residual_geometry_reference"] != cover["residual_polygon_artifact_reference"]:
         raise ValueError("branch result does not target the cover residual")
-    if branch["box_hash"] != cover["box_hash"]:
+    if branch["box_description"] != cover["box_description"]:
         raise ValueError("branch and cover semantics boxes differ")
     if branch["selected_polygon_count"] != cover_row["unresolved_leaves"]:
         raise ValueError("branch result does not include every residual polygon")
@@ -69,14 +69,14 @@ def main() -> None:
             "fixed_trace": fixed_trace["code_revision"],
             "polygon_branches": branch["code_revision"],
         },
-        "source_report_hashes": {
-            str(cover_path.relative_to(root)).replace("\\", "/"): sha256_file(
+        "source_report_descriptions": {
+            str(cover_path.relative_to(root)).replace("\\", "/"): file_reference(
                 cover_path
             ),
             str(fixed_trace_path.relative_to(root)).replace(
                 "\\", "/"
-            ): sha256_file(fixed_trace_path),
-            str(branch_path.relative_to(root)).replace("\\", "/"): sha256_file(
+            ): file_reference(fixed_trace_path),
+            str(branch_path.relative_to(root)).replace("\\", "/"): file_reference(
                 branch_path
             ),
         },
@@ -93,7 +93,7 @@ def main() -> None:
             "synaptic_delay": 0,
             "output_delay": 0,
         },
-        "box_hash": cover["box_hash"],
+        "box_description": cover["box_description"],
         "reference_prediction": branch_rows[0]["reference_prediction"],
         "possible_predictions": possible_predictions,
         "cover": {
@@ -151,7 +151,7 @@ def main() -> None:
         ),
     }
     output_path = root / "results/shd_v1/polygon_branch_certificate_summary.json"
-    write_json_immutable(output_path, summary)
+    write_json(output_path, summary)
 
 
 if __name__ == "__main__":

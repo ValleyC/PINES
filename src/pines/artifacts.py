@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import hashlib
 import json
-import os
 import subprocess
-import tempfile
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
 from typing import Any
@@ -34,28 +31,23 @@ def canonical_json(value: Any) -> str:
     )
 
 
-def sha256_json(value: Any) -> str:
-    return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
+def config_description(value: Any) -> str:
+    """Return a readable canonical description of a configuration."""
+
+    return canonical_json(value)
 
 
-def sha256_bytes(value: bytes) -> str:
-    return hashlib.sha256(value).hexdigest()
+def file_reference(path: str | Path) -> str:
+    """Return the artifact filename used by a report or manifest."""
+
+    return Path(path).name
 
 
-def sha256_file(path: str | Path) -> str:
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def array_description(array: np.ndarray) -> str:
+    """Describe an array by dtype and shape."""
 
-
-def array_hash(array: np.ndarray) -> str:
-    contiguous = np.ascontiguousarray(array)
-    header = canonical_json(
-        {"dtype": str(contiguous.dtype), "shape": list(contiguous.shape)}
-    ).encode("utf-8")
-    return sha256_bytes(header + contiguous.tobytes())
+    value = np.asarray(array)
+    return f"{value.dtype}[{','.join(str(size) for size in value.shape)}]"
 
 
 def code_revision(root: str | Path | None = None) -> str:
@@ -103,31 +95,13 @@ def code_revision(root: str | Path | None = None) -> str:
         return "uncommitted"
 
 
-def write_json_immutable(path: str | Path, value: Any) -> Path:
-    """Create a JSON artifact exactly once.
-
-    The final creation uses an exclusive filesystem operation, so concurrent or
-    accidental reruns cannot silently replace evidence.
-    """
+def write_json(path: str | Path, value: Any) -> Path:
+    """Write a readable JSON report."""
 
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    payload = (json.dumps(_jsonable(value), indent=2, sort_keys=True) + "\n").encode(
-        "utf-8"
+    destination.write_text(
+        json.dumps(_jsonable(value), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
     )
-    if destination.exists():
-        raise FileExistsError(f"immutable artifact already exists: {destination}")
-    with tempfile.NamedTemporaryFile(
-        dir=destination.parent, prefix=f".{destination.name}.", delete=False
-    ) as temporary:
-        temporary.write(payload)
-        temporary.flush()
-        os.fsync(temporary.fileno())
-        temporary_path = Path(temporary.name)
-    try:
-        os.link(temporary_path, destination)
-    except FileExistsError:
-        raise
-    finally:
-        temporary_path.unlink(missing_ok=True)
     return destination

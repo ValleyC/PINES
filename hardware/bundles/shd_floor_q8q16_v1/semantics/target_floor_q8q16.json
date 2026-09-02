@@ -1,0 +1,28 @@
+{
+  "integration_rule": "forward_euler",
+  "output_delay_steps": 0,
+  "randomness": {
+    "deterministic": true,
+    "seed": 0
+  },
+  "reset_rule": "subtractive",
+  "state_format": {
+    "fractional_bits": 8,
+    "kind": "fixed",
+    "overflow": "saturate",
+    "rounding": "floor",
+    "total_bits": 16
+  },
+  "synaptic_delay_steps": 0,
+  "threshold_timing": "post_integration",
+  "timestep": 1.0,
+  "update_ordering": "integrate>threshold>reset",
+  "version": "1.0",
+  "weight_format": {
+    "fractional_bits": 6,
+    "kind": "fixed",
+    "overflow": "saturate",
+    "rounding": "floor",
+    "total_bits": 8
+  }
+}

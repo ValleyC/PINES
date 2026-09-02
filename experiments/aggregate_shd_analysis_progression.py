@@ -4,7 +4,7 @@ import csv
 import json
 from pathlib import Path
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def _load(path: Path) -> dict:
@@ -31,11 +31,11 @@ def main() -> None:
     affine = _load(affine_path)
     polygon = _load(polygon_path)
     branch = _load(branch_path)
-    model_hashes = {
-        affine["model_hash"], polygon["model_hash"], branch["model_hash"]
+    model_descriptions = {
+        affine["model_description"], polygon["model_description"], branch["model_description"]
     }
-    box_hashes = {affine["box_hash"], polygon["box_hash"], branch["box_hash"]}
-    if len(model_hashes) != 1 or len(box_hashes) != 1:
+    box_descriptions = {affine["box_description"], polygon["box_description"], branch["box_description"]}
+    if len(model_descriptions) != 1 or len(box_descriptions) != 1:
         raise ValueError("analysis stages do not use the same model and contract")
     if affine["selected_indices"] != [6] or polygon["selected_indices"] != [6]:
         raise ValueError("analysis stages do not use the frozen development input")
@@ -102,18 +102,18 @@ def main() -> None:
         ),
         "seed": 1701,
         "dataset_index": 6,
-        "model_hash": next(iter(model_hashes)),
-        "box_hash": next(iter(box_hashes)),
+        "model_description": next(iter(model_descriptions)),
+        "box_description": next(iter(box_descriptions)),
         "contract": (
             "reset-to-value with joint plus/minus one-percent timestep and "
             "threshold ranges"
         ),
         "rows": rows,
-        "input_report_hashes": {
-            str(path.relative_to(root)).replace("\\", "/"): sha256_file(path)
+        "input_report_references": {
+            str(path.relative_to(root)).replace("\\", "/"): file_reference(path)
             for path in (affine_path, polygon_path, branch_path)
         },
-        "rows_csv_hash": sha256_file(rows_path),
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
         "interpretation": (
             "Shared affine boxes preserve semantic dependence but leave guard "
@@ -122,7 +122,7 @@ def main() -> None:
             "certificate for the same input and contract."
         ),
     }
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
     print(json.dumps(summary, indent=2))
 
 

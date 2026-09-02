@@ -8,10 +8,10 @@ from pathlib import Path
 import numpy as np
 
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -150,12 +150,12 @@ def main() -> None:
             {
                 "method": method,
                 **repair_metadata,
-                "deployed_model_hash": deployed_model.model_hash,
-                "deployed_model_artifact_hash": sha256_file(model_path),
-                "repair_report_hash": (
+                "deployed_model_description": deployed_model.model_description,
+                "deployed_model_file": file_reference(model_path),
+                "repair_report_description": (
                     None
                     if repair_report_path is None
-                    else sha256_file(repair_report_path)
+                    else file_reference(repair_report_path)
                 ),
                 "center_target_identity_inputs": int(np.count_nonzero(matches[center_index])),
                 "center_target_identity_fraction": float(np.mean(matches[center_index])),
@@ -193,14 +193,14 @@ def main() -> None:
         "sample_count": len(selected_indices),
         "sample_selection": "first entries of the frozen certificate-audit order",
         "selected_indices": selected_indices.tolist(),
-        "selected_indices_hash": array_hash(selected_indices),
+        "selected_indices_reference": array_description(selected_indices),
         "identity_bit_order": "little",
-        "source_model_hash": source_model.model_hash,
-        "source_model_artifact_hash": sha256_file(source_model_path),
-        "train_store_hash": store.data_hash,
-        "split_indices_hash": sha256_file(split_path),
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
+        "source_model": source_model.model_description,
+        "source_model_file": file_reference(source_model_path),
+        "train_store_reference": store.data_description,
+        "split_indices_file": file_reference(split_path),
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
         "methods": list(args.methods),
         "rows": rows,
         "device": device,
@@ -212,7 +212,7 @@ def main() -> None:
             "between sampled points."
         ),
     }
-    write_json_immutable(report_path, report)
+    write_json(report_path, report)
 
 
 if __name__ == "__main__":

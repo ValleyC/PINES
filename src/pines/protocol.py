@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
-from .artifacts import sha256_json
+import numpy as np
+
+from .artifacts import config_description
 
 
 @dataclass(frozen=True)
@@ -13,8 +14,8 @@ class FrozenSplit:
     sample_ids: tuple[str, ...]
 
     @property
-    def split_hash(self) -> str:
-        return sha256_json({"name": self.name, "sample_ids": self.sample_ids})
+    def split_description(self) -> str:
+        return config_description({"name": self.name, "sample_ids": self.sample_ids})
 
 
 def deterministic_partition(
@@ -22,7 +23,7 @@ def deterministic_partition(
     fractions: Mapping[str, float],
     salt: str,
 ) -> dict[str, FrozenSplit]:
-    """Order-independent hash partitioning with a public frozen salt."""
+    """Create a reproducible partition after sorting the public sample IDs."""
 
     if not salt:
         raise ValueError("partition salt must be non-empty")
@@ -41,10 +42,10 @@ def deterministic_partition(
         running += fractions[name]
         cumulative.append(running)
     assigned: dict[str, list[str]] = {name: [] for name in names}
-    denominator = float(1 << 256)
-    for sample_id in ids:
-        digest = hashlib.sha256(f"{salt}\0{sample_id}".encode("utf-8")).digest()
-        value = int.from_bytes(digest, "big") / denominator
+    seed = sum((index + 1) * ord(character) for index, character in enumerate(salt))
+    rng = np.random.default_rng(seed)
+    for sample_id in sorted(ids):
+        value = float(rng.random())
         for name, boundary in zip(names, cumulative):
             if value < boundary:
                 assigned[name].append(sample_id)
@@ -62,4 +63,3 @@ def assert_disjoint_splits(splits: Iterable[FrozenSplit]) -> None:
         if overlap:
             raise ValueError(f"split {split.name} overlaps prior splits: {sorted(overlap)[:3]}")
         seen.update(split.sample_ids)
-

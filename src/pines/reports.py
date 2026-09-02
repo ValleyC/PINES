@@ -4,19 +4,19 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from .artifacts import sha256_json, write_json_immutable
+from .artifacts import config_description, write_json
 
 
 @dataclass(frozen=True)
 class CertificateReport:
     schema_version: str
-    model_hash: str
-    data_hash: str
+    model_description: str
+    data_description: str
     dataset_split: str
-    checkpoint_hash: str
-    reference_semantics_hash: str
-    target_semantics_hashes: tuple[str, ...]
-    static_family_hash: str
+    checkpoint_file: str
+    reference_semantics: str
+    target_semantics: tuple[str, ...]
+    static_family: str
     sample_count: int
     confidence_level: float
     certified_input_fraction: float
@@ -29,9 +29,9 @@ class CertificateReport:
     budget_verdict: str
     conditional_on_emulator: bool
     code_revision: str
-    random_seed_hash: str
-    firmware_hash: str | None = None
-    bitstream_hash: str | None = None
+    random_seed: str
+    firmware_version: str | None = None
+    bitstream_file: str | None = None
     assumptions: tuple[str, ...] = ()
     member_bounds: tuple[float, ...] = ()
 
@@ -55,29 +55,29 @@ class CertificateReport:
             raise ValueError("conditional flag must match conformance evidence")
 
     @property
-    def report_hash(self) -> str:
-        return sha256_json(asdict(self))
+    def report_description(self) -> str:
+        return config_description(asdict(self))
 
     def write(self, path: str | Path) -> Path:
-        return write_json_immutable(path, asdict(self))
+        return write_json(path, asdict(self))
 
 
 @dataclass(frozen=True)
 class RepairReport:
     schema_version: str
-    source_certificate_hash: str
+    source_certificate: str
     permitted_parameter_changes: tuple[str, ...]
-    calibration_data_hash: str
-    audit_data_hash: str
+    calibration_split: str
+    audit_split: str
     data_budget: int
     label_budget: int
     optimization_evaluations: int
     optimization_seconds: float
-    original_model_hash: str
-    repaired_model_hash: str
+    original_model: str
+    repaired_model: str
     pre_repair_objective: float
     post_repair_objective: float
-    post_repair_certificate_hash: str
+    post_repair_certificate: str
     selected_changes: tuple[dict[str, Any], ...]
     code_revision: str
 
@@ -86,12 +86,12 @@ class RepairReport:
             raise ValueError("unsupported repair report schema")
         if self.label_budget < 0 or self.data_budget <= 0:
             raise ValueError("invalid data or label budget")
-        if self.calibration_data_hash == self.audit_data_hash:
+        if self.calibration_split == self.audit_split:
             raise ValueError("calibration and audit artifacts must differ")
 
     @property
-    def report_hash(self) -> str:
-        return sha256_json(asdict(self))
+    def report_description(self) -> str:
+        return config_description(asdict(self))
 
     def write(self, path: str | Path) -> Path:
-        return write_json_immutable(path, asdict(self))
+        return write_json(path, asdict(self))

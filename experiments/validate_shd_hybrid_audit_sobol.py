@@ -11,10 +11,10 @@ import numpy as np
 from scipy.stats import qmc
 
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -163,13 +163,13 @@ def main() -> None:
             "not a proof, while any certified-row mismatch is a soundness violation"
         ),
         "audit_report": str(audit_path.relative_to(root)).replace("\\", "/"),
-        "audit_report_hash": sha256_file(audit_path),
+        "audit_report_description": file_reference(audit_path),
         "audit_code_revision": audit["code_revision"],
         "condition": audit["condition"],
         "sobol_power": args.sobol_power,
         "sobol_seed": args.sobol_seed,
         "points_per_input": len(normalized_points),
-        "normalized_points_hash": array_hash(normalized_points),
+        "normalized_points_reference": array_description(normalized_points),
         "sample_count": len(output_rows),
         "certificate_count": len(certified_rows),
         "certified_sobol_violation_count": len(violations),
@@ -189,11 +189,11 @@ def main() -> None:
         "seconds": time.perf_counter() - started,
         "executor": "VectorizedEmulator canonical operational semantics",
         "device": "cpu",
-        "train_store_hash": PackedSHD(
+        "train_store_reference": PackedSHD(
             root / args.data_root / "train.npz"
-        ).data_hash,
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
+        ).data_description,
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
         "code_revision": code_revision(root),
         "interpretation": (
             "This diagnostic complements the structured grid with a deterministic "
@@ -202,7 +202,7 @@ def main() -> None:
         ),
     }
     output_dir.mkdir(parents=True, exist_ok=True)
-    write_json_immutable(output_path, report)
+    write_json(output_path, report)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,38 @@
+{
+  "audit_samples": 861,
+  "common_files": [
+    "README.md",
+    "DATA_LICENSE.md",
+    "common/audit_inputs.npz",
+    "common/audit_input_spikes.mem",
+    "common/audit_samples.csv",
+    "semantics/reference.json",
+    "semantics/target_floor_q8q16.json"
+  ],
+  "condition": "floor_rounding_saturation",
+  "dataset": {
+    "license": "CC BY 4.0",
+    "name": "Spiking Heidelberg Digits",
+    "source_url": "https://zenkelab.org/resources/spiking-heidelberg-datasets-shd/",
+    "split": "certificate-audit"
+  },
+  "labels_included": false,
+  "purpose": "PINES Virtex-7 SHD physical conformance and repair evaluation",
+  "reference_semantics": "semantics/reference.json",
+  "schema_version": "SHDHardwareBundle/v1",
+  "seed_manifests": [
+    "seeds/1701/manifest.json",
+    "seeds/2718/manifest.json",
+    "seeds/3141/manifest.json",
+    "seeds/5772/manifest.json",
+    "seeds/8119/manifest.json"
+  ],
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "target_semantics": "semantics/target_floor_q8q16.json"
+}

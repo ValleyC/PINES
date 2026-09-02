@@ -11,10 +11,10 @@ import numpy as np
 
 from pines.abstract import IntervalFamilyCertifier, SemanticsBox
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -194,9 +194,9 @@ def main() -> None:
         rows.append(
             {
                 "family": name,
-                "box_hash": box.box_hash,
-                "member_semantics_hashes": [
-                    member.semantics_hash for member in family.members
+                "box_description": box.box_description,
+                "member_semantics_descriptions": [
+                    member.semantics_description for member in family.members
                 ],
                 "member_count": len(family.members),
                 "samples": len(audit_indices),
@@ -229,14 +229,14 @@ def main() -> None:
         ),
         "seed": args.seed,
         "ablation": "zero_recurrence" if args.zero_recurrence else "none",
-        "source_model_hash": source_model.model_hash,
-        "model_hash": model.model_hash,
-        "model_artifact_hash": sha256_file(seed_dir / "model.npz"),
-        "train_store_hash": store.data_hash,
-        "split_indices_hash": sha256_file(seed_dir / "split_indices.npz"),
-        "audit_sample_indices_hash": array_hash(audit_indices),
+        "source_model": source_model.model_description,
+        "model_description": model.model_description,
+        "model_file": file_reference(seed_dir / "model.npz"),
+        "train_store_reference": store.data_description,
+        "split_indices_file": file_reference(seed_dir / "split_indices.npz"),
+        "audit_sample_indices_reference": array_description(audit_indices),
         "audit_samples": len(audit_indices),
-        "reference_semantics_hash": reference.semantics_hash,
+        "reference_semantics": reference.semantics_description,
         "rows": rows,
         "gate_assessment": {
             "full_family_certifies_at_least_20_percent": next(
@@ -253,7 +253,7 @@ def main() -> None:
         },
         "code_revision": code_revision(root),
     }
-    write_json_immutable(output_path, report)
+    write_json(output_path, report)
     print(json.dumps(report["gate_assessment"], indent=2))
 
 

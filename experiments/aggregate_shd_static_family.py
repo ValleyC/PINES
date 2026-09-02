@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def main() -> None:
@@ -25,16 +25,16 @@ def main() -> None:
     figure_pdf = root / "paper" / "figures" / "shd_static_family.pdf"
     figure_png = root / "paper" / "figures" / "shd_static_family.png"
     if any(path.exists() for path in (summary_path, rows_path, figure_pdf, figure_png)):
-        raise FileExistsError("static-family aggregate exists; evidence is immutable")
+        raise FileExistsError("static-family aggregate exists; evidence is saved")
 
     rows: list[dict[str, object]] = []
-    report_hashes: dict[str, str] = {}
+    report_descriptions: dict[str, str] = {}
     for seed in seeds:
         path = root / args.input_root / f"seed_{seed}" / "static_family_report.json"
         report = json.loads(path.read_text(encoding="utf-8"))
         if int(report["seed"]) != seed:
             raise ValueError("seed mismatch in static-family report")
-        report_hashes[f"seed_{seed}"] = sha256_file(path)
+        report_descriptions[f"seed_{seed}"] = file_reference(path)
         rows.extend({"seed": seed, **row} for row in report["rows"])
     fields = tuple(rows[0].keys())
     with rows_path.open("x", newline="", encoding="utf-8") as handle:
@@ -107,11 +107,11 @@ def main() -> None:
             "80 percent of inputs for every seed. This triggers the planned stop/pivot rule "
             "unless a substantially tighter sound abstraction reverses the result."
         ),
-        "input_report_hashes": report_hashes,
-        "rows_csv_hash": sha256_file(rows_path),
+        "input_report_references": report_descriptions,
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
 
     static_values = [float(item["static_certified_mean"]) * 100 for item in per_family]
     exact_values = [

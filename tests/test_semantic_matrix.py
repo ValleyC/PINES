@@ -16,5 +16,5 @@ def test_primary_semantic_conditions_are_unique_and_preregistered() -> None:
         "pre_threshold__floor",
         "reset__fixed__delay_1",
     }
-    hashes = [semantics.semantics_hash for semantics in conditions.values()]
-    assert len(hashes) == len(set(hashes))
+    descriptions = [semantics.semantics_description for semantics in conditions.values()]
+    assert len(descriptions) == len(set(descriptions))

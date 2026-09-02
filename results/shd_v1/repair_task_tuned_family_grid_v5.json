@@ -90,28 +90,6 @@
     "reset_to_value",
     "floor_rounding_saturation"
   ],
-  "input_report_hashes": {
-    "floor_rounding_saturation__seed_1701__logit_only": "ff67aef8bc165c318d89ed0ad0bb7ac8494082d6bf09b579a70e08523c678d43",
-    "floor_rounding_saturation__seed_1701__pines": "fc988843259c7cc84b0eefa4c9ae180c0c5ba64ab16f410ba0798553c1f59881",
-    "floor_rounding_saturation__seed_2718__logit_only": "207aea76d8cb3421c317b3241145373075d5390d2e749003a391d10f3ccf223b",
-    "floor_rounding_saturation__seed_2718__pines": "36de5917c640c13a6b296c73e115ab3ac5e325d5bd6ec57e74c353aea5e36cd9",
-    "floor_rounding_saturation__seed_3141__logit_only": "d19dd72fe1258a59e0dd37d318965b402c1caf475308a37387f2f64aabd5ab0a",
-    "floor_rounding_saturation__seed_3141__pines": "bab35093cc90a5a156b374747f5408617d15665bb7986e75168718bae5c22c91",
-    "floor_rounding_saturation__seed_5772__logit_only": "d0db4b1541e7439781e449917d3ad20e0f092e3cabd09716350f96095db6d04d",
-    "floor_rounding_saturation__seed_5772__pines": "a22a889b12ef93acc9d115cf236cf46b9bad033087969ef1f69b1c436bc28434",
-    "floor_rounding_saturation__seed_8119__logit_only": "834df1019c9c865cc42b086cae4743e32f723c487c81eabec7aaface91d29615",
-    "floor_rounding_saturation__seed_8119__pines": "b98a154c8b7e257e8bdb5a2edff3ce95a4c5779d03013a092a5cc604c030af70",
-    "reset_to_value__seed_1701__logit_only": "2ab765996365dbf558ad284ef7f60163d4342d6cebb3ef372655feb906873e7a",
-    "reset_to_value__seed_1701__pines": "6e4c664cc354c29db3f0ac1cf6f22f8e379e0c6ae98bedc7848e5679357e1049",
-    "reset_to_value__seed_2718__logit_only": "3cfbc17f288c69d09909eb8950b6fc41c344d5f5d6ce68a81a052ca66d514870",
-    "reset_to_value__seed_2718__pines": "0b8e30e530dfe8efc8fcc4730fd39bc69f4ca3396d0c2310b338397be01665ad",
-    "reset_to_value__seed_3141__logit_only": "e8e9da6f26c3f3283f4f32cfd5530d2b5e6ca6db7c22c78f565abe3edf80226b",
-    "reset_to_value__seed_3141__pines": "1f87ae4f7bd14ad9600390e24f7367a4fbd306f8d7de8d8e4a08922dee124096",
-    "reset_to_value__seed_5772__logit_only": "2128b6be41091a3517e05c3185530a92c00c4166bc4510f16300092d7b2f04bb",
-    "reset_to_value__seed_5772__pines": "a6558e83ba2baf01e77f803fdbf23264362f8bce708c404c18940d32afdf4860",
-    "reset_to_value__seed_8119__logit_only": "b5bb7d649eeb613f8b427b2cb33efc8ce63b5dff5214e017605b9c5bc7b65e20",
-    "reset_to_value__seed_8119__pines": "b2cb0d82e9484c15c37e83a9148887c2a00e990c255c2eeb66e70311bb5e19a6"
-  },
   "methods": {
     "logit_only": {
       "path": "artifacts\\shd_v117_logit_family_grid_clean_3b3aef4_v1",

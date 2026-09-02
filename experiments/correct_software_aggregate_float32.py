@@ -5,7 +5,7 @@ import csv
 import json
 from pathlib import Path
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 
 
@@ -32,21 +32,21 @@ def main() -> None:
         if fieldnames is None:
             raise ValueError("source rows have no header")
         rows = list(reader)
-    old_hashes: dict[str, set[str]] = {}
+    old_references: dict[str, set[str]] = {}
     for row in rows:
         condition = row["condition"]
         if condition not in conditions or condition == "reference":
             raise ValueError(f"unexpected condition: {condition}")
-        old_hashes.setdefault(condition, set()).add(row["semantics_hash"])
-        row["semantics_hash"] = conditions[condition].semantics_hash
+        old_references.setdefault(condition, set()).add(row["semantics_description"])
+        row["semantics_description"] = conditions[condition].semantics_description
     with corrected_rows_path.open("x", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
 
     seeds = tuple(int(seed) for seed in source_summary["seeds"])
-    raw_hashes: dict[str, str] = {}
-    prediction_hashes: dict[str, str] = {}
+    raw_references: dict[str, str] = {}
+    prediction_references: dict[str, str] = {}
     source_revisions: dict[str, str] = {}
     for seed in seeds:
         semantic_path = (
@@ -56,8 +56,8 @@ def main() -> None:
         reference = raw["condition_semantics"]["reference"]
         if reference["state_format"]["kind"] != "float64":
             raise ValueError("source report is not the known float64 metadata case")
-        raw_hashes[f"seed_{seed}"] = sha256_file(semantic_path)
-        prediction_hashes[f"seed_{seed}"] = raw["prediction_artifact_hash"]
+        raw_references[f"seed_{seed}"] = file_reference(semantic_path)
+        prediction_references[f"seed_{seed}"] = raw["prediction_file"]
         source_revisions[f"seed_{seed}"] = raw["code_revision"]
 
     corrected = dict(source_summary)
@@ -66,19 +66,19 @@ def main() -> None:
         f"{source_summary['status']}; float32 semantics metadata corrected, metrics unchanged"
     )
     corrected["runtime_dtype"] = "float32"
-    corrected["reference_semantics_hash"] = conditions["reference"].semantics_hash
+    corrected["reference_semantics"] = conditions["reference"].semantics_description
     corrected["condition_semantics"] = {
         name: semantics.to_dict() for name, semantics in conditions.items()
     }
-    corrected["superseded_aggregate_hash"] = sha256_file(source_summary_path)
-    corrected["superseded_rows_hash"] = sha256_file(source_rows_path)
-    corrected["source_raw_semantic_summary_hashes"] = raw_hashes
-    corrected["source_prediction_artifact_hashes"] = prediction_hashes
+    corrected["superseded_aggregate_reference"] = file_reference(source_summary_path)
+    corrected["superseded_rows_reference"] = file_reference(source_rows_path)
+    corrected["source_raw_semantic_summary_references"] = raw_references
+    corrected["source_prediction_files"] = prediction_references
     corrected["source_code_revisions"] = source_revisions
-    corrected["superseded_condition_hashes"] = {
-        name: sorted(values) for name, values in old_hashes.items()
+    corrected["superseded_condition_references"] = {
+        name: sorted(values) for name, values in old_references.items()
     }
-    corrected["rows_csv_hash"] = sha256_file(corrected_rows_path)
+    corrected["rows_csv_reference"] = file_reference(corrected_rows_path)
     corrected["code_revision"] = code_revision(root)
     corrected["metadata_correction"] = {
         "benchmark": args.benchmark,
@@ -88,10 +88,10 @@ def main() -> None:
             "torch.float32, but the source ExecutionSemantics object retained its float64 "
             "default for unquantized conditions. Non-fixed quantization is an identity in "
             "that runner, so correcting the declared runtime precision changes only semantics "
-            "metadata and hashes, not predictions, bounds, or accuracy."
+            "metadata and references, not predictions, bounds, or accuracy."
         ),
     }
-    write_json_immutable(corrected_summary_path, corrected)
+    write_json(corrected_summary_path, corrected)
     print(corrected_summary_path)
 
 

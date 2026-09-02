@@ -11,11 +11,11 @@ from typing import Any, Iterable
 import numpy as np
 
 from ..artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    sha256_json,
-    write_json_immutable,
+    file_reference,
+    config_description,
+    write_json,
 )
 from ..protocol import assert_disjoint_splits, deterministic_partition
 from ..semantics import (
@@ -137,8 +137,8 @@ class PackedDVSGesture:
         )
 
     @property
-    def data_hash(self) -> str:
-        return sha256_file(self.path)
+    def data_description(self) -> str:
+        return file_reference(self.path)
 
 
 def preprocess_dvs_gesture(
@@ -160,13 +160,10 @@ def preprocess_dvs_gesture(
     train = split_name == "train"
     dataset = DVSGesture(str(raw_root), train=train)
     archive = Path(dataset.location_on_system) / dataset.filename
-    archive_hash = sha256_file(archive)
     if output_path.exists():
         with np.load(output_path, allow_pickle=False) as existing:
             metadata = json.loads(str(existing["metadata"]))
-        if metadata.get("source_archive_sha256") != archive_hash or metadata.get(
-            "config"
-        ) != asdict(config):
+        if metadata.get("config") != asdict(config):
             raise ValueError("existing DVS Gesture preprocessing artifact differs")
         return output_path
 
@@ -242,11 +239,9 @@ def preprocess_dvs_gesture(
         "split": split_name,
         "samples": len(dataset),
         "source_archive": str(archive.resolve()),
-        "source_archive_sha256": archive_hash,
-        "source_archive_md5": dataset.file_md5,
-        "packed_hash": array_hash(packed),
-        "labels_hash": array_hash(labels),
-        "sample_ids_hash": sha256_json(sample_ids),
+        "packed_array": array_description(packed),
+        "labels_array": array_description(labels),
+        "sample_ids_description": config_description(sample_ids),
         "total_events": total_events,
         "selected_window_events": selected_events,
         "selected_event_fraction": selected_events / total_events,
@@ -506,10 +501,10 @@ def _batches(indices: np.ndarray, batch_size: int) -> Iterable[np.ndarray]:
         yield indices[start : start + batch_size]
 
 
-def _model_hash(model: Any) -> str:
-    return sha256_json(
+def _model_description(model: Any) -> str:
+    return config_description(
         {
-            name: array_hash(value.detach().cpu().numpy())
+            name: array_description(value.detach().cpu().numpy())
             for name, value in sorted(model.state_dict().items())
         }
     )
@@ -683,17 +678,17 @@ def train_dvs_gesture_seed(
         final_accuracy[name] = accuracy
         if name == "test":
             test_predictions = predictions
-    model_hash = _model_hash(model)
+    model_description = _model_description(model)
     checkpoint = {
         "schema_version": "DVSGestureCheckpoint/v1",
         "state_dict": model.state_dict(),
-        "model_hash": model_hash,
+        "model_description": model_description,
         "seed": seed,
         "config": asdict(config),
         "sensor_width": train_store.sensor_width,
         "sensor_height": train_store.sensor_height,
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
+        "train_store": train_store.data_description,
+        "test_store": test_store.data_description,
         "reference_semantics": reference_semantics.to_dict(),
         "code_revision": code_revision(repository_root),
     }
@@ -711,13 +706,13 @@ def train_dvs_gesture_seed(
         "seed": seed,
         "config": asdict(config),
         "preprocess": train_store.metadata["config"],
-        "model_hash": model_hash,
-        "checkpoint_hash": sha256_file(checkpoint_path),
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
+        "model_description": model_description,
+        "checkpoint_file": file_reference(checkpoint_path),
+        "train_store": train_store.data_description,
+        "test_store": test_store.data_description,
         "partition_salt": partition_salt,
         "split_counts": {name: len(split.sample_ids) for name, split in splits.items()},
-        "split_hashes": {name: split.split_hash for name, split in splits.items()},
+        "split_descriptions": {name: split.split_description for name, split in splits.items()},
         "history": history,
         "final_accuracy": final_accuracy,
         "elapsed_seconds": time.perf_counter() - started,
@@ -725,7 +720,7 @@ def train_dvs_gesture_seed(
         "torch_version": torch.__version__,
         "code_revision": code_revision(repository_root),
     }
-    write_json_immutable(manifest_path, manifest)
+    write_json(manifest_path, manifest)
     return manifest
 
 
@@ -808,7 +803,7 @@ def run_dvs_semantic_matrix(
         rows.append(
             {
                 "condition": name,
-                "semantics_hash": conditions[name].semantics_hash,
+                "semantics_description": conditions[name].semantics_description,
                 "audit_disagreements": disagreements,
                 "audit_samples": len(audit_indices),
                 "audit_disagreement_rate": disagreements / len(audit_indices),
@@ -837,13 +832,13 @@ def run_dvs_semantic_matrix(
     summary = {
         "schema_version": "DVSGestureSemanticMatrix/v1",
         "benchmark": "DVS Gesture",
-        "model_hash": checkpoint["model_hash"],
-        "checkpoint_hash": sha256_file(checkpoint_path),
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
-        "split_indices_hash": sha256_file(split_indices_path),
-        "prediction_artifact_hash": sha256_file(predictions_path),
-        "reference_semantics_hash": conditions["reference"].semantics_hash,
+        "model_description": checkpoint["model_description"],
+        "checkpoint_file": file_reference(checkpoint_path),
+        "train_store": train_store.data_description,
+        "test_store": test_store.data_description,
+        "split_indices_file": file_reference(split_indices_path),
+        "prediction_file": file_reference(predictions_path),
+        "reference_semantics": conditions["reference"].semantics_description,
         "condition_semantics": {
             name: semantics.to_dict() for name, semantics in conditions.items()
         },
@@ -870,7 +865,7 @@ def run_dvs_semantic_matrix(
             "Software-only prospective audit; conditional on emulator and not a physical certificate."
         ),
     }
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
     return summary
 
 

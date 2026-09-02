@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import t
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 SEEDS = (1701, 2718, 3141, 5772, 8119)
@@ -107,11 +107,11 @@ def main() -> None:
         raise FileExistsError("repair-family grid aggregate destination already exists")
 
     rows = []
-    input_hashes = {}
+    input_references = {}
     sample_counts = set()
     radii = set()
     grid_resolutions = set()
-    selected_indices_hashes = set()
+    selected_indices_references = set()
     identity_by_method: dict[str, list[np.ndarray]] = {method: [] for method in METHODS}
     for seed in SEEDS:
         path = artifact_root / f"seed_{seed}" / f"{args.condition}_family_grid.json"
@@ -132,7 +132,7 @@ def main() -> None:
         sample_counts.add(int(report["sample_count"]))
         radii.add(float(report["relative_radius"]))
         grid_resolutions.add(int(report["grid_resolution"]))
-        selected_indices_hashes.add(report["selected_indices_hash"])
+        selected_indices_references.add(report["selected_indices_reference"])
         if report["schema_version"] == "SHDRepairFamilyGridDiagnostic/v3":
             if report.get("identity_bit_order") != "little":
                 raise ValueError(f"unsupported bit order: {path}")
@@ -149,10 +149,10 @@ def main() -> None:
                 identity_by_method[row["method"]].append(vector)
         for row in report["rows"]:
             rows.append({"seed": seed, **row})
-        input_hashes[f"seed_{seed}"] = sha256_file(path)
+        input_references[f"seed_{seed}"] = file_reference(path)
     if len(sample_counts) != 1 or len(radii) != 1 or len(grid_resolutions) != 1:
         raise ValueError("repair-family reports do not share one experimental design")
-    if len(selected_indices_hashes) != 1:
+    if len(selected_indices_references) != 1:
         raise ValueError("repair-family reports do not share input clusters")
     sample_count = sample_counts.pop()
     radius = radii.pop()
@@ -317,11 +317,11 @@ def main() -> None:
                 "necessary."
             )
         ),
-        "input_report_hashes": input_hashes,
-        "rows_csv_hash": sha256_file(rows_path),
+        "input_report_references": input_references,
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
 
     labels = {
         "no_repair": "no repair",

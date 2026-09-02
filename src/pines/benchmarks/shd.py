@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import math
 import os
@@ -13,7 +12,7 @@ from typing import Any, Iterable
 import h5py
 import numpy as np
 
-from ..artifacts import array_hash, code_revision, sha256_file, sha256_json, write_json_immutable
+from ..artifacts import array_description, code_revision, file_reference, config_description, write_json
 from ..models import DenseRecurrentSNN
 from ..protocol import assert_disjoint_splits, deterministic_partition
 
@@ -69,8 +68,8 @@ class PackedSHD:
         ).astype(np.float32)
 
     @property
-    def data_hash(self) -> str:
-        return sha256_file(self.path)
+    def data_description(self) -> str:
+        return file_reference(self.path)
 
 
 def preprocess_shd(
@@ -87,7 +86,6 @@ def preprocess_shd(
         expected = {
             "schema_version": config.schema_version,
             "config": asdict(config),
-            "raw_sha256": sha256_file(raw_h5),
             "split": split_name,
         }
         for key, value in expected.items():
@@ -133,12 +131,11 @@ def preprocess_shd(
         "schema_version": config.schema_version,
         "config": asdict(config),
         "raw_path": str(raw_h5.resolve()),
-        "raw_sha256": sha256_file(raw_h5),
         "split": split_name,
         "samples": len(labels),
-        "packed_hash": array_hash(packed),
-        "labels_hash": array_hash(labels),
-        "sample_ids_hash": sha256_json(sample_ids.tolist()),
+        "packed_array": array_description(packed),
+        "labels_array": array_description(labels),
+        "sample_ids_description": config_description(sample_ids.tolist()),
         "total_events": int(np.sum(event_counts)),
         "events_outside_horizon": int(np.sum(clipped_counts)),
     }
@@ -385,12 +382,12 @@ def train_shd_seed(
     checkpoint = {
         "schema_version": "SHDCheckpoint/v1",
         "state_dict": model.state_dict(),
-        "model_hash": reference.model_hash,
+        "model_description": reference.model_description,
         "seed": seed,
         "config": asdict(config),
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
-        "splits": {name: split.split_hash for name, split in splits.items()},
+        "train_store": train_store.data_description,
+        "test_store": test_store.data_description,
+        "splits": {name: split.split_description for name, split in splits.items()},
         "code_revision": code_revision(repository_root),
     }
     with checkpoint_path.open("xb") as handle:
@@ -416,14 +413,14 @@ def train_shd_seed(
         "seed": seed,
         "config": asdict(config),
         "preprocess": train_store.metadata["config"],
-        "model_hash": reference.model_hash,
-        "checkpoint_hash": sha256_file(checkpoint_path),
-        "model_artifact_hash": sha256_file(model_path),
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
+        "model_description": reference.model_description,
+        "checkpoint_file": file_reference(checkpoint_path),
+        "model_file": file_reference(model_path),
+        "train_store": train_store.data_description,
+        "test_store": test_store.data_description,
         "partition_salt": partition_salt,
         "split_counts": {name: len(split.sample_ids) for name, split in splits.items()},
-        "split_hashes": {name: split.split_hash for name, split in splits.items()},
+        "split_descriptions": {name: split.split_description for name, split in splits.items()},
         "history": history,
         "final_accuracy": {
             "train": train_accuracy,
@@ -436,7 +433,7 @@ def train_shd_seed(
         "torch_version": torch.__version__,
         "code_revision": code_revision(repository_root),
     }
-    write_json_immutable(manifest_path, manifest)
+    write_json(manifest_path, manifest)
     return manifest
 
 

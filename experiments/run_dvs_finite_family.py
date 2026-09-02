@@ -10,10 +10,10 @@ from pathlib import Path
 import numpy as np
 
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.dvs_gesture import (
     DVSGestureTrainConfig,
@@ -138,25 +138,25 @@ def main() -> None:
         "seed": args.seed,
         "member_count": len(members),
         "member_semantics": [member.to_dict() for member in members],
-        "member_semantics_hashes": [member.semantics_hash for member in members],
-        "reference_semantics_hash": reference.semantics_hash,
+        "member_semantics_descriptions": [member.semantics_description for member in members],
+        "reference_semantics": reference.semantics_description,
         "audit_samples": len(audit_indices),
-        "audit_indices_hash": array_hash(audit_indices),
+        "audit_indices_reference": array_description(audit_indices),
         "certified_inputs": int(np.count_nonzero(family_agreement)),
         "certified_fraction": float(np.mean(family_agreement)),
         "falsified_inputs": int(np.count_nonzero(~family_agreement)),
         "unknown_inputs": 0,
         "elapsed_seconds": elapsed,
-        "model_hash": checkpoint["model_hash"],
-        "checkpoint_hash": sha256_file(checkpoint_path),
-        "split_indices_hash": sha256_file(split_path),
-        "train_store_hash": store.data_hash,
-        "prediction_artifact_hash": sha256_file(prediction_path),
+        "model_description": checkpoint["model_description"],
+        "checkpoint_file": file_reference(checkpoint_path),
+        "split_indices_file": file_reference(split_path),
+        "train_store_reference": store.data_description,
+        "prediction_file": file_reference(prediction_path),
         "device": str(device),
         "torch_version": torch.__version__,
         "code_revision": code_revision(root),
     }
-    write_json_immutable(report_path, report)
+    write_json(report_path, report)
     print(json.dumps({
         "seed": args.seed,
         "certified_fraction": report["certified_fraction"],

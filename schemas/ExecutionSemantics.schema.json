@@ -29,7 +29,7 @@
       "additionalProperties": false,
       "required": ["kind", "rounding", "overflow"],
       "properties": {
-        "kind": {"enum": ["float64", "fixed"]},
+        "kind": {"enum": ["float32", "float64", "fixed"]},
         "total_bits": {"type": ["integer", "null"], "minimum": 2},
         "fractional_bits": {"type": ["integer", "null"], "minimum": 0},
         "rounding": {"enum": ["nearest_even", "floor", "truncate", "stochastic"]},

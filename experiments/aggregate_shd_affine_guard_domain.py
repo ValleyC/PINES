@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def _read(path: Path) -> dict[str, object]:
@@ -30,17 +30,17 @@ def main() -> None:
     )
     cover_rows = []
     adaptive_rows = []
-    input_hashes = {}
+    input_references = {}
     for relative in cover_relatives:
         path = root / relative
         report = _read(path)
         cover_rows.extend(report["rows"])
-        input_hashes[relative] = sha256_file(path)
+        input_references[relative] = file_reference(path)
     for relative in adaptive_relatives:
         path = root / relative
         report = _read(path)
         adaptive_rows.extend(report["rows"])
-        input_hashes[relative] = sha256_file(path)
+        input_references[relative] = file_reference(path)
 
     finest_cover = max(
         cover_rows, key=lambda row: int(row["partitions_per_axis"])
@@ -101,10 +101,10 @@ def main() -> None:
             "residue prevents a full certificate. The next method should cut or constrain "
             "symbolic guard surfaces rather than add more axis-aligned leaves."
         ),
-        "input_report_hashes": input_hashes,
+        "input_report_references": input_references,
         "code_revision": code_revision(root),
     }
-    write_json_immutable(output_path, summary)
+    write_json(output_path, summary)
     print(json.dumps(summary["route_assessment"], indent=2))
 
 

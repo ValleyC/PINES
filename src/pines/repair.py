@@ -6,7 +6,7 @@ from typing import Iterable
 
 import numpy as np
 
-from .artifacts import array_hash, code_revision
+from .artifacts import code_revision
 from .certificates import CertificateEngine, SemanticsFamily, exact_identity_mapping
 from .differentiable_repair import DifferentiableSurrogateRepair
 from .emulator import ExecutionTrace, VectorizedEmulator
@@ -196,31 +196,31 @@ class CertificateDirectedRepair:
             delta=delta,
             decision_budget=decision_budget,
             dataset_split="certificate-audit",
-            checkpoint_hash=best_model.model_hash,
+            checkpoint_file=best_model.model_description,
             seed_manifest={"reference": reference.randomness.seed, "target": target.randomness.seed},
             repository_root=repository_root,
         )
         elapsed = time.perf_counter() - started
         report = RepairReport(
             schema_version="RepairReport/v1",
-            source_certificate_hash=source_certificate.report_hash,
+            source_certificate=source_certificate.report_description,
             permitted_parameter_changes=(
                 "threshold",
                 "tau_mem",
                 "bias",
                 "incoming_weight_scale",
             ),
-            calibration_data_hash=array_hash(np.asarray(calibration_inputs)),
-            audit_data_hash=array_hash(np.asarray(audit_inputs)),
+            calibration_split="repair-calibration",
+            audit_split="certificate-audit",
             data_budget=len(calibration_inputs),
             label_budget=0,
             optimization_evaluations=evaluations,
             optimization_seconds=elapsed,
-            original_model_hash=model.model_hash,
-            repaired_model_hash=best_model.model_hash,
+            original_model=model.model_description,
+            repaired_model=best_model.model_description,
             pre_repair_objective=initial_objective,
             post_repair_objective=best_objective,
-            post_repair_certificate_hash=post_certificate.report_hash,
+            post_repair_certificate=post_certificate.report_description,
             selected_changes=tuple(changes),
             code_revision=code_revision(repository_root),
         )

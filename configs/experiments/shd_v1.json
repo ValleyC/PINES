@@ -1,7 +1,7 @@
 {
   "schema_version": "SHDExperiment/v1",
   "dataset": "Spiking Heidelberg Digits",
-  "dataset_source": "Tonic 1.6.0 / Zenke Lab hash-verified HDF5",
+  "dataset_source": "Tonic 1.6.0 / Zenke Lab HDF5",
   "partition_salt": "transportcert-neurips2027-v1",
   "seeds": [1701, 2718, 3141, 5772, 8119],
   "preprocess": {
@@ -24,4 +24,3 @@
     "gradient_clip": 1.0
   }
 }
-

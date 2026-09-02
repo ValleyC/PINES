@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def main() -> None:
@@ -27,7 +27,7 @@ def main() -> None:
         raise ValueError("unsupported hybrid radius-sweep configuration")
 
     rows: list[dict[str, object]] = []
-    report_hashes: dict[str, str] = {}
+    report_descriptions: dict[str, str] = {}
     expected_seeds: list[int] | None = None
     expected_indices: dict[int, list[int]] | None = None
     for variant in config["variants"]:
@@ -43,9 +43,9 @@ def main() -> None:
             raise ValueError(f"unsupported audit report: {audit_path}")
         if grid.get("schema_version") != "SHDHybridAuditGridValidation/v1":
             raise ValueError(f"unsupported grid report: {grid_path}")
-        if audit["config_hash"] != sha256_file(variant_config_path):
-            raise ValueError(f"audit config hash mismatch: {audit_path}")
-        if grid["audit_report_hash"] != sha256_file(audit_path):
+        if audit["config_reference"] != file_reference(variant_config_path):
+            raise ValueError(f"audit config reference mismatch: {audit_path}")
+        if grid["audit_report_description"] != file_reference(audit_path):
             raise ValueError(f"grid does not bind the audit report: {grid_path}")
         if not np.isclose(
             float(variant_config["relative_timestep_radius"]), radius
@@ -117,8 +117,8 @@ def main() -> None:
             ),
         }
         rows.append(row)
-        report_hashes[f"audit_{radius:.4g}"] = sha256_file(audit_path)
-        report_hashes[f"grid_{radius:.4g}"] = sha256_file(grid_path)
+        report_descriptions[f"audit_{radius:.4g}"] = file_reference(audit_path)
+        report_descriptions[f"grid_{radius:.4g}"] = file_reference(grid_path)
 
     rows.sort(key=lambda row: float(row["relative_radius"]))
     output_root = root / args.output_root
@@ -170,9 +170,9 @@ def main() -> None:
             "budget. Grid falsification provides concrete changed executions. "
             "Stable unresolved inputs isolate proof or resource conservatism."
         ),
-        "config_hash": sha256_file(config_path),
-        "input_report_hashes": report_hashes,
-        "rows_csv_hash": sha256_file(rows_path),
+        "config_reference": file_reference(config_path),
+        "input_report_references": report_descriptions,
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
     certified = np.asarray(
@@ -249,7 +249,7 @@ def main() -> None:
     )
     fig.savefig(figure_path, bbox_inches="tight")
     plt.close(fig)
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
 
 
 if __name__ == "__main__":

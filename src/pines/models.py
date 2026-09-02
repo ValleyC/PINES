@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 
-from .artifacts import array_hash, sha256_json
+from .artifacts import array_description, config_description
 
 
 def _as_vector(value: float | np.ndarray, size: int, name: str) -> np.ndarray:
@@ -84,12 +84,12 @@ class DenseRecurrentSNN:
         }
 
     @property
-    def model_hash(self) -> str:
-        return sha256_json(
+    def model_description(self) -> str:
+        return config_description(
             {
                 "type": "DenseRecurrentSNN/v1",
                 "name": self.name,
-                "arrays": {name: array_hash(value) for name, value in self.arrays.items()},
+                "arrays": {name: array_description(value) for name, value in self.arrays.items()},
             }
         )
 

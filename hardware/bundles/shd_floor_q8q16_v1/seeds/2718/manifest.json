@@ -1,0 +1,43 @@
+{
+  "audit_samples": 861,
+  "deployed_repaired_model": "repaired/deployed_model.npz",
+  "deployed_source_model": "unrepaired/deployed_model.npz",
+  "files": [
+    "unrepaired/original_model.npz",
+    "unrepaired/deployed_model.npz",
+    "repaired/original_model.npz",
+    "repaired/deployed_model.npz",
+    "golden_audit.npz",
+    "golden_smoke_traces.npz",
+    "unrepaired/parameters_int.npz",
+    "unrepaired/input_weights.mem",
+    "unrepaired/recurrent_weights.mem",
+    "unrepaired/output_weights.mem",
+    "unrepaired/bias.mem",
+    "unrepaired/threshold.mem",
+    "unrepaired/reset_value.mem",
+    "unrepaired/leak_reciprocal_q24.mem",
+    "repaired/parameters_int.npz",
+    "repaired/input_weights.mem",
+    "repaired/recurrent_weights.mem",
+    "repaired/output_weights.mem",
+    "repaired/bias.mem",
+    "repaired/threshold.mem",
+    "repaired/reset_value.mem",
+    "repaired/leak_reciprocal_q24.mem"
+  ],
+  "reference_semantics": "../../semantics/reference.json",
+  "repaired_mapping_prediction_changes": 22,
+  "repaired_model": "repaired/original_model.npz",
+  "repaired_reference_target_disagreements": 117,
+  "schema_version": "SHDHardwareSeedBundle/v1",
+  "seed": 2718,
+  "source_model": "unrepaired/original_model.npz",
+  "target_semantics": "../../semantics/target_floor_q8q16.json",
+  "unrepaired_mapping_prediction_changes": 7,
+  "unrepaired_reference_target_disagreements": 657,
+  "upstream": {
+    "training_artifact": "SHD seed 2718 source model",
+    "repair_artifact": "SHD seed 2718 final certificate-directed repair"
+  }
+}

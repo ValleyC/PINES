@@ -8,7 +8,7 @@ first physical run require a new protocol version and must be reported.
 - SHD recurrent SNN and DVS Gesture convolutional/recurrent SNN are primary.
 - N-MNIST feedforward SNN is a transport-robust negative control.
 - SSC begins only after every primary gate passes.
-- The canonical training partition is deterministically hash-split into 80%
+- The canonical training partition is reproducibly split into 80%
   training, 10% label-free repair calibration, and 10% unlabeled certificate
   audit. The canonical labeled test split remains sequestered evaluation.
 - All five training seeds use identical sample IDs and semantic conditions.
@@ -36,5 +36,4 @@ nonzero label count.
 Each cell records actual absolute accuracy change, total upper bound, slack,
 static certified fraction, emulator/hardware disagreement, 1/2/5-point
 accept/reject decisions, repair recovery, labels, runtime, hardware runs, and
-all artifact hashes. Causal single-axis results precede combination results.
-
+all source files and versions. Causal single-axis results precede combination results.

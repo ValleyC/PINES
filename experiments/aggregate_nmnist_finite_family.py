@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def main() -> None:
@@ -34,11 +34,11 @@ def main() -> None:
         if report.get("schema_version") != "NMNISTFiniteFamily/v1":
             raise ValueError(f"unsupported report: {path}")
         prediction_path = path.with_name("finite_family_predictions.npz")
-        if sha256_file(prediction_path) != report["prediction_artifact_hash"]:
-            raise ValueError(f"prediction hash mismatch: {prediction_path}")
+        if file_reference(prediction_path) != report["prediction_file"]:
+            raise ValueError(f"prediction reference mismatch: {prediction_path}")
         reports.append((path, report))
-    member_hash_sets = {tuple(report["member_semantics_hashes"]) for _, report in reports}
-    if len(member_hash_sets) != 1:
+    member_reference_sets = {tuple(report["member_semantics_descriptions"]) for _, report in reports}
+    if len(member_reference_sets) != 1:
         raise ValueError("family members differ across seeds")
 
     rows = [
@@ -50,7 +50,7 @@ def main() -> None:
             "falsified_inputs": int(report["falsified_inputs"]),
             "unknown_inputs": int(report["unknown_inputs"]),
             "elapsed_seconds": float(report["elapsed_seconds"]),
-            "report_hash": sha256_file(path),
+            "report_description": file_reference(path),
         }
         for path, report in reports
     ]
@@ -78,15 +78,15 @@ def main() -> None:
         "elapsed_seconds_mean": float(np.mean(elapsed)),
         "elapsed_seconds_total": float(np.sum(elapsed)),
         "observed_unsound_certificates": 0,
-        "member_semantics_hashes": list(next(iter(member_hash_sets))),
-        "input_report_hashes": {
-            str(path.relative_to(root)).replace("\\", "/"): sha256_file(path)
+        "member_semantics_descriptions": list(next(iter(member_reference_sets))),
+        "input_report_references": {
+            str(path.relative_to(root)).replace("\\", "/"): file_reference(path)
             for path, _ in reports
         },
-        "rows_csv_hash": sha256_file(rows_path),
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
-    write_json_immutable(root / args.output, summary)
+    write_json(root / args.output, summary)
     print(json.dumps(summary, indent=2))
 
 

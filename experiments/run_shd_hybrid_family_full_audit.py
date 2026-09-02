@@ -12,10 +12,10 @@ import numpy as np
 from pines.abstract import SemanticsBox
 from pines.affine import AdaptiveHybridPolygonCertifier
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -122,23 +122,23 @@ def _run_shard(task: dict[str, Any]) -> dict[str, Any]:
             )
     return {
         "schema_version": "SHDHybridFamilyFullAuditShard/v1",
-        "config_hash": task["config_hash"],
+        "config_reference": task["config_reference"],
         "seed": seed,
         "shard_index": int(task["shard_index"]),
         "shard_count": int(task["shard_count"]),
         "audit_positions": positions,
-        "audit_positions_hash": array_hash(positions),
+        "audit_positions_reference": array_description(positions),
         "selected_indices": selected_indices,
-        "selected_indices_hash": array_hash(selected_indices),
+        "selected_indices_reference": array_description(selected_indices),
         "rows": rows,
         "seconds": time.perf_counter() - started,
-        "model_hash": model.model_hash,
-        "model_artifact_hash": sha256_file(model_path),
-        "split_indices_hash": sha256_file(split_path),
-        "train_store_hash": store.data_hash,
-        "box_hash": box.box_hash,
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
+        "model_description": model.model_description,
+        "model_file": file_reference(model_path),
+        "split_indices_file": file_reference(split_path),
+        "train_store_reference": store.data_description,
+        "box_description": box.box_description,
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
         "code_revision": code_revision(root),
     }
 
@@ -151,10 +151,10 @@ def _validated_shard(path: Path, task: dict[str, Any]) -> dict[str, Any] | None:
     expected_positions = np.asarray(task["positions"], dtype=np.int64)
     if (
         shard.get("schema_version") != "SHDHybridFamilyFullAuditShard/v1"
-        or shard.get("config_hash") != task["config_hash"]
+        or shard.get("config_reference") != task["config_reference"]
         or int(shard.get("seed", -1)) != int(task["seed"])
         or int(shard.get("shard_index", -1)) != int(task["shard_index"])
-        or shard.get("audit_positions_hash") != array_hash(expected_positions)
+        or shard.get("audit_positions_reference") != array_description(expected_positions)
         or len(shard.get("rows", [])) != len(expected_positions)
     ):
         raise ValueError(f"existing shard failed validation: {path}")
@@ -189,7 +189,7 @@ def main() -> None:
         raise ValueError("unsupported full hybrid audit configuration")
     if not config["audit_selection"].get("use_all_available"):
         raise ValueError("full audit configuration must select all audit inputs")
-    config_hash = sha256_file(config_path)
+    config_reference = file_reference(config_path)
     output_dir = root / args.output_root
     output_path = output_dir / "hybrid_family_full_audit.json"
     if output_path.exists():
@@ -209,8 +209,8 @@ def main() -> None:
             )
         seed_provenance[str(seed)] = {
             "sample_count": len(audit_indices),
-            "selected_indices_hash": array_hash(audit_indices),
-            "split_indices_hash": sha256_file(split_path),
+            "selected_indices_reference": array_description(audit_indices),
+            "split_indices_file": file_reference(split_path),
         }
         for shard_index in range(shard_count):
             positions = np.arange(shard_index, len(audit_indices), shard_count)
@@ -218,7 +218,7 @@ def main() -> None:
                 {
                     "root": str(root),
                     "config": config,
-                    "config_hash": config_hash,
+                    "config_reference": config_reference,
                     "data_root": args.data_root,
                     "artifact_root": args.artifact_root,
                     "seed": seed,
@@ -264,7 +264,7 @@ def main() -> None:
             for future in as_completed(future_map):
                 task, path = future_map[future]
                 shard = future.result()
-                write_json_immutable(path, shard)
+                write_json(path, shard)
                 shards.append(shard)
                 print(
                     f"full audit shard seed={task['seed']} "
@@ -335,9 +335,9 @@ def main() -> None:
             "input; only zero unresolved area is certified"
         ),
         "config": config,
-        "config_hash": config_hash,
+        "config_reference": config_reference,
         "condition": config["condition"],
-        "box_hash": box.box_hash,
+        "box_description": box.box_description,
         "sample_count": len(rows),
         "certified_input_count": sum(row["certified"] for row in rows),
         "certified_input_fraction": certified_fraction,
@@ -359,7 +359,7 @@ def main() -> None:
                         / f"seed_{shard['seed']}_shard_{shard['shard_index']:02d}.json"
                     ).relative_to(root)
                 ).replace("\\", "/"),
-                "hash": sha256_file(
+                "reference": file_reference(
                     shard_dir
                     / f"seed_{shard['seed']}_shard_{shard['shard_index']:02d}.json"
                 ),
@@ -372,9 +372,9 @@ def main() -> None:
             )
         ],
         "seed_provenance": seed_provenance,
-        "train_store_hash": store.data_hash,
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
+        "train_store_reference": store.data_description,
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
         "code_revision": code_revision(root),
         "interpretation": (
             "This is the declared population-level tractability audit for the "
@@ -385,7 +385,7 @@ def main() -> None:
             "or physical hardware conformance."
         ),
     }
-    write_json_immutable(output_path, report)
+    write_json(output_path, report)
 
 
 if __name__ == "__main__":

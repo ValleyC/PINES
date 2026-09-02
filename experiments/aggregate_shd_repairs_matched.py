@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 from pines.statistics import clopper_pearson_upper
 
 
@@ -71,7 +71,7 @@ def main() -> None:
         raise FileExistsError("matched repair aggregate destination already exists")
 
     rows: list[dict[str, object]] = []
-    report_hashes: dict[str, str] = {}
+    report_descriptions: dict[str, str] = {}
     for condition in CONDITIONS:
         for seed in SEEDS:
             for method in METHODS:
@@ -126,12 +126,12 @@ def main() -> None:
                     "trainable_parameters": report["trainable_parameters"],
                     "elapsed_seconds": report["elapsed_seconds"],
                     "quantization_active": report["quantization_active"],
-                    "source_model_hash": report["source_model_hash"],
-                    "repaired_model_hash": report["repaired_model_hash"],
+                    "source_model": report["source_model"],
+                    "repaired_model": report["repaired_model"],
                     "report_code_revision": report["code_revision"],
                 }
                 rows.append(row)
-                report_hashes[f"{condition}__seed_{seed}__{method}"] = sha256_file(
+                report_descriptions[f"{condition}__seed_{seed}__{method}"] = file_reference(
                     path
                 )
 
@@ -315,8 +315,8 @@ def main() -> None:
             "No repaired model obtains a non-vacuous five-point disagreement certificate, "
             "so repair efficacy does not rescue the manuscript's tight-certificate claim."
         ),
-        "input_report_hashes": report_hashes,
-        "rows_csv_hash": sha256_file(rows_path),
+        "input_report_references": report_descriptions,
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
     certificate_seventy_count = sum(
@@ -360,7 +360,7 @@ def main() -> None:
         "supports transport repair followed by recertification rather than "
         "certificate restoration."
     )
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
 
     labels = ("Cert-directed", "Logit-only", "Global threshold", "QAT", "Scratch")
     colors = ("#7570b3", "#1b9e77", "#d95f02", "#1f78b4", "#b15928")

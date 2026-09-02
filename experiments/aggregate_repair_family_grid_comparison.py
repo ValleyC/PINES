@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 DEFAULT_SEEDS = (1701, 2718, 3141, 5772, 8119)
@@ -63,13 +63,13 @@ def main() -> None:
 
     repository_root = Path(__file__).resolve().parents[1]
     roots = _method_roots(args.method_root, repository_root)
-    input_hashes: dict[str, str] = {}
+    input_references: dict[str, str] = {}
     condition_results: list[dict[str, object]] = []
     for condition in args.conditions:
         vectors: dict[str, list[np.ndarray]] = {alias: [] for alias in roots}
         fractions: dict[str, list[float]] = {alias: [] for alias in roots}
         design: tuple[int, int, float] | None = None
-        per_seed_index_hash: dict[int, str] = {}
+        per_seed_index_reference: dict[int, str] = {}
         for seed in args.seeds:
             for alias, (report_method, artifact_root) in roots.items():
                 path = artifact_root / f"seed_{seed}" / f"{condition}_family_grid.json"
@@ -85,10 +85,10 @@ def main() -> None:
                     design = current_design
                 elif current_design != design:
                     raise ValueError(f"grid design mismatch: {path}")
-                index_hash = report["selected_indices_hash"]
-                if seed in per_seed_index_hash and per_seed_index_hash[seed] != index_hash:
+                index_reference = report["selected_indices_reference"]
+                if seed in per_seed_index_reference and per_seed_index_reference[seed] != index_reference:
                     raise ValueError(f"selected inputs differ across methods: {path}")
-                per_seed_index_hash[seed] = index_hash
+                per_seed_index_reference[seed] = index_reference
                 row = next(
                     item for item in report["rows"] if item["method"] == report_method
                 )
@@ -102,7 +102,7 @@ def main() -> None:
                     raise ValueError(f"packed identity mismatch: {path}")
                 vectors[alias].append(vector)
                 fractions[alias].append(float(np.mean(vector)))
-                input_hashes[f"{condition}__seed_{seed}__{alias}"] = sha256_file(path)
+                input_references[f"{condition}__seed_{seed}__{alias}"] = file_reference(path)
         assert design is not None
         paired: dict[str, object] = {}
         for left, right in combinations(roots, 2):
@@ -150,7 +150,7 @@ def main() -> None:
             for alias, (report_method, path) in roots.items()
         },
         "condition_results": condition_results,
-        "input_report_hashes": input_hashes,
+        "input_report_references": input_references,
         "code_revision": code_revision(repository_root),
     }
     output_path = (
@@ -159,7 +159,7 @@ def main() -> None:
         / "shd_v1"
         / f"{args.result_stem}.json"
     )
-    write_json_immutable(output_path, result)
+    write_json(output_path, result)
     print(json.dumps(condition_results, indent=2))
 
 

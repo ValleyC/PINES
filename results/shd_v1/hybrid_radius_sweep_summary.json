@@ -1,16 +1,5 @@
 {
   "code_revision": "6df4e9b8c7383b88fe997e546102c4f2277d8d0e",
-  "config_hash": "041399a363433841ef5a7712e029df630704c507fbb0c69ca9d17f78f1302167",
-  "input_report_hashes": {
-    "audit_0.0025": "8fc99add50192f8a546923b84dd97f42d2e4109df07c7ef0643e68d30fa96580",
-    "audit_0.005": "e6d77779a08206847efd92fb13975262860399fe2b37f2f988883cc3eb087d19",
-    "audit_0.01": "13e68525686f392881fd3a44376612ff6c437a64b00b7806b35e351d56d8ee70",
-    "audit_0.02": "2c52064cfb4cb0a6cc44129b8fca9d7dafe67895252cede0d6332e9619e610f2",
-    "grid_0.0025": "23992188242cfa9734cf2cb48cbedf23f9a2d9d0bbca9d417e22d169a2720ee4",
-    "grid_0.005": "7ef26e63260d3b9cd5960241f365fccfd584ec2d5f42ded7a1a83caf94a65632",
-    "grid_0.01": "b48f4adec7d1f44d05785c7465d04d83d73efdb905de0c43ef213a7afb9464fc",
-    "grid_0.02": "f740623b383413c002c0de4ca8fc1b1490a41ef351d103cac40362db3b26c278"
-  },
   "interpretation": "Certified fraction measures complete proof at the fixed resource budget. Grid falsification provides concrete changed executions. Stable unresolved inputs isolate proof or resource conservatism.",
   "monotonicity_checks": {
     "certified_fraction_nonincreasing": true,
@@ -82,7 +71,6 @@
       "stable_unresolved_fraction": 0.575
     }
   ],
-  "rows_csv_hash": "b46aa9e7b4048bd77fee21b088c2020288c2c5c88b7b4286934384211d9756bf",
   "schema_version": "SHDHybridRadiusSweepAggregate/v1",
   "scope": {
     "condition": "reset_to_value",

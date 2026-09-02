@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import pearsonr, spearmanr
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def main() -> None:
@@ -29,11 +29,11 @@ def main() -> None:
     figure_pdf = root / "paper" / "figures" / "dvs_software_matrix.pdf"
     figure_png = root / "paper" / "figures" / "dvs_software_matrix.png"
     if any(path.exists() for path in (summary_path, rows_path, figure_pdf, figure_png)):
-        raise FileExistsError("DVS aggregate destination exists; evidence is immutable")
+        raise FileExistsError("DVS aggregate destination exists; evidence is saved")
 
     rows: list[dict[str, object]] = []
     references: list[float] = []
-    input_hashes: dict[str, str] = {}
+    input_references: dict[str, str] = {}
     for seed in seeds:
         training_path = (
             root / args.training_root / f"seed_{seed}" / "training_manifest.json"
@@ -44,13 +44,13 @@ def main() -> None:
         semantic = json.loads(semantic_path.read_text(encoding="utf-8"))
         references.append(float(semantic["reference_test_accuracy"]))
         rows.extend({"seed": seed, **row} for row in semantic["rows"])
-        input_hashes[f"training_seed_{seed}"] = sha256_file(training_path)
-        input_hashes[f"semantics_seed_{seed}"] = sha256_file(semantic_path)
+        input_references[f"training_seed_{seed}"] = file_reference(training_path)
+        input_references[f"semantics_seed_{seed}"] = file_reference(semantic_path)
 
     fields = (
         "seed",
         "condition",
-        "semantics_hash",
+        "semantics_description",
         "audit_disagreements",
         "audit_samples",
         "audit_disagreement_rate",
@@ -160,11 +160,11 @@ def main() -> None:
             "development evidence because official test accuracy selected the reference pipeline; "
             "a fresh sequestered replication is required for submission."
         ),
-        "input_artifact_hashes": input_hashes,
-        "rows_csv_hash": sha256_file(rows_path),
+        "input_artifact_references": input_references,
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
 
     fig, axes = plt.subplots(1, 2, figsize=(10.3, 4.3), constrained_layout=True)
     axes[0].scatter(

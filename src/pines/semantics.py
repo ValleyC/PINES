@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 
-from .artifacts import sha256_json
+from .artifacts import config_description
 
 
 class IntegrationRule(str, Enum):
@@ -152,8 +152,8 @@ class ExecutionSemantics:
         return convert(asdict(self))
 
     @property
-    def semantics_hash(self) -> str:
-        return sha256_json(self.to_dict())
+    def semantics_description(self) -> str:
+        return config_description(self.to_dict())
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ExecutionSemantics":

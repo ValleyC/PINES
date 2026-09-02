@@ -14,7 +14,7 @@ class SpiNNaker2Conversion:
     input_population: Any
     output_population: Any
     py_spinnaker2_version: str
-    semantics_hash: str
+    semantics_description: str
     conversion_config: dict[str, Any]
 
 
@@ -48,7 +48,7 @@ class SpiNNaker2Adapter:
             input_population=input_population,
             output_population=output_population,
             py_spinnaker2_version=version,
-            semantics_hash=semantics.semantics_hash,
+            semantics_description=semantics.semantics_description,
             conversion_config=conversion_config,
         )
 

@@ -10,10 +10,10 @@ import numpy as np
 from pines.abstract import SemanticsBox
 from pines.affine import PolygonBranchCertifier, polygon_area
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -49,8 +49,8 @@ def main() -> None:
     if residual_report["condition"] != args.condition:
         raise ValueError("residual condition does not match")
     geometry_path = root / residual_report["residual_polygon_artifact"]
-    if sha256_file(geometry_path) != residual_report["residual_polygon_artifact_hash"]:
-        raise ValueError("residual geometry hash mismatch")
+    if file_reference(geometry_path) != residual_report["residual_polygon_artifact_reference"]:
+        raise ValueError("residual geometry reference mismatch")
     with np.load(geometry_path, allow_pickle=False) as archive:
         vertices = np.asarray(archive["vertices"], dtype=np.float64)
         offsets = np.asarray(archive["offsets"], dtype=np.int64)
@@ -152,7 +152,7 @@ def main() -> None:
         "selected_polygon_count": len(selected_polygon_indices),
         "selection_rule": "largest normalized area first",
         "selected_polygon_indices": selected_polygon_indices,
-        "selected_polygon_indices_hash": array_hash(selected_polygon_indices),
+        "selected_polygon_indices_reference": array_description(selected_polygon_indices),
         "selected_area_fraction_of_residue": float(
             np.sum(areas[selected_polygon_indices]) / np.sum(areas)
         ),
@@ -178,15 +178,15 @@ def main() -> None:
         },
         "rows": rows,
         "seconds": time.perf_counter() - started,
-        "residual_report_hash": sha256_file(residual_report_path),
-        "residual_geometry_hash": sha256_file(geometry_path),
-        "model_hash": model.model_hash,
-        "model_artifact_hash": sha256_file(model_path),
-        "train_store_hash": store.data_hash,
-        "split_indices_hash": sha256_file(split_path),
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
-        "box_hash": box.box_hash,
+        "residual_report_description": file_reference(residual_report_path),
+        "residual_geometry_reference": file_reference(geometry_path),
+        "model_description": model.model_description,
+        "model_file": file_reference(model_path),
+        "train_store_reference": store.data_description,
+        "split_indices_file": file_reference(split_path),
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
+        "box_description": box.box_description,
         "code_revision": code_revision(root),
         "interpretation": (
             "A complete result covers the entire selected polygon, including "
@@ -197,7 +197,7 @@ def main() -> None:
     }
     output_dir = root / args.output_root / f"seed_{args.seed}"
     output_path = output_dir / f"{args.condition}_polygon_branches.json"
-    write_json_immutable(output_path, report)
+    write_json(output_path, report)
 
 
 if __name__ == "__main__":

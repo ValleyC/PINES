@@ -5,22 +5,22 @@ import pytest
 
 from pines.branch_analysis import (
     nested_grid_flat_indices,
-    packed_trace_hashes,
+    packed_trace_keys,
     summarize_branch_grid,
     summarize_family_prediction_grid,
 )
 
 
-def test_packed_trace_hashes_distinguish_binary_traces() -> None:
+def test_packed_trace_keys_distinguish_binary_traces() -> None:
     spikes = np.zeros((3, 2, 4), dtype=np.float32)
     spikes[1, 0, 0] = 1
     spikes[2, 0, 0] = 1
-    hashes = packed_trace_hashes(spikes)
-    assert hashes.shape == (3,)
-    assert hashes[0] != hashes[1]
-    assert hashes[1] == hashes[2]
+    descriptions = packed_trace_keys(spikes)
+    assert descriptions.shape == (3,)
+    assert descriptions[0] != descriptions[1]
+    assert descriptions[1] == descriptions[2]
     with pytest.raises(ValueError):
-        packed_trace_hashes(np.zeros((2, 4)))
+        packed_trace_keys(np.zeros((2, 4)))
 
 
 def test_nested_grid_indices_are_centered_subgrids() -> None:

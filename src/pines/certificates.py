@@ -7,7 +7,7 @@ from typing import Iterable, Sequence
 
 import numpy as np
 
-from .artifacts import array_hash, code_revision, sha256_json
+from .artifacts import array_description, code_revision, config_description
 from .emulator import VectorizedEmulator, _decay_and_drive
 from .models import DenseRecurrentSNN
 from .reports import CertificateReport
@@ -27,14 +27,14 @@ class SemanticsFamily:
     def __post_init__(self) -> None:
         if not self.members:
             raise ValueError("a semantics family must have at least one member")
-        hashes = [member.semantics_hash for member in self.members]
-        if len(hashes) != len(set(hashes)):
+        descriptions = [member.semantics_description for member in self.members]
+        if len(descriptions) != len(set(descriptions)):
             raise ValueError("semantics family members must be unique")
 
     @property
-    def family_hash(self) -> str:
-        return sha256_json(
-            {"name": self.name, "members": [m.semantics_hash for m in self.members]}
+    def family_description(self) -> str:
+        return config_description(
+            {"name": self.name, "members": [m.semantics_description for m in self.members]}
         )
 
 
@@ -62,7 +62,7 @@ class EquivalenceResult:
 def exact_identity_mapping(
     source: ExecutionSemantics, target: ExecutionSemantics
 ) -> EquivalenceResult:
-    if source.semantics_hash == target.semantics_hash:
+    if source.semantics_description == target.semantics_description:
         return EquivalenceResult(True, "all supported models and inputs", "structural identity", {})
     return EquivalenceResult(
         False,
@@ -262,15 +262,15 @@ class CertificateEngine:
         delta: float,
         decision_budget: float,
         dataset_split: str,
-        checkpoint_hash: str,
+        checkpoint_file: str,
         seed_manifest: object,
         hardware_predictions: np.ndarray | None = None,
         hardware_target_index: int = 0,
-        firmware_hash: str | None = None,
-        bitstream_hash: str | None = None,
+        firmware_version: str | None = None,
+        bitstream_file: str | None = None,
         repository_root: str | Path | None = None,
         static_certified_fraction: float | None = None,
-        static_family_hash: str | None = None,
+        static_family: str | None = None,
     ) -> CertificateReport:
         if not 0 < delta < 1:
             raise ValueError("delta must be in (0,1)")
@@ -306,15 +306,15 @@ class CertificateEngine:
             total_bound = semantic_bound
         return CertificateReport(
             schema_version="CertificateReport/v1",
-            model_hash=model.model_hash,
-            data_hash=array_hash(np.asarray(inputs)),
+            model_description=model.model_description,
+            data_description=array_description(np.asarray(inputs)),
             dataset_split=dataset_split,
-            checkpoint_hash=checkpoint_hash,
-            reference_semantics_hash=reference.semantics_hash,
-            target_semantics_hashes=tuple(
-                member.semantics_hash for member in family.members
+            checkpoint_file=checkpoint_file,
+            reference_semantics=reference.semantics_description,
+            target_semantics=tuple(
+                member.semantics_description for member in family.members
             ),
-            static_family_hash=static_family_hash or family.family_hash,
+            static_family=static_family or family.family_description,
             sample_count=int(np.asarray(inputs).shape[0]),
             confidence_level=1.0 - delta,
             certified_input_fraction=(
@@ -331,9 +331,9 @@ class CertificateEngine:
             budget_verdict="accept" if total_bound <= decision_budget else "reject",
             conditional_on_emulator=hardware_predictions is None,
             code_revision=code_revision(repository_root),
-            random_seed_hash=sha256_json(seed_manifest),
-            firmware_hash=firmware_hash,
-            bitstream_hash=bitstream_hash,
+            random_seed=config_description(seed_manifest),
+            firmware_version=firmware_version,
+            bitstream_file=bitstream_file,
             assumptions=(
                 "audit examples are independent draws from the deployment distribution",
                 "predictions are paired on identical inputs",

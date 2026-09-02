@@ -17,12 +17,12 @@ from pines.semantics import (
 )
 
 
-def test_semantics_hash_is_stable_and_sensitive() -> None:
+def test_semantics_description_is_stable_and_sensitive() -> None:
     first = ExecutionSemantics()
     second = ExecutionSemantics()
     changed = replace(first, reset_rule=ResetRule.TO_VALUE)
-    assert first.semantics_hash == second.semantics_hash
-    assert first.semantics_hash != changed.semantics_hash
+    assert first.semantics_description == second.semantics_description
+    assert first.semantics_description != changed.semantics_description
 
 
 def test_order_and_timing_must_agree() -> None:

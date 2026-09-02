@@ -8,7 +8,7 @@ from typing import Any
 
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 from pines.statistics import clopper_pearson_upper
 
 
@@ -32,7 +32,7 @@ def _stats(values: list[float]) -> dict[str, float]:
 
 def _finite_shd(root: Path) -> tuple[list[dict[str, Any]], dict[str, str]]:
     rows = []
-    hashes = {}
+    references = {}
     for seed in SEEDS:
         path = (
             root
@@ -57,8 +57,8 @@ def _finite_shd(root: Path) -> tuple[list[dict[str, Any]], dict[str, str]]:
                 "seconds_per_input": float(family["exact_seconds"]) / samples,
             }
         )
-        hashes[str(path.relative_to(root)).replace("\\", "/")] = sha256_file(path)
-    return rows, hashes
+        references[str(path.relative_to(root)).replace("\\", "/")] = file_reference(path)
+    return rows, references
 
 
 def _finite_reports(
@@ -69,7 +69,7 @@ def _finite_reports(
     artifact_root: str,
 ) -> tuple[list[dict[str, Any]], dict[str, str]]:
     rows = []
-    hashes = {}
+    references = {}
     for seed in SEEDS:
         path = root / artifact_root / f"seed_{seed}" / "finite_family_report.json"
         report = _load(path)
@@ -87,8 +87,8 @@ def _finite_reports(
                 "seconds_per_input": float(report["elapsed_seconds"]) / samples,
             }
         )
-        hashes[str(path.relative_to(root)).replace("\\", "/")] = sha256_file(path)
-    return rows, hashes
+        references[str(path.relative_to(root)).replace("\\", "/")] = file_reference(path)
+    return rows, references
 
 
 def _continuous_shd(
@@ -118,7 +118,7 @@ def _continuous_shd(
     if tuple(sorted(row["seed"] for row in rows)) != SEEDS:
         raise ValueError("continuous SHD summary does not contain the five fixed seeds")
     return rows, {
-        str(summary_path.relative_to(root)).replace("\\", "/"): sha256_file(
+        str(summary_path.relative_to(root)).replace("\\", "/"): file_reference(
             summary_path
         )
     }
@@ -143,7 +143,7 @@ def main() -> None:
 
     root = Path(__file__).resolve().parents[1]
     all_rows: list[dict[str, Any]] = []
-    input_hashes: dict[str, str] = {}
+    input_references: dict[str, str] = {}
     for loader in (
         lambda: _finite_shd(root),
         lambda: _continuous_shd(root, root / args.shd_continuous_summary),
@@ -160,9 +160,9 @@ def main() -> None:
             artifact_root="artifacts/nmnist_v3_full_audit_finite_family",
         ),
     ):
-        rows, hashes = loader()
+        rows, references = loader()
         all_rows.extend(rows)
-        input_hashes.update(hashes)
+        input_references.update(references)
 
     comparisons = len(all_rows)
     alpha = 0.05 / comparisons
@@ -240,8 +240,8 @@ def main() -> None:
         "per_cell_alpha": alpha,
         "budgets": list(BUDGETS),
         "rows": grouped,
-        "input_report_hashes": input_hashes,
-        "rows_csv_hash": sha256_file(rows_path),
+        "input_report_references": input_references,
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
         "interpretation": (
             "Finite families are exactly enumerated. The continuous SHD row "
@@ -249,7 +249,7 @@ def main() -> None:
             "population bound remains sound even when the analyzer is incomplete."
         ),
     }
-    write_json_immutable(root / args.output, summary)
+    write_json(root / args.output, summary)
     print(json.dumps(summary, indent=2))
 
 

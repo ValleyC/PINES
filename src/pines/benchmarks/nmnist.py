@@ -9,7 +9,7 @@ from typing import Any, Iterable
 
 import numpy as np
 
-from ..artifacts import array_hash, code_revision, sha256_file, sha256_json, write_json_immutable
+from ..artifacts import array_description, code_revision, file_reference, config_description, write_json
 from ..models import DenseRecurrentSNN
 from ..protocol import assert_disjoint_splits, deterministic_partition
 from .shd import _SurrogateSpike
@@ -64,8 +64,8 @@ class PackedNMNIST:
         ).astype(np.float32)
 
     @property
-    def data_hash(self) -> str:
-        return sha256_file(self.path)
+    def data_description(self) -> str:
+        return file_reference(self.path)
 
 
 def preprocess_nmnist(
@@ -82,13 +82,10 @@ def preprocess_nmnist(
     source_archive = raw_root / "NMNIST" / (
         "train.zip" if split_name == "train" else "test.zip"
     )
-    source_hash = sha256_file(source_archive)
     if output_path.exists():
         with np.load(output_path, allow_pickle=False) as existing:
             metadata = json.loads(str(existing["metadata"]))
-        if metadata.get("source_archive_sha256") != source_hash or metadata.get(
-            "config"
-        ) != asdict(config):
+        if metadata.get("config") != asdict(config):
             raise ValueError("existing N-MNIST preprocessing artifact differs")
         return output_path
     packed_width = (config.input_channels + 7) // 8
@@ -135,10 +132,9 @@ def preprocess_nmnist(
         "split": split_name,
         "samples": len(dataset),
         "source_archive": str(source_archive.resolve()),
-        "source_archive_sha256": source_hash,
-        "packed_hash": array_hash(packed),
-        "labels_hash": array_hash(labels),
-        "sample_ids_hash": sha256_json(sample_ids),
+        "packed_array": array_description(packed),
+        "labels_array": array_description(labels),
+        "sample_ids_description": config_description(sample_ids),
         "total_events": total_events,
         "events_outside_horizon": clipped,
     }
@@ -324,7 +320,7 @@ def train_nmnist_seed(
     checkpoint = {
         "schema_version": "NMNISTCheckpoint/v1",
         "state_dict": model.state_dict(),
-        "model_hash": reference.model_hash,
+        "model_description": reference.model_description,
         "seed": seed,
         "config": asdict(config),
         "code_revision": code_revision(repository_root),
@@ -344,14 +340,14 @@ def train_nmnist_seed(
         "seed": seed,
         "config": asdict(config),
         "preprocess": train_store.metadata["config"],
-        "model_hash": reference.model_hash,
-        "model_artifact_hash": sha256_file(destinations[1]),
-        "checkpoint_hash": sha256_file(destinations[2]),
-        "train_store_hash": train_store.data_hash,
-        "test_store_hash": test_store.data_hash,
+        "model_description": reference.model_description,
+        "model_file": file_reference(destinations[1]),
+        "checkpoint_file": file_reference(destinations[2]),
+        "train_store": train_store.path.name,
+        "test_store": test_store.path.name,
         "partition_salt": partition_salt,
         "split_counts": {name: len(value) for name, value in indices.items()},
-        "split_hashes": {name: split.split_hash for name, split in splits.items()},
+        "split_descriptions": {name: split.split_description for name, split in splits.items()},
         "history": history,
         "final_accuracy": accuracies,
         "elapsed_seconds": time.perf_counter() - started,
@@ -359,7 +355,7 @@ def train_nmnist_seed(
         "torch_version": torch.__version__,
         "code_revision": code_revision(repository_root),
     }
-    write_json_immutable(destinations[0], manifest)
+    write_json(destinations[0], manifest)
     return manifest
 
 
@@ -372,4 +368,3 @@ def load_nmnist_config(path: str | Path):
         NMNISTTrainConfig(**raw["training"]),
         raw,
     )
-

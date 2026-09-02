@@ -2,7 +2,7 @@
 
 This directory contains only the final aggregate software evidence used in the
 anonymous manuscript. JSON summaries preserve protocol details, provenance
-hashes, and full-precision statistics. CSV files contain the corresponding
+source filenames and full-precision statistics. CSV files contain the corresponding
 rows. Reported manuscript values are rounded from these artifacts.
 
 ## Evidence map
@@ -23,7 +23,7 @@ rows. Reported manuscript values are rounded from these artifacts.
 
 The finite-family source aggregates are retained beside each dataset. The SHD
 continuous audit also retains its frozen screening summary because the final
-all-input audit records its hash as upstream provenance.
+all-input audit records it as upstream provenance.
 
 Table V has no physical result artifact yet. Hardware-dependent values remain
 unreported until the paired SpiNNaker2 and Virtex-7 campaigns produce complete

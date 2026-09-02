@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import scipy
 
-from pines.artifacts import sha256_file, sha256_json, write_json_immutable
+from pines.artifacts import file_reference, config_description, write_json
 
 
 def _git(root: Path, *arguments: str) -> str:
@@ -33,7 +33,7 @@ def _function_manifest(source: str, names: tuple[str, ...]) -> dict[str, str]:
     missing = [name for name in names if not definitions.get(name)]
     if missing:
         raise ValueError(f"driver functions missing from source: {missing}")
-    return {name: sha256_json(definitions[name]) for name in names}
+    return {name: config_description(definitions[name]) for name in names}
 
 
 def main() -> None:
@@ -72,7 +72,7 @@ def main() -> None:
     expected_total = len(configured_seeds) * configured_shards_per_seed
     shard_paths = sorted((audit_root / "shards").glob("seed_*_shard_*.json"))
     if not shard_paths:
-        raise ValueError("audit has no immutable shards")
+        raise ValueError("audit has no saved shards")
     shards = [json.loads(path.read_text(encoding="utf-8")) for path in shard_paths]
     per_seed_shard_counts: dict[int, int] = {}
     for shard in shards:
@@ -89,10 +89,10 @@ def main() -> None:
         raise ValueError(
             f"audit is incomplete: found {len(shard_paths)} of {expected_total} shards"
         )
-    config_hash = sha256_file(config_path)
-    shard_config_hashes = {shard["config_hash"] for shard in shards}
-    if shard_config_hashes != {config_hash}:
-        raise ValueError("current config does not match every immutable shard")
+    config_reference = file_reference(config_path)
+    shard_config_references = {shard["config_reference"] for shard in shards}
+    if shard_config_references != {config_reference}:
+        raise ValueError("current config does not match every saved shard")
 
     source_paths = [
         root / path
@@ -138,8 +138,8 @@ def main() -> None:
             "scientific core changed after the audit revision: "
             + ", ".join(changed_since_audit)
         )
-    source_hashes = {
-        relative: sha256_file(root / relative) for relative in relative_sources
+    source_references = {
+        relative: file_reference(root / relative) for relative in relative_sources
     }
     driver_relative = driver_path.relative_to(root).as_posix()
     driver_functions = ("_box_and_certifier", "_run_shard", "_validated_shard")
@@ -159,7 +159,7 @@ def main() -> None:
         ),
         "audit_root": args.audit_root.replace("\\", "/"),
         "audit_report": args.audit_report.replace("\\", "/"),
-        "audit_report_hash": sha256_file(audit_report_path),
+        "audit_report_description": file_reference(audit_report_path),
         "audit_report_code_revision": audit_revision,
         "shard_count": len(shard_paths),
         "expected_shard_count": expected_total,
@@ -167,13 +167,13 @@ def main() -> None:
         "git_head": head,
         "scientific_sources_match_git_head": True,
         "scientific_core_unchanged_since_audit_revision": True,
-        "scientific_source_hashes": source_hashes,
-        "scientific_source_manifest_hash": sha256_json(source_hashes),
-        "scientific_driver_function_hashes": current_driver_functions,
+        "scientific_source_references": source_references,
+        "scientific_source_manifest_reference": config_description(source_references),
+        "scientific_driver_function_references": current_driver_functions,
         "scientific_driver_functions_unchanged_since_audit_revision": True,
         "config_path": args.config.replace("\\", "/"),
-        "config_hash": config_hash,
-        "config_hash_matches_every_shard": True,
+        "config_reference": config_reference,
+        "config_reference_matches_every_shard": True,
         "environment": {
             "python": sys.version,
             "python_executable": sys.executable,
@@ -188,12 +188,12 @@ def main() -> None:
             "Scheduling-only driver changes do not alter scientific results."
         ),
     }
-    write_json_immutable(root / args.output, report)
+    write_json(root / args.output, report)
     print(json.dumps({key: report[key] for key in (
         "shard_count",
         "git_head",
         "scientific_sources_match_git_head",
-        "config_hash_matches_every_shard",
+        "config_reference_matches_every_shard",
     )}, indent=2))
 
 

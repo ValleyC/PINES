@@ -10,10 +10,10 @@ import numpy as np
 from pines.abstract import SemanticsBox
 from pines.affine import AdaptiveAffineGuardCutCertifier
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -173,7 +173,7 @@ def main() -> None:
                 flush=True,
             )
 
-    residual_artifact_hash = None
+    residual_artifact_reference = None
     if args.save_residual_polygons:
         vertex_counts = np.asarray(
             [len(polygon) for polygon in retained_polygons], dtype=np.int64
@@ -193,7 +193,7 @@ def main() -> None:
                 offsets=offsets,
                 row_indices=np.asarray(retained_row_indices, dtype=np.int64),
             )
-        residual_artifact_hash = sha256_file(residual_path)
+        residual_artifact_reference = file_reference(residual_path)
 
     report = {
         "schema_version": "SHDGuardCutCertificate/v1",
@@ -209,27 +209,27 @@ def main() -> None:
         "grid_stable_pool_inputs": int(np.count_nonzero(grid_stable)),
         "sample_count": len(selected_indices),
         "selected_indices": selected_indices.tolist(),
-        "selected_indices_hash": array_hash(selected_indices),
+        "selected_indices_reference": array_description(selected_indices),
         "max_leaf_budgets": list(args.max_leaves),
         "max_guard_band_splits": (
             None
             if args.max_guard_band_splits == -1
             else args.max_guard_band_splits
         ),
-        "model_hash": model.model_hash,
-        "model_artifact_hash": sha256_file(model_path),
-        "train_store_hash": store.data_hash,
-        "split_indices_hash": sha256_file(split_path),
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
-        "box_hash": box.box_hash,
+        "model_description": model.model_description,
+        "model_file": file_reference(model_path),
+        "train_store_reference": store.data_description,
+        "split_indices_file": file_reference(split_path),
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
+        "box_description": box.box_description,
         "rows": rows,
         "residual_polygon_artifact": (
             str(residual_path.relative_to(root)).replace("\\", "/")
             if args.save_residual_polygons
             else None
         ),
-        "residual_polygon_artifact_hash": residual_artifact_hash,
+        "residual_polygon_artifact_reference": residual_artifact_reference,
         "retained_residual_polygon_count": len(retained_polygons),
         "device_for_grid_selection": device,
         "torch_version": torch.__version__,
@@ -240,7 +240,7 @@ def main() -> None:
             "certified area is diagnostic until the unresolved area is zero."
         ),
     }
-    write_json_immutable(report_path, report)
+    write_json(report_path, report)
 
 
 if __name__ == "__main__":

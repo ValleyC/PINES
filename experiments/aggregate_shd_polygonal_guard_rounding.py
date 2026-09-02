@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def _load_row(root: Path, relative_path: str, max_leaves: int) -> tuple[dict, str]:
@@ -11,7 +11,7 @@ def _load_row(root: Path, relative_path: str, max_leaves: int) -> tuple[dict, st
     with path.open("r", encoding="utf-8") as handle:
         report = json.load(handle)
     row = next(row for row in report["rows"] if row["max_leaves"] == max_leaves)
-    return row, sha256_file(path)
+    return row, file_reference(path)
 
 
 def main() -> None:
@@ -43,11 +43,11 @@ def main() -> None:
         ),
     )
     rows = []
-    hashes = {}
+    references = {}
     for variant, path, leaves in specifications:
-        row, report_hash = _load_row(root, path, leaves)
+        row, report_description = _load_row(root, path, leaves)
         rows.append({"variant": variant, **row})
-        hashes[path] = report_hash
+        references[path] = report_description
     staged_4096 = next(row for row in rows if row["variant"] == "guard_cap_512_4096")
     staged_16384 = next(
         row for row in rows if row["variant"] == "guard_cap_2048_16384"
@@ -60,11 +60,11 @@ def main() -> None:
         "condition": "reset_to_value",
         "relative_radius": 0.01,
         "code_revision": code_revision(root),
-        "input_report_hashes": hashes,
+        "input_report_references": references,
         "superseded_arithmetic_idealized_summary": str(
             previous_summary.relative_to(root)
         ).replace("\\", "/"),
-        "superseded_summary_hash": sha256_file(previous_summary),
+        "superseded_summary_reference": file_reference(previous_summary),
         "rows": rows,
         "rounding_model": (
             "state/current/output/logit float32 conversions receive a conservative "
@@ -103,7 +103,7 @@ def main() -> None:
             "advances to a joint timestep-threshold boundary oracle."
         ),
     }
-    write_json_immutable(output_path, summary)
+    write_json(output_path, summary)
 
 
 if __name__ == "__main__":

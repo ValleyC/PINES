@@ -7,7 +7,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 METHODS = (
@@ -126,8 +126,8 @@ def main() -> None:
                 )
             ),
         },
-        "source_hashes": {
-            condition: sha256_file(path) for condition, path in paths.items()
+        "source_references": {
+            condition: file_reference(path) for condition, path in paths.items()
         },
         "code_revision": code_revision(root),
         "interpretation": (
@@ -138,7 +138,7 @@ def main() -> None:
         ),
     }
     output_path = root / args.output
-    write_json_immutable(output_path, combined)
+    write_json(output_path, combined)
 
     labels = {
         "no_repair": "no repair",

@@ -9,7 +9,7 @@ from typing import Any
 
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
 from pines.emulator import VectorizedEmulator
@@ -174,7 +174,7 @@ def main() -> None:
             "not a proof, while any certified-row mismatch is a soundness violation"
         ),
         "audit_report": str(audit_path.relative_to(root)).replace("\\", "/"),
-        "audit_report_hash": sha256_file(audit_path),
+        "audit_report_description": file_reference(audit_path),
         "audit_code_revision": audit["code_revision"],
         "condition": condition,
         "grid_resolution_per_axis": args.grid_resolution,
@@ -196,11 +196,11 @@ def main() -> None:
         "seconds": time.perf_counter() - started,
         "executor": "VectorizedEmulator canonical operational semantics",
         "device": "cpu",
-        "train_store_hash": PackedSHD(
+        "train_store_reference": PackedSHD(
             root / args.data_root / "train.npz"
-        ).data_hash,
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
+        ).data_description,
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
         "code_revision": code_revision(root),
         "interpretation": (
             "The grid checks the same joint timestep/threshold box as the sound "
@@ -210,7 +210,7 @@ def main() -> None:
         ),
     }
     output_dir.mkdir(parents=True, exist_ok=True)
-    write_json_immutable(output_path, report)
+    write_json(output_path, report)
 
 
 if __name__ == "__main__":

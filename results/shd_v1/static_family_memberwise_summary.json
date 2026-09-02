@@ -14,14 +14,6 @@
     "full_family_vacuous_on_more_than_80_percent": false,
     "no_observed_static_unsoundness": true
   },
-  "input_report_hashes": {
-    "seed_1701": "dcac991f1c45c7c9a2e99fabdf2357f35aeb75c5f06b7e11b45303f57f2c6da8",
-    "seed_2718": "5f12edd928d43d82f266eec3d15b97add8923b2ec6ef6bbbd6b9a47e6fbed45f",
-    "seed_3141": "5246a658f3385e6d33b4429c536411435ceacc10c7e1119144a7f1281a8f34b5",
-    "seed_5772": "9d6d86c31ce9ebb66a2d2439410eb11fa105564c898195517a535e461f15d08c",
-    "seed_8119": "cb660ea761fbe75d3cf569b85b98fabda58270dedde3a6f2405c649f61e08a54"
-  },
-  "legacy_joint_merge_summary_hash": "63b7d930095340a9dd8a88f79ccffbad054f5fb8b36ce11aa01f97084b0c37b1",
   "method": "continuous uncertainty is merged within each discrete member; argmax is checked per member before conjunction across the family",
   "per_family": [
     {
@@ -109,7 +101,6 @@
       "remaining_relaxation_gap_mean": 0.0004645760743321681
     }
   ],
-  "rows_csv_hash": "665c4a386eafbfbebbb1404029ee0423fbc40db977e728c3842a7c2b6ab2dce2",
   "schema_version": "SHDMemberwiseStaticFamilyAggregate/v1",
   "seeds": [
     1701,

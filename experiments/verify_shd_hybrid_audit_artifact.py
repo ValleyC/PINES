@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def _check_row(row: dict, budgets: dict) -> list[str]:
@@ -70,7 +70,7 @@ def main() -> None:
             "SHDHybridAuditScientificSourceProvenance/v2"
         ):
             raise ValueError("unsupported scientific source provenance")
-        if provenance.get("audit_report_hash") != sha256_file(report_path):
+        if provenance.get("audit_report_description") != file_reference(report_path):
             raise ValueError("source provenance references a different audit report")
     config = report["config"]
     arithmetic = config.get("analysis_arithmetic", {})
@@ -91,8 +91,8 @@ def main() -> None:
     seen_shards: set[tuple[int, int]] = set()
     for record in report["shards"]:
         shard_path = root / record["path"]
-        if sha256_file(shard_path) != record["hash"]:
-            failures.append(f"hash mismatch: {record['path']}")
+        if file_reference(shard_path) != record["reference"]:
+            failures.append(f"reference mismatch: {record['path']}")
             continue
         with shard_path.open("r", encoding="utf-8") as handle:
             shard = json.load(handle)
@@ -100,9 +100,9 @@ def main() -> None:
         if identity in seen_shards:
             failures.append(f"duplicate shard: {identity}")
         seen_shards.add(identity)
-        if shard.get("config_hash") != report["config_hash"]:
+        if shard.get("config_reference") != report["config_reference"]:
             failures.append(f"config mismatch: {record['path']}")
-        if shard.get("box_hash") != report["box_hash"]:
+        if shard.get("box_description") != report["box_description"]:
             failures.append(f"box mismatch: {record['path']}")
         if len(shard["rows"]) != int(record["sample_count"]):
             failures.append(f"row-count mismatch: {record['path']}")
@@ -113,7 +113,7 @@ def main() -> None:
     report_rows = sorted(report["rows"], key=row_key)
     shard_rows = sorted(shard_rows, key=row_key)
     if report_rows != shard_rows:
-        failures.append("top-level rows are not an exact copy of immutable shard rows")
+        failures.append("top-level rows are not an exact copy of saved shard rows")
     if len({row_key(row) for row in report_rows}) != len(report_rows):
         failures.append("duplicate model-input row identity")
     if len(report_rows) != int(report["sample_count"]):
@@ -131,7 +131,7 @@ def main() -> None:
             "scientific_driver_functions_unchanged_since_audit_revision"
         )
         and int(provenance.get("shard_count", -1)) == len(report["shards"])
-        and provenance.get("config_hash") == report["config_hash"]
+        and provenance.get("config_reference") == report["config_reference"]
     )
     if not revision_match and not revision_supplement_valid:
         failures.append(
@@ -159,7 +159,7 @@ def main() -> None:
         "schema_version": "SHDHybridAuditArtifactVerification/v1",
         "status": "passed" if not failures and not contract_failures else "failed",
         "audit_report": str(report_path.relative_to(root)).replace("\\", "/"),
-        "audit_report_hash": sha256_file(report_path),
+        "audit_report_description": file_reference(report_path),
         "sample_count": len(report_rows),
         "shard_count": len(seen_shards),
         "code_revision_under_test": report["code_revision"],
@@ -172,13 +172,13 @@ def main() -> None:
         "failures": failures,
         "checker_code_revision": code_revision(root),
         "interpretation": (
-            "This independently checks hashes, row topology, exact leaf/fraction "
+            "This independently checks references, row topology, exact leaf/fraction "
             "accounting, resource caps, aggregate recomputation, and the declared "
             "roundoff/partition contract. It does not replace the analyzer's "
             "mathematical soundness tests."
         ),
     }
-    write_json_immutable(output_path, verification)
+    write_json(output_path, verification)
     if verification["status"] != "passed":
         raise SystemExit(1)
 

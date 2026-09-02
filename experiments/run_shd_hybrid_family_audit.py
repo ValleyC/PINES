@@ -10,10 +10,10 @@ import numpy as np
 from pines.abstract import SemanticsBox
 from pines.affine import AdaptiveHybridPolygonCertifier
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -93,11 +93,11 @@ def main() -> None:
         selected_indices = audit_indices[:sample_count]
         frames = store.frames(selected_indices)
         seed_provenance[str(seed)] = {
-            "model_hash": model.model_hash,
-            "model_artifact_hash": sha256_file(model_path),
-            "split_indices_hash": sha256_file(split_path),
+            "model_description": model.model_description,
+            "model_file": file_reference(model_path),
+            "split_indices_file": file_reference(split_path),
             "selected_indices": selected_indices,
-            "selected_indices_hash": array_hash(selected_indices),
+            "selected_indices_reference": array_description(selected_indices),
         }
         for position, (dataset_index, frame) in enumerate(
             zip(selected_indices, frames, strict=True)
@@ -197,9 +197,9 @@ def main() -> None:
             "input filtering; only zero unresolved area is certified"
         ),
         "config": config,
-        "config_hash": sha256_file(config_path),
+        "config_reference": file_reference(config_path),
         "condition": condition,
-        "box_hash": box.box_hash,
+        "box_description": box.box_description,
         "sample_count": len(rows),
         "certified_input_count": sum(row["certified"] for row in rows),
         "certified_input_fraction": certified_fraction,
@@ -211,9 +211,9 @@ def main() -> None:
         "rows": rows,
         "seconds": time.perf_counter() - run_started,
         "seed_provenance": seed_provenance,
-        "train_store_hash": store.data_hash,
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
+        "train_store_reference": store.data_description,
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
         "code_revision": code_revision(root),
         "interpretation": (
             "This audit estimates certificate tractability on untouched split "
@@ -221,7 +221,7 @@ def main() -> None:
             "subset until the declared gate triggers the full frozen audit."
         ),
     }
-    write_json_immutable(output_path, report)
+    write_json(output_path, report)
 
 
 if __name__ == "__main__":

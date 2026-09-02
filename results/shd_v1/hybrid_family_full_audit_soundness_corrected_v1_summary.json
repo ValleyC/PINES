@@ -429,12 +429,5 @@
     "revision_supplement_valid": true,
     "sobol_validation": "c837ab82d7de0682be859a122d43e3b615b290a0"
   },
-  "source_report_hashes": {
-    "artifacts/shd_v68_hybrid_full_audit_soundness_corrected_v1/hybrid_family_full_audit.json": "0d67dc5bc1dd7e6496a3a0296b030253eacca71943fee8d6147e77bb40c43ea1",
-    "artifacts/shd_v68_hybrid_full_audit_soundness_corrected_v1/scientific_source_provenance.json": "b37d3cc9e792a0d21c0313028ea4be84817361ad56195d5901db462705a43a5c",
-    "artifacts/shd_v69_hybrid_full_audit_grid_soundness_corrected_v1/hybrid_audit_grid_validation.json": "4e84e15ee4c930123f23130f5b43bab8e481fe0481260e0385b23a06ed434764",
-    "artifacts/shd_v70_hybrid_full_audit_sobol_soundness_corrected_v1/hybrid_audit_sobol_validation.json": "5d5192f4726cce9179d948eab907a0727ee4e034ff2e7caaf803cf9edfb6eb30",
-    "results/shd_v1/hybrid_family_audit_summary.json": "cf91401ea523c15991d30f7cf5eb5ac8655f2924b77ba6bd5e0c66cc50780c98"
-  },
   "status": "five-seed confirmation-style all-input audit plus canonical grid and Sobol falsification diagnostics; not a sequestered final audit"
 }

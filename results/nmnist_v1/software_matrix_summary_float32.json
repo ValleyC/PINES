@@ -338,24 +338,12 @@
     "no_observed_simultaneous_bound_violation": true,
     "p90_slack_at_most_eight_points": true
   },
-  "input_artifact_hashes": {
-    "semantics_seed_1701": "a9a2ae203c755996c93bb35d73935e17010dab6bb024417933be8d096373b854",
-    "semantics_seed_2718": "553dffe9eae1f3ad93f739d15bdea648028a3fee295e26cb38b75a528839195f",
-    "semantics_seed_3141": "ed33abc54f52fb046f1f9892990d7ede3b0e51b7c47aca9da25adb3020f922ac",
-    "semantics_seed_5772": "ae68793a1e1bb3370a16fb892e69f8abb11684b6330f97ae744d181314d0c51b",
-    "semantics_seed_8119": "5db9cf1dd37a54ea0be9c7dc4066d03ed96400ff215fcfef0e85ae5ca508b411",
-    "training_seed_1701": "2e70f87c8ce69268cc878a4e4b956e50b6d0c1986281efdb0d4f4986ee77a896",
-    "training_seed_2718": "06ad509a90b479da66f6b5233b4476eeeb7bb485fca836709e7e7667fb84235d",
-    "training_seed_3141": "45af633c03fbc0bd5c8db6a3314ee13ac520a1e4e79ef4c4ee232764ba401dab",
-    "training_seed_5772": "69b4273e5d6f4fb0f52e3bd833cabbe8af9868f3efff6bcd26e84cf96a6b320b",
-    "training_seed_8119": "f66639b4deb1685e868e381e89ddf7452cb3d1b19c84379d84ee66cb1268619f"
-  },
   "interpretation": "The high-accuracy feedforward negative control is robust to reset, threshold timing, and delay, and its certificate passes the software tightness gates.",
   "median_bound_slack": 0.011496846258304804,
   "metadata_correction": {
     "benchmark": "N-MNIST",
     "numerical_results_changed": false,
-    "reason": "The vectorized matrix runner explicitly instantiated TorchEmulator with torch.float32, but the source ExecutionSemantics object retained its float64 default for unquantized conditions. Non-fixed quantization is an identity in that runner, so correcting the declared runtime precision changes only semantics metadata and hashes, not predictions, bounds, or accuracy."
+    "reason": "The vectorized matrix runner explicitly instantiated TorchEmulator with torch.float32, but the source ExecutionSemantics object retained its float64 default for unquantized conditions. Non-fixed quantization is an identity in that runner, so correcting the declared runtime precision changes only semantics metadata, not predictions, bounds, or accuracy."
   },
   "p90_bound_slack": 0.03026602649805582,
   "pearson_disagreement_vs_absolute_change": {
@@ -464,10 +452,8 @@
       "seeds_over_five_point_loss": 0
     }
   ],
-  "reference_semantics_hash": "414b9d77d679005e3ab7049b66099bd5419433ac57c87eabe6e77228bbba68c1",
   "reference_test_accuracy_mean": 0.97416,
   "reference_test_accuracy_std": 0.0011480418110852606,
-  "rows_csv_hash": "0207e8a7d36c6e4567328156379bc1b87c636348bb3d1dd4e8974403b4a191d5",
   "runtime_dtype": "float32",
   "schema_version": "NMNISTSoftwareAggregate/v1-float32-metadata-v2",
   "seeds": [
@@ -485,57 +471,9 @@
     "seed_5772": "c579d6ce6aa3f8bad42b640c73ea7aa0c1fa8378",
     "seed_8119": "c579d6ce6aa3f8bad42b640c73ea7aa0c1fa8378"
   },
-  "source_prediction_artifact_hashes": {
-    "seed_1701": "7f5c96fd208c4079f084f1af657fdbcf77c09bec79fb4a3ebefb789e2cf5c934",
-    "seed_2718": "462eccd072d668287049b19f1c99d894c591d94a1fdbb3ad2f6b879cc9b91d24",
-    "seed_3141": "2feef0a2d4cde412c9b6c876e6e57c5944df19d999c48b141319c596cf490e20",
-    "seed_5772": "c78f2abcb1d766958ce749765cd453f9457a079c556db55eb276da7a98fcbd57",
-    "seed_8119": "1d013033fe7753f36e532a831148b01c96e1b694a8e9d49aa132bf6bd33edc56"
-  },
-  "source_raw_semantic_summary_hashes": {
-    "seed_1701": "a9a2ae203c755996c93bb35d73935e17010dab6bb024417933be8d096373b854",
-    "seed_2718": "553dffe9eae1f3ad93f739d15bdea648028a3fee295e26cb38b75a528839195f",
-    "seed_3141": "ed33abc54f52fb046f1f9892990d7ede3b0e51b7c47aca9da25adb3020f922ac",
-    "seed_5772": "ae68793a1e1bb3370a16fb892e69f8abb11684b6330f97ae744d181314d0c51b",
-    "seed_8119": "5db9cf1dd37a54ea0be9c7dc4066d03ed96400ff215fcfef0e85ae5ca508b411"
-  },
   "spearman_disagreement_vs_absolute_change": {
     "p": 7.257223236848694e-11,
     "rho": 0.7684635638472205
   },
-  "status": "software negative control; not physical evidence; float32 semantics metadata corrected, metrics unchanged",
-  "superseded_aggregate_hash": "93f1af346bf62245b1020b840bd6e026b55731b4d4019505eb99a8385dc570bd",
-  "superseded_condition_hashes": {
-    "exponential__fixed": [
-      "85beb2135b38887ed846fde0c9bdc141ea76cb8c8feabd3b9a49784502ea3e04"
-    ],
-    "exponential_euler": [
-      "9af35dbddb01d42cc50906a6c5783ef9bac82f53530838b84c8accf73fd15c9f"
-    ],
-    "fixed_q8_weights_q16_state": [
-      "7537a0bf57a0bf0b7af5b1292cde7fe10a4db5d81d470c285d258691f2330815"
-    ],
-    "floor_rounding_saturation": [
-      "5b176cc182396ee606999b2beb8b6274ffdcf3ad74b12cc1c6d62bb33f3107f6"
-    ],
-    "pre_integration_threshold": [
-      "a61ea813b6679d4b83300e7ec7b640c2f93f26295d091bcf8abb0156633a4e06"
-    ],
-    "pre_threshold__floor": [
-      "58e552bb13dd516e74730b6065a295d099b53dbe94a1da89ab9c2392ea3a9fb5"
-    ],
-    "reset__fixed__delay_1": [
-      "db5728379824e7381402fa8150eec5dfaf014240d64ed841c1cee083492f2047"
-    ],
-    "reset_to_value": [
-      "5269ce18d12b0085002187bd657de2c0de753165097d1293f1288508bf914b8e"
-    ],
-    "reset_to_value__delay_1": [
-      "5aa9239256abde4ae68e4612d65808e236edc9085e50412faeecf7ad38f26856"
-    ],
-    "synaptic_delay_1": [
-      "14ac1404ccac1a4b87ce8c95ae5206c5771885f997ae1f7f310bbf7401e61c76"
-    ]
-  },
-  "superseded_rows_hash": "fee1674f70e4f87e7903dafe95eaae5834c6123a297e3102be9932c3623d2213"
+  "status": "software negative control; not physical evidence; float32 semantics metadata corrected, metrics unchanged"
 }

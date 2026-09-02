@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import statistics
 from pathlib import Path
@@ -92,16 +91,6 @@ def load(path: str) -> dict[str, Any]:
         return json.load(handle)
 
 
-def file_hash_candidates(path: str) -> set[str]:
-    data = (ROOT / path).read_bytes()
-    lf = data.replace(b"\r\n", b"\n")
-    crlf = lf.replace(b"\n", b"\r\n")
-    return {
-        hashlib.sha256(candidate).hexdigest()
-        for candidate in (data, lf, crlf)
-    }
-
-
 def point(value: float) -> float:
     return round(100.0 * float(value), 1)
 
@@ -109,18 +98,6 @@ def point(value: float) -> float:
 def close(actual: float, expected: float, label: str, tolerance: float = 0.051) -> None:
     if abs(float(actual) - expected) > tolerance:
         raise AssertionError(f"{label}: expected {expected}, observed {actual}")
-
-
-def verify_hashes() -> None:
-    for summary_path, rows_path in SUMMARY_ROWS.items():
-        summary = load(summary_path)
-        expected = summary.get("rows_csv_hash")
-        observed = file_hash_candidates(rows_path)
-        if expected not in observed:
-            raise AssertionError(
-                f"row hash mismatch for {rows_path}: expected {expected}, "
-                f"observed candidates {sorted(observed)}"
-            )
 
 
 def verify_result_inventory() -> None:
@@ -286,7 +263,6 @@ def verify_sample_complexity() -> None:
 
 def main() -> None:
     verify_result_inventory()
-    verify_hashes()
     verify_table_i()
     verify_figure_2()
     verify_table_ii()

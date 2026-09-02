@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import beta
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def _exact_interval(successes: int, samples: int, confidence: float) -> list[float]:
@@ -51,7 +51,7 @@ def main() -> None:
         raise ValueError("unsupported hybrid audit report")
     if grid.get("schema_version") != "SHDHybridAuditGridValidation/v1":
         raise ValueError("unsupported hybrid grid validation report")
-    if grid["audit_report_hash"] != sha256_file(audit_path):
+    if grid["audit_report_description"] != file_reference(audit_path):
         raise ValueError("grid validation does not reference the supplied audit")
 
     audit_keys = {
@@ -149,11 +149,11 @@ def main() -> None:
             ),
             "grid_wall_seconds": float(grid["seconds"]),
         },
-        "source_report_hashes": {
-            str(audit_path.relative_to(root)).replace("\\", "/"): sha256_file(
+        "source_report_descriptions": {
+            str(audit_path.relative_to(root)).replace("\\", "/"): file_reference(
                 audit_path
             ),
-            str(grid_path.relative_to(root)).replace("\\", "/"): sha256_file(
+            str(grid_path.relative_to(root)).replace("\\", "/"): file_reference(
                 grid_path
             ),
         },
@@ -177,7 +177,7 @@ def main() -> None:
             "full split, other axes, a second event task, and hardware remain open."
         ),
     }
-    write_json_immutable(output_path, summary)
+    write_json(output_path, summary)
 
 
 if __name__ == "__main__":

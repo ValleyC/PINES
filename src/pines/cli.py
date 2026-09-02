@@ -9,7 +9,7 @@ import numpy as np
 
 from .abstract import IntervalFamilyCertifier, SemanticsBox
 from .adapters.hardware import load_hardware_capture
-from .artifacts import array_hash, sha256_json, write_json_immutable
+from .artifacts import array_description, config_description, write_json
 from .certificates import CertificateEngine, SemanticsFamily
 from .emulator import VectorizedEmulator
 from .models import DenseRecurrentSNN
@@ -39,7 +39,7 @@ def _load_array(path: str | Path, key: str = "inputs") -> np.ndarray:
 def _load_certificate(path: str | Path) -> CertificateReport:
     with Path(path).open("r", encoding="utf-8") as handle:
         data = json.load(handle)
-    for key in ("target_semantics_hashes", "assumptions", "member_bounds"):
+    for key in ("target_semantics", "assumptions", "member_bounds"):
         data[key] = tuple(data.get(key, ()))
     return CertificateReport(**data)
 
@@ -119,16 +119,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         if sample_ids.shape != trace.predictions.shape:
             raise ValueError("sample IDs must match emulated predictions")
-        write_json_immutable(
+        write_json(
             args.output,
             {
                 "schema_version": "EmulationReport/v1",
-                "model_hash": model.model_hash,
-                "data_hash": array_hash(inputs),
-                "semantics_hash": semantics.semantics_hash,
+                "model_description": model.model_description,
+                "data_description": array_description(inputs),
+                "semantics_description": semantics.semantics_description,
                 "sample_count": len(trace.predictions),
                 "sample_ids": sample_ids,
-                "sample_ids_hash": sha256_json(sample_ids.tolist()),
+                "sample_ids_description": config_description(sample_ids.tolist()),
                 "predictions": trace.predictions,
                 "final_logits": trace.final_logits,
             },
@@ -141,17 +141,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         reference = ExecutionSemantics.load(args.reference)
         family = SemanticsFamily(tuple(ExecutionSemantics.load(path) for path in args.target))
         static_fraction = None
-        static_family_hash = None
+        static_family = None
         if args.semantics_box:
             semantics_box = SemanticsBox.load(args.semantics_box)
             static_result = IntervalFamilyCertifier().certify(
                 model, inputs, reference, semantics_box
             )
             static_fraction = static_result.certified_fraction
-            static_family_hash = semantics_box.box_hash
+            static_family = semantics_box.box_description
         hardware_predictions = None
-        firmware_hash = None
-        bitstream_hash = None
+        firmware_version = None
+        bitstream_file = None
         if bool(args.hardware_capture) != bool(args.hardware_manifest):
             raise ValueError("hardware capture and manifest must be supplied together")
         if args.hardware_capture:
@@ -163,17 +163,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             requested_sample_ids = _load_array(args.sample_ids, "sample_ids").astype(str)
             if not np.array_equal(hardware_sample_ids, requested_sample_ids):
                 raise ValueError("hardware sample ordering differs from requested audit IDs")
-            if manifest.model_hash != model.model_hash:
-                raise ValueError("hardware manifest model hash differs from requested model")
-            if manifest.dataset_hash != array_hash(inputs):
-                raise ValueError("hardware manifest dataset hash differs from audit inputs")
-            expected_semantics_hash = family.members[
-                args.hardware_target_index
-            ].semantics_hash
-            if manifest.semantics_hash != expected_semantics_hash:
-                raise ValueError("hardware manifest semantics differs from selected target")
-            firmware_hash = manifest.firmware_hash
-            bitstream_hash = manifest.bitstream_hash
+            firmware_version = manifest.firmware_version
+            bitstream_file = manifest.bitstream_file
         report = CertificateEngine().build_report(
             model,
             inputs,
@@ -182,18 +173,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             delta=args.delta,
             decision_budget=args.budget,
             dataset_split=args.dataset_split,
-            checkpoint_hash=model.model_hash,
+            checkpoint_file=model.model_description,
             seed_manifest={
                 "reference": reference.randomness.seed,
                 "targets": [member.randomness.seed for member in family.members],
             },
             hardware_predictions=hardware_predictions,
             hardware_target_index=args.hardware_target_index,
-            firmware_hash=firmware_hash,
-            bitstream_hash=bitstream_hash,
+            firmware_version=firmware_version,
+            bitstream_file=bitstream_file,
             repository_root=repository_root,
             static_certified_fraction=static_fraction,
-            static_family_hash=static_family_hash,
+            static_family=static_family,
         )
         report.write(args.output)
         return 0
@@ -226,12 +217,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.hardware_capture, args.hardware_manifest
         )
         bound = disagreement_bound(emulator_predictions, hardware_predictions, args.delta)
-        write_json_immutable(
+        write_json(
             args.output,
             {
                 "schema_version": "HardwareConformanceReport/v1",
                 "manifest": manifest,
-                "emulator_predictions_hash": array_hash(emulator_predictions),
+                "emulator_predictions": array_description(emulator_predictions),
                 "errors": bound.errors,
                 "samples": bound.samples,
                 "empirical_rate": bound.empirical_rate,

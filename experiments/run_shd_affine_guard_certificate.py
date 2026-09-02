@@ -13,10 +13,10 @@ from pines.abstract import (
 )
 from pines.affine import AffineGuardFamilyCertifier
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -163,14 +163,14 @@ def main() -> None:
         "sample_count": len(selected_indices),
         "batch_size": args.batch_size,
         "sample_selection": "first entries of the frozen certificate-audit order",
-        "selected_indices_hash": array_hash(selected_indices),
-        "model_hash": model.model_hash,
-        "model_artifact_hash": sha256_file(model_path),
-        "train_store_hash": store.data_hash,
-        "split_indices_hash": sha256_file(split_path),
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
-        "root_box_hash": root_box.box_hash,
+        "selected_indices_reference": array_description(selected_indices),
+        "model_description": model.model_description,
+        "model_file": file_reference(model_path),
+        "train_store_reference": store.data_description,
+        "split_indices_file": file_reference(split_path),
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
+        "root_box_description": root_box.box_description,
         "rows": rows,
         "code_revision": code_revision(root),
         "interpretation": (
@@ -179,7 +179,7 @@ def main() -> None:
             "it is not itself a per-input family certificate."
         ),
     }
-    write_json_immutable(report_path, report)
+    write_json(report_path, report)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,6 @@
   "polygon_count": 3365,
   "proposed_point_count": 137967,
   "reference_prediction": 2,
-  "residual_geometry_hash": "76d55075aaeae7262347b32e625def7196d738c0ab0fcba7dd3ea4678e546933",
   "route_assessment": {
     "advance_to_more_random_search": false,
     "advance_to_sound_joint_oracle": true,
@@ -27,13 +26,11 @@
     "sampled_counterexample_found": false
   },
   "sample_artifact": "artifacts/shd_v52_residual_counterexample_search_dense/seed_1701/reset_to_value_residual_samples.npz",
-  "sample_artifact_hash": "256e174f9374c7140b19499fdfd9d3e15437bc0a8e00d9583d17082dcf80e38d",
   "sampling_design": "every polygon vertex, edge midpoint, vertex centroid, and 32 deterministic random convex combinations per polygon",
   "schema_version": "SHDResidualCounterexampleSearchSummary/v1",
   "seconds": 1.3193781001027673,
   "seed": 1701,
   "source_code_revision": "c05bbae8539913c0a3fde295c28244fc2c406d66",
   "source_report": "artifacts/shd_v52_residual_counterexample_search_dense/seed_1701/reset_to_value_residual_search.json",
-  "source_report_hash": "18977f2b7024e02a09fa8a495a95663eb86b3212dbacfc9cecefb33fccf23df2",
   "unique_point_count": 128460
 }

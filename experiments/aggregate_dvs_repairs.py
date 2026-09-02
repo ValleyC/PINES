@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 SEEDS = (1701, 2718, 3141, 5772, 8119)
@@ -66,7 +66,7 @@ def main() -> None:
         raise FileExistsError("DVS repair aggregate destination already exists")
 
     rows: list[dict[str, object]] = []
-    report_hashes: dict[str, str] = {}
+    report_descriptions: dict[str, str] = {}
     for seed in SEEDS:
         for method in methods:
             method_artifact_root = (
@@ -119,12 +119,12 @@ def main() -> None:
                 "trainable_parameters": report["trainable_parameters"],
                 "elapsed_seconds": report["elapsed_seconds"],
                 "confidence_alpha": report["confidence_alpha"],
-                "source_model_hash": report["source_model_hash"],
-                "repaired_model_hash": report["repaired_model_hash"],
+                "source_model": report["source_model"],
+                "repaired_model": report["repaired_model"],
                 "report_code_revision": report["code_revision"],
             }
             rows.append(row)
-            report_hashes[f"seed_{seed}__{method}"] = sha256_file(path)
+            report_descriptions[f"seed_{seed}__{method}"] = file_reference(path)
 
     output_root.mkdir(parents=True, exist_ok=True)
     with rows_path.open("x", newline="", encoding="utf-8") as handle:
@@ -368,11 +368,11 @@ def main() -> None:
             "This supports a distinct recovery advantage, but not universal bound dominance "
             "or a five-point certificate. The result remains development evidence."
         ),
-        "input_report_hashes": report_hashes,
-        "rows_csv_hash": sha256_file(rows_path),
+        "input_report_references": report_descriptions,
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
 
     labels = ("Cert-directed", "Logit-only", "Global threshold") + (
         ("QAT (97 labels)",) if args.include_qat else ()

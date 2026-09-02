@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .artifacts import sha256_json
+from .artifacts import config_description
 from .emulator import VectorizedEmulator, _validate_inputs
 from .models import DenseRecurrentSNN
 from .semantics import (
@@ -60,11 +60,11 @@ class SemanticsBox:
             pass
 
     @property
-    def box_hash(self) -> str:
-        return sha256_json(
+    def box_description(self) -> str:
+        return config_description(
             {
                 "name": self.name,
-                "base": self.base.semantics_hash,
+                "base": self.base.semantics_description,
                 "timestep_bounds": self.timestep_bounds,
                 "threshold_scale_bounds": self.threshold_scale_bounds,
                 "integration_rules": self.integration_rules,

@@ -47,7 +47,7 @@ def test_conditional_and_physical_reports(small_model, event_batch) -> None:
         delta=0.05,
         decision_budget=0.2,
         dataset_split="audit",
-        checkpoint_hash=small_model.model_hash,
+        checkpoint_file=small_model.model_description,
         seed_manifest=[1, 2, 3],
     )
     assert conditional.conditional_on_emulator
@@ -64,10 +64,10 @@ def test_conditional_and_physical_reports(small_model, event_batch) -> None:
         delta=0.05,
         decision_budget=0.5,
         dataset_split="audit",
-        checkpoint_hash=small_model.model_hash,
+        checkpoint_file=small_model.model_description,
         seed_manifest=[1, 2, 3],
         hardware_predictions=hardware,
-        firmware_hash="f" * 64,
+        firmware_version="f" * 64,
     )
     assert not physical.conditional_on_emulator
     assert physical.conformance_disagreement_count == 1

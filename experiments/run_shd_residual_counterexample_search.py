@@ -8,10 +8,10 @@ from pathlib import Path
 import numpy as np
 
 from pines.artifacts import (
-    array_hash,
+    array_description,
     code_revision,
-    sha256_file,
-    write_json_immutable,
+    file_reference,
+    write_json,
 )
 from pines.benchmarks.semantic_matrix import primary_semantic_conditions
 from pines.benchmarks.shd import PackedSHD
@@ -50,8 +50,8 @@ def main() -> None:
     if residual_report["condition"] != args.condition:
         raise ValueError("residual report condition does not match")
     geometry_path = root / residual_report["residual_polygon_artifact"]
-    if sha256_file(geometry_path) != residual_report["residual_polygon_artifact_hash"]:
-        raise ValueError("residual geometry hash mismatch")
+    if file_reference(geometry_path) != residual_report["residual_polygon_artifact_reference"]:
+        raise ValueError("residual geometry reference mismatch")
     with np.load(geometry_path, allow_pickle=False) as archive:
         vertices = np.asarray(archive["vertices"], dtype=np.float64)
         offsets = np.asarray(archive["offsets"], dtype=np.int64)
@@ -154,7 +154,7 @@ def main() -> None:
         "unique_point_count": len(normalized_points),
         "random_points_per_polygon": args.random_points_per_polygon,
         "random_seed": args.random_seed,
-        "normalized_points_hash": array_hash(normalized_points),
+        "normalized_points_reference": array_description(normalized_points),
         "reference_prediction": reference_prediction,
         "observed_predictions": sorted(
             int(value) for value in np.unique(execution.predictions)
@@ -183,15 +183,15 @@ def main() -> None:
         "device": device,
         "torch_version": torch.__version__,
         "sample_artifact": str(sample_path.relative_to(root)).replace("\\", "/"),
-        "sample_artifact_hash": sha256_file(sample_path),
-        "residual_report_hash": sha256_file(report_path),
-        "residual_geometry_hash": sha256_file(geometry_path),
-        "model_hash": model.model_hash,
-        "model_artifact_hash": sha256_file(model_path),
-        "train_store_hash": store.data_hash,
-        "split_indices_hash": sha256_file(split_path),
-        "reference_semantics_hash": reference.semantics_hash,
-        "target_semantics_hash": target.semantics_hash,
+        "sample_artifact_reference": file_reference(sample_path),
+        "residual_report_description": file_reference(report_path),
+        "residual_geometry_reference": file_reference(geometry_path),
+        "model_description": model.model_description,
+        "model_file": file_reference(model_path),
+        "train_store_reference": store.data_description,
+        "split_indices_file": file_reference(split_path),
+        "reference_semantics": reference.semantics_description,
+        "target_semantics": target.semantics_description,
         "code_revision": code_revision(root),
         "interpretation": (
             "This search targets the exact polygons left by the sound analyzer. "
@@ -200,7 +200,7 @@ def main() -> None:
             "oracle."
         ),
     }
-    write_json_immutable(report_output, report)
+    write_json(report_output, report)
 
 
 if __name__ == "__main__":

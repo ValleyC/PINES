@@ -15,4 +15,4 @@ pines reproduce --config configs/toy_study.json --output-dir artifacts/local-toy
 Changes to execution semantics require a schema-version decision, scalar and
 vector transition tests, at least one handcrafted trace, and randomized
 differential coverage. Hardware evidence additionally requires a complete
-manifest and immutable capture hashes.
+manifest and capture filenames.

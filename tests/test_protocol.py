@@ -5,7 +5,7 @@ import pytest
 from pines.protocol import FrozenSplit, assert_disjoint_splits, deterministic_partition
 
 
-def test_hash_partition_is_order_independent_and_disjoint() -> None:
+def test_reproducible_partition_is_order_independent_and_disjoint() -> None:
     ids = [f"sample-{index}" for index in range(1000)]
     fractions = {"train": 0.8, "repair": 0.1, "audit": 0.1}
     forward = deterministic_partition(ids, fractions, "pines-v1")
@@ -20,4 +20,3 @@ def test_split_overlap_is_rejected() -> None:
         assert_disjoint_splits(
             (FrozenSplit("calibration", ("x",)), FrozenSplit("audit", ("x",)))
         )
-

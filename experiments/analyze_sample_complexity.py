@@ -4,7 +4,7 @@ import csv
 import json
 from pathlib import Path
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 from pines.statistics import (
     bonferroni_alpha,
     clopper_pearson_upper,
@@ -20,7 +20,7 @@ def main() -> None:
     rows_path = output / "zero_disagreement_rows.csv"
     table_path = root / "paper" / "generated" / "sample_complexity_table.tex"
     if any(path.exists() for path in (summary_path, rows_path, table_path)):
-        raise FileExistsError("sample-complexity output exists; evidence is immutable")
+        raise FileExistsError("sample-complexity output exists; evidence is saved")
     confidence = 0.95
     comparisons = 10
     alpha = bonferroni_alpha(1.0 - confidence, comparisons)
@@ -44,11 +44,11 @@ def main() -> None:
         / "semantic_matrix.json",
     }
     rows = []
-    source_hashes: dict[str, str] = {}
+    source_references: dict[str, str] = {}
     for dataset, path in sources.items():
         report = json.loads(path.read_text(encoding="utf-8"))
         samples = int(report["audit_samples"])
-        source_hashes[dataset] = sha256_file(path)
+        source_references[dataset] = file_reference(path)
         row: dict[str, object] = {
             "dataset": dataset,
             "audit_samples": samples,
@@ -83,11 +83,11 @@ def main() -> None:
             "certificate splits confidence between semantic and conformance terms and must plan "
             "canary sizes against the allocated component budgets."
         ),
-        "input_report_hashes": source_hashes,
-        "rows_csv_hash": sha256_file(rows_path),
+        "input_report_references": source_references,
+        "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
-    write_json_immutable(summary_path, summary)
+    write_json(summary_path, summary)
     table_path.parent.mkdir(parents=True, exist_ok=True)
     lines = [
         "\\begin{tabular}{lrrccc}",

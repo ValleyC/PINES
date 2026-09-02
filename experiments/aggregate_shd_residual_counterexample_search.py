@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from pines.artifacts import code_revision, sha256_file, write_json_immutable
+from pines.artifacts import code_revision, file_reference, write_json
 
 
 def main() -> None:
@@ -18,7 +18,7 @@ def main() -> None:
     summary = {
         "schema_version": "SHDResidualCounterexampleSearchSummary/v1",
         "source_report": str(source_path.relative_to(root)).replace("\\", "/"),
-        "source_report_hash": sha256_file(source_path),
+        "source_report_description": file_reference(source_path),
         "source_code_revision": source["code_revision"],
         "code_revision": code_revision(root),
         "seed": source["seed"],
@@ -39,8 +39,8 @@ def main() -> None:
         "seconds": source["seconds"],
         "device": source["device"],
         "sample_artifact": source["sample_artifact"],
-        "sample_artifact_hash": source["sample_artifact_hash"],
-        "residual_geometry_hash": source["residual_geometry_hash"],
+        "sample_artifact_reference": source["sample_artifact_reference"],
+        "residual_geometry_reference": source["residual_geometry_reference"],
         "route_assessment": {
             "sampled_counterexample_found": source["counterexample_count"] > 0,
             "claim_certificate_from_search": False,
@@ -60,7 +60,7 @@ def main() -> None:
         ),
     }
     output_path = root / "results/shd_v1/residual_counterexample_search_summary.json"
-    write_json_immutable(output_path, summary)
+    write_json(output_path, summary)
 
 
 if __name__ == "__main__":
