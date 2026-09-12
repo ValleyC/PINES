@@ -161,6 +161,25 @@ recordings and writes separate diagnostic outputs:
 python experiments/probe_spinnaker1_dvs_reset.py --bundle BUNDLE --output RESET_PROBE --seed 1701
 ```
 
+The 7.4.1 reset-reuse development probe was rejected. Its exact repetition of the
+first window reproduced every first-convolution spike, but the second convolution
+and recurrent layer emitted no spikes after reset. The initial original-model
+window had 5,115 second-convolution and 32 recurrent spikes. The repaired model
+had 6,468 and 172, respectively. These disappeared in the repeat despite empty
+reported late-spike counters. Consequently, this loading profile is not used for
+primary certification. The incomplete probe and its exact-repeat traces remain
+development evidence, not recording-level results.
+
+A self-contained NMPI job can instead run each window with fresh initialization:
+
+```sh
+python experiments/build_spinnaker1_nmpi_job.py --task dvs --bundle BUNDLE --inputs BUNDLE/development_inputs.npz --seeds 1701 --count 1 --windows 0 1 2 3 --record-layers --output artifacts/dvs_batch_development.py --run-output batch_dvs_development
+```
+
+This executes both original and repaired full networks. Use the submission flow
+in `SPINNAKER1_EXPERIMENT.md` and preserve the resulting capture ZIP. Batch 7.4.2
+and notebook 7.4.1 executions are separate development profiles.
+
 The default runner executes all four windows and both model variants. It records
 raw timestamps and layer spikes when requested. A recording-level prediction is
 written only after all four windows complete. Preserve failed upload attempts,

@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import zipfile
+
+import pytest
 
 
 spec = importlib.util.spec_from_file_location("build_nmpi_job",
@@ -12,24 +15,34 @@ builder = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(builder)
 
 
-def test_embedded_job_preserves_models_and_passes_run_arguments(tmp_path):
+@pytest.mark.parametrize("task", ["shd", "dvs"])
+def test_embedded_job_preserves_models_and_passes_run_arguments(tmp_path, task):
     runtime = tmp_path / "runtime"
     (runtime / "src/pines").mkdir(parents=True)
     (runtime / "src/pines/__init__.py").write_text("")
     (runtime / "experiments").mkdir()
-    (runtime / "experiments/run_spinnaker1_matrix.py").write_text(
+    fake_runner = (
         "import json, sys\nfrom pathlib import Path\n"
-        "Path('observed_arguments.json').write_text(json.dumps(sys.argv))\n")
+        "Path('observed_arguments.json').write_text(json.dumps(sys.argv))\n"
+        "out=Path(sys.argv[sys.argv.index('--output')+1])\n"
+        "for index in range(2):\n"
+        "    folder=out/f'input_{index:05d}'\n"
+        "    folder.mkdir(parents=True)\n"
+        "    (folder/'summary.json').write_text(str(index))\n")
+    (runtime / "experiments/run_spinnaker1_matrix.py").write_text(fake_runner)
+    (runtime / "experiments/run_spinnaker1_dvs.py").write_text(fake_runner)
     (runtime / "experiments/run_spinnaker1_shd.py").write_text("")
     bundle = tmp_path / "bundle"
     (bundle / "models/1701").mkdir(parents=True)
-    for variant in builder.VARIANTS:
+    variants = builder.VARIANTS if task == "shd" else ("original", "floor_repaired")
+    for variant in variants:
         (bundle / f"models/1701/{variant}.npz").write_bytes(variant.encode())
     inputs = bundle / "development_inputs.npz"
     inputs.write_bytes(b"frozen-input-bytes")
     (bundle / "DATA_LICENSE.md").write_text("Dataset attribution")
     source = builder.build_job(runtime, bundle, inputs, seeds=[1701],
-                               start=2, count=3, time_scale_factor=100)
+                               start=2, count=3, time_scale_factor=100,
+                               task=task, windows=[0, 1, 2, 3], record_layers=True)
     job = tmp_path / "job.py"
     job.write_text(source)
     result = subprocess.run([sys.executable, str(job)], cwd=tmp_path,
@@ -39,10 +52,18 @@ def test_embedded_job_preserves_models_and_passes_run_arguments(tmp_path):
     assert args[args.index("--start") + 1] == "2"
     assert args[args.index("--count") + 1] == "3"
     assert args[args.index("--time-scale-factor") + 1] == "100"
-    assert args[args.index("--seeds") + 1:] == ["1701"]
+    if task == "shd":
+        assert args[args.index("--seeds") + 1:] == ["1701"]
+    else:
+        assert args[args.index("--seed") + 1] == "1701"
+        assert args[args.index("--windows") + 1:args.index("--windows") + 5] == ["0", "1", "2", "3"]
+        assert "--record-layers" in args
     unpacked = tmp_path / "pines_job_payload/bundle"
     assert (unpacked / inputs.name).read_bytes() == inputs.read_bytes()
-    for variant in builder.VARIANTS:
+    for variant in variants:
         name = f"models/1701/{variant}.npz"
         assert (unpacked / name).read_bytes() == (bundle / name).read_bytes()
     assert (unpacked / "DATA_LICENSE.md").read_text() == "Dataset attribution"
+    with zipfile.ZipFile(tmp_path / "batch_shd_capture_capture.zip") as archive:
+        assert archive.read("input_00000/summary.json") == b"0"
+        assert archive.read("input_00001/summary.json") == b"1"

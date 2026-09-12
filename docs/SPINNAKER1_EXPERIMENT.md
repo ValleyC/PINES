@@ -157,12 +157,17 @@ From an authenticated EBRAINS notebook with the existing allocated Collab:
 ```python
 job = client.submit_job(
     source="artifacts/shd_nmpi_development.py", platform="SpiNNaker",
-    collab_id=collab_id, config={"spynnaker_version": "7.4.1"},
+    collab_id=collab_id,
     command="run.py", tags=["PINES", "development"], wait=False)
 ```
 
-The requested version is not proof of the installed version. Inspect the package
-versions saved by the runner and compare development traces before selecting this
-route for primary inputs. A failed development submission does not invalidate or
-restart the independent notebook campaign. Job IDs and private account details
-stay outside the anonymous artifact.
+The preinstalled batch environment observed on 2026-09-12 uses sPyNNaker,
+SpiNNFrontEndCommon and SpiNNMan 7.4.2, PyNN 0.12.4 and NumPy 2.3.4 on Python
+3.13.9. Requesting 7.4.1 failed in the service's version-switching script before
+execution. Omitting that request allowed a one-input, two-condition SHD
+development run to finish in 69.7 seconds. Both predictions matched the emulator.
+This is development evidence, separate from the primary notebook campaign using
+7.4.1. Inspect actual package versions and development traces before selecting a
+batch profile. Preserve the generated `*_capture.zip`, which retains per-input
+directories even when the service publishes individual files by basename.
+Job IDs and private account details stay outside the anonymous artifact.
