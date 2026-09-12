@@ -1,7 +1,8 @@
 """Run complete DVS convolution/recurrent dynamics on physical SpiNNaker-1.
 
-This development runner allocates fresh hardware for each input window. Four
-window captures make one classification observation, not four independent ones.
+The default allocates fresh hardware for each input window. Optional aligned
+reset reuse keeps the loaded network between windows. Four window captures make
+one classification observation, not four independent ones.
 """
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ from pines.adapters.spinnaker1_dvs import (
     conv2d_connections, dense_connections, split_signed_rows,
 )
 from pines.adapters.spinnaker1_transfer import install_bounded_memory_transfer
+from pines.adapters.spinnaker1_timing import align_run_steps
 from run_spinnaker1_shd import input_spike_times, install_source_update_compatibility, spike_readout
 from run_spinnaker1_matrix import read_packet_diagnostics
 
@@ -67,9 +69,87 @@ def build_network(sim, source, clock, state, meta, args, mapping):
     return populations,projections,parameters["readout.weight"].T
 
 
+def capture_window(sim, models, networks, horizon, output, args, started,
+                   *, clear=False, include_machine=True):
+    from spinn_utilities.config_holder import get_config_bool
+    from spinn_front_end_common.interface.provenance import ProvenanceReader
+    results = []
+    for (_, meta), (pops, projections, weights) in zip(models, networks):
+        hidden = pops[-1]
+        segment = hidden.get_data("spikes", clear=clear).segments[-1]
+        spikes, logits, raw = spike_readout(segment, hidden.size, horizon, 5, 1., weights)
+        data = dict(hidden_spikes=spikes, window_logits=logits, raw_hidden_spikes_neuron_ms=raw)
+        if args.record_layers:
+            for name, pop, latency in zip(("conv1", "conv2"), pops[:2], (3, 4)):
+                segment = pop.get_data("spikes", clear=clear).segments[-1]
+                q, _, times = spike_readout(segment, pop.size, horizon, latency, 1., np.empty((pop.size, 0)))
+                data[name+"_spikes"] = q
+                data["raw_"+name+"_spikes_neuron_ms"] = times
+        np.savez_compressed(output / (meta["variant"]+".npz"), **data)
+        results.append(dict(variant=meta["variant"], window_logits=logits.tolist(), hidden_spikes=int(spikes.sum())))
+    with ProvenanceReader() as reader:
+        diagnostics = read_packet_diagnostics(reader)
+    result = dict(status="physical_window_capture_completed", timestamp_utc=datetime.now(timezone.utc).isoformat(),
+                  seconds=time.monotonic()-started, java_transfer=get_config_bool("Java", "use_java"),
+                  diagnostics=diagnostics, rows=results)
+    if include_machine:
+        result["machine"] = str(sim.get_machine())
+    return result
+
+
+class AlignedDVSAllocation:
+    """Reuse one full network, resetting model state and replacing each input.
+
+    Packet-colour alignment changes only steps after the observed window. The
+    hardware reset-calibration probe must qualify this profile before a campaign.
+    """
+
+    def __init__(self, sim, models, args, mapping):
+        self.sim, self.models, self.args, self.mapping = sim, models, args, mapping
+        self.started = False
+        self.windows = 0
+
+    def run(self, event, output):
+        from spinn_utilities.config_holder import get_config_bool, get_config_int, set_config
+        started = time.monotonic()
+        sim, args = self.sim, self.args
+        trains = input_spike_times(event.reshape(len(event), -1), 1., 2)
+        if not self.started:
+            sim.setup(timestep=1., min_delay=1., time_scale_factor=args.time_scale_factor)
+            self.started = True
+            if get_config_bool("Machine", "virtual_board"):
+                raise RuntimeError("This runner requires physical hardware")
+            self.colour_bits = get_config_int("Simulation", "n_colour_bits")
+            for setting in ("read_placements_provenance_data", "read_router_provenance_data"):
+                set_config("Reports", setting, "True")
+            self.source = sim.Population(2048, sim.SpikeSourceArray(spike_times=trains[:-1]), label="dvs_input")
+            self.source.set_max_atoms_per_core(args.source_neurons_per_core)
+            self.clock = sim.Population(1, sim.SpikeSourceArray(spike_times=trains[-1]), label="bias_clock")
+            self.networks = [build_network(sim, self.source, self.clock, state, meta, args, self.mapping)
+                             for state, meta in self.models]
+        else:
+            sim.reset()
+            self.source.set(spike_times=trains[:-1])
+            self.clock.set(spike_times=trains[-1])
+        run_steps = align_run_steps(len(event)+7, self.colour_bits)
+        sim.run(run_steps)
+        # get_machine() between runs requests a hard reset in sPyNNaker.
+        result = capture_window(sim, self.models, self.networks, len(event), output,
+                                args, started, clear=True, include_machine=False)
+        result.update(execution_profile="aligned_reset_reuse", run_steps=run_steps,
+                      observation_steps=len(event), colour_bits=self.colour_bits,
+                      allocation_window=self.windows)
+        self.windows += 1
+        return result
+
+    def close(self):
+        if self.started:
+            self.sim.end()
+            self.started = False
+
+
 def run_window(sim, models, event, output, args, mapping):
     from spinn_utilities.config_holder import get_config_bool,set_config
-    from spinn_front_end_common.interface.provenance import ProvenanceReader
     started = time.monotonic()
     sim.setup(timestep=1.,min_delay=1.,time_scale_factor=args.time_scale_factor)
     try:
@@ -83,23 +163,7 @@ def run_window(sim, models, event, output, args, mapping):
         clock = sim.Population(1,sim.SpikeSourceArray(spike_times=trains[-1]),label="bias_clock")
         networks = [build_network(sim,source,clock,state,meta,args,mapping) for state,meta in models]
         sim.run(len(event)+7)
-        results = []
-        for (state,meta),(pops,projections,weights) in zip(models,networks):
-            hidden = pops[-1]
-            spikes,logits,raw = spike_readout(hidden.get_data("spikes").segments[-1],hidden.size,len(event),5,1.,weights)
-            data = dict(hidden_spikes=spikes,window_logits=logits,raw_hidden_spikes_neuron_ms=raw)
-            if args.record_layers:
-                for name,pop,latency in zip(("conv1","conv2"),pops[:2],(3,4)):
-                    q,_,times = spike_readout(pop.get_data("spikes").segments[-1],pop.size,len(event),latency,1.,np.empty((pop.size,0)))
-                    data[name+"_spikes"] = q
-                    data["raw_"+name+"_spikes_neuron_ms"] = times
-            np.savez_compressed(output / (meta["variant"]+".npz"),**data)
-            results.append(dict(variant=meta["variant"],window_logits=logits.tolist(),hidden_spikes=int(spikes.sum())))
-        with ProvenanceReader() as reader:
-            diagnostics = read_packet_diagnostics(reader)
-        return dict(status="physical_window_capture_completed",timestamp_utc=datetime.now(timezone.utc).isoformat(),
-                    seconds=time.monotonic()-started,machine=str(sim.get_machine()),
-                    java_transfer=get_config_bool("Java","use_java"),diagnostics=diagnostics,rows=results)
+        return capture_window(sim, models, networks, len(event), output, args, started)
     finally:
         sim.end()
 
@@ -122,29 +186,40 @@ def run(args):
         conv_neurons_per_core=args.conv_neurons_per_core,hidden_neurons_per_core=args.hidden_neurons_per_core,
         source_neurons_per_core=args.source_neurons_per_core,host_compatibility=compatibility,
         memory_transfer=transfer,
+        execution_profile="aligned_reset_reuse" if args.reuse_reset else "fresh_allocation_per_window",
+        recording_layers="all" if args.record_layers else "hidden",
         observation="One complete four-window recording per condition, never count individual windows as independent inputs.",
         packages={p:importlib.metadata.version(p) for p in ("sPyNNaker","SpiNNFrontEndCommon","SpiNNMan","PyNN","numpy")})
     (args.output / "config.json").write_text(json.dumps(config,indent=2)+"\n")
-    for index in range(args.start,args.start+args.count):
-        folder = args.output / f"input_{index:05d}"
-        folder.mkdir()
-        records = []
-        for window in args.windows:
-            event = np.unpackbits(packed[index,window],axis=-1,bitorder="little")[...,:2048].reshape(60,2,32,32)
-            target = folder / f"window_{window}"
-            target.mkdir()
-            record = run_window(sim,models,event,target,args,mapping)
-            (target / "summary.json").write_text(json.dumps(record,indent=2)+"\n")
-            records.append(record)
-            print(f"input {index} window {window} completed in {record['seconds']:.1f}s",flush=True)
-        result = dict(sample_id=ids[index],windows=args.windows,status="development_partial_windows")
-        if args.windows == [0,1,2,3]:
-            result["status"] = "physical_classification_capture_completed"
-            result["predictions"] = {meta["variant"]:int(aggregate_windows(
-                [record["rows"][position]["window_logits"] for record in records],meta["aggregation_temperature"]).argmax())
-                for position,(_,meta) in enumerate(models)}
-        (folder / "summary.json").write_text(json.dumps(result,indent=2)+"\n")
-    (args.output / "completed.json").write_text(json.dumps(dict(samples=args.count,windows=args.windows))+"\n")
+    allocation = AlignedDVSAllocation(sim, models, args, mapping) if args.reuse_reset else None
+    try:
+        for index in range(args.start,args.start+args.count):
+            folder = args.output / f"input_{index:05d}"
+            folder.mkdir()
+            records = []
+            for window in args.windows:
+                event = np.unpackbits(packed[index,window],axis=-1,bitorder="little")[...,:2048].reshape(60,2,32,32)
+                target = folder / f"window_{window}"
+                target.mkdir()
+                record = (allocation.run(event, target) if allocation else
+                          run_window(sim,models,event,target,args,mapping))
+                (target / "summary.json").write_text(json.dumps(record,indent=2)+"\n")
+                records.append(record)
+                print(f"input {index} window {window} completed in {record['seconds']:.1f}s",flush=True)
+            result = dict(sample_id=ids[index],windows=args.windows,status="development_partial_windows")
+            if args.windows == [0,1,2,3]:
+                result["status"] = "physical_classification_capture_completed"
+                result["predictions"] = {meta["variant"]:int(aggregate_windows(
+                    [record["rows"][position]["window_logits"] for record in records],meta["aggregation_temperature"]).argmax())
+                    for position,(_,meta) in enumerate(models)}
+            (folder / "summary.json").write_text(json.dumps(result,indent=2)+"\n")
+        completed = dict(samples=args.count, windows=args.windows)
+        if allocation:
+            completed["machine"] = str(sim.get_machine())
+        (args.output / "completed.json").write_text(json.dumps(completed)+"\n")
+    finally:
+        if allocation:
+            allocation.close()
 
 
 if __name__ == "__main__":
@@ -163,4 +238,6 @@ if __name__ == "__main__":
     parser.add_argument("--source-neurons-per-core",type=int,default=32)
     parser.add_argument("--transfer-chunk-bytes",type=int,default=256*1024)
     parser.add_argument("--record-layers",action="store_true")
+    parser.add_argument("--reuse-reset", action="store_true",
+                        help="Use the calibration-qualified aligned-reset loading profile")
     run(parser.parse_args())

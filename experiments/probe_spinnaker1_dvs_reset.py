@@ -18,6 +18,7 @@ from run_spinnaker1_dvs import (
     input_spike_times, install_source_update_compatibility, spike_readout,
     install_bounded_memory_transfer, read_packet_diagnostics,
 )
+from pines.adapters.spinnaker1_timing import align_run_steps
 
 
 def development_schedule():
@@ -49,7 +50,7 @@ def read_layers(populations, weights, horizon, offset):
 
 def run(args):
     import pyNN.spiNNaker as sim
-    from spinn_utilities.config_holder import get_config_bool, set_config
+    from spinn_utilities.config_holder import get_config_bool, get_config_int, set_config
     from spinn_front_end_common.interface.provenance import ProvenanceReader
 
     compatibility = install_source_update_compatibility()
@@ -76,6 +77,12 @@ def run(args):
         return input_spike_times(event, 1., args.input_offset_steps)
 
     sim.setup(timestep=1., min_delay=1., time_scale_factor=args.time_scale_factor)
+    colour_bits = get_config_int("Simulation", "n_colour_bits")
+    minimum_steps = 60+args.input_offset_steps+5
+    run_steps = align_run_steps(minimum_steps, colour_bits) if args.align_reset else minimum_steps
+    config.update(align_reset=args.align_reset, colour_bits=colour_bits,
+                  run_steps=run_steps, observation_steps=60)
+    (args.output / "config.json").write_text(json.dumps(config, indent=2)+"\n")
     results = []
     try:
         if get_config_bool("Machine", "virtual_board"):
@@ -96,7 +103,7 @@ def run(args):
                 trains = trains_for(case)
                 source.set(spike_times=trains[:-1])
                 clock.set(spike_times=trains[-1])
-            sim.run(60+args.input_offset_steps+5)
+            sim.run(run_steps)
             folder = args.output / f"step_{step:02d}"
             folder.mkdir()
             rows = []
@@ -148,5 +155,7 @@ if __name__ == "__main__":
     parser.add_argument("--hidden-neurons-per-core", type=int, default=32)
     parser.add_argument("--source-neurons-per-core", type=int, default=32)
     parser.add_argument("--transfer-chunk-bytes", type=int, default=256*1024)
+    parser.add_argument("--align-reset", action="store_true",
+                        help="Pad execution to a packet-colour wrap for a distinct reset-reuse diagnostic")
     parser.set_defaults(record_layers=True)
     run(parser.parse_args())

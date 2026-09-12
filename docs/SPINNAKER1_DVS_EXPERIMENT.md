@@ -92,6 +92,14 @@ conditions, not the planned 1,600-observation physical matrix. Fresh setup for
 every window remains the selected execution profile. The declared v1 mapping
 and existing checkpoints are fixed for the five-seed semantic audit.
 
+The service timing databases identify the runtime bottleneck. Mean times across
+these four windows are 311.3 seconds for application-data loading, 75.8 seconds
+for data-specification generation, 16.1 seconds for buffer extraction, and 7.9
+seconds for the application run. These measurements motivate reusing a loaded
+network rather than extrapolating the fresh-allocation diagnostic into a quota
+request. A 500,000-core-hour estimate based on assumed full-board charging was
+withdrawn. No such allocation request was submitted.
+
 ## Mapping contract
 
 Weights are floor-rounded to signed 8-bit values with six fractional bits.
@@ -203,6 +211,42 @@ had 6,468 and 172, respectively. These disappeared in the repeat despite empty
 reported late-spike counters. Consequently, this loading profile is not used for
 primary certification. The incomplete probe and its exact-repeat traces remain
 development evidence, not recording-level results.
+
+A small physical two-layer diagnostic subsequently isolated a run-length effect.
+At 67 steps, the initial downstream spikes at 4, 7 and 11 ms disappeared in both
+reset repeats, while upstream spikes were unchanged. At 80 steps, both layers
+reproduced their initial spike times exactly in both repeats. The installed
+four-bit packet-colour period is 16 steps, making 80 the next aligned length.
+This supports testing alignment padding after the observation window as a
+network-reuse workaround. It does not yet establish full-model reset fidelity.
+The first aligned run took 55.3 seconds and its repeats took 15.9 and 16.0 seconds
+on this tiny network. These times are not full-DVS runtime estimates. Raw captures
+and the completed report are retained locally under
+`artifacts/spinnaker1_reset_alignment08/`.
+
+The full-model calibration probe now accepts `--align-reset`. This pads execution
+to the packet-colour period while retaining the original 60 observed hidden bins.
+The default remains the previous unpadded profile. No primary canary observations
+have been collected with the candidate aligned profile.
+
+Build the full-model alignment test for the batch service:
+
+```sh
+python experiments/build_spinnaker1_nmpi_job.py --task dvs-reset --bundle BUNDLE --seeds 1701 --align-reset --output artifacts/dvs_aligned_reset.py --run-output dvs_aligned_reset
+```
+
+This packages only the two development recordings and their emulator traces,
+alongside both complete model variants. It does not package held-out canary inputs.
+The aligned batch calibration attempt is in progress, not a completed primary
+campaign. Preserve its capture and compare both repeated windows with their
+initial physical execution before selecting the reuse profile.
+
+The capture runner also has an optional `--reuse-reset` switch. It preserves
+the existing per-recording output format and four-window aggregation, but loads
+the networks once and resets before each subsequent window. Configuration and
+per-window records distinguish this candidate profile from fresh allocation.
+It is not the default, and its software orchestration tests are not evidence of
+physical reset fidelity. The batch builder forwards this switch for DVS jobs.
 
 A self-contained NMPI job can instead run each window with fresh initialization:
 
