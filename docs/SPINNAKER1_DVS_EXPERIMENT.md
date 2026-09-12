@@ -34,8 +34,11 @@ neuron dynamics or weights. The direct transfer was also rejected with HTTP 413
 before execution. A subsequent development run, ending in `development06_chunked`,
 uses contiguous memory writes of at most 256 KiB through the installed transceiver.
 This changes only transfer granularity, preserving the data bytes and device
-addresses. Its physical traces and runtime are being compared with the completed
-Python-transfer capture before choosing the full-campaign profile. Only one DVS
+addresses. This run completed in 1,178.7 seconds. Its first-convolution,
+second-convolution and hidden spike arrays and its logits exactly match the
+completed Python-transfer capture. Its pre-shutdown diagnostics are also empty,
+while shutdown retains router dump/reinjection warnings. The bounded direct
+profile therefore has measured full-network loading evidence. Only one DVS
 process runs at a time within the notebook server's memory limit.
 
 The completed window uses seed 1701, the original model, the first development
@@ -57,6 +60,16 @@ four-window classification result or a population certificate.
 The remote archive `PINES_DVS_dev04_capture.zip` contains the raw and binned
 spikes, logits, run configuration, development comparison and execution log.
 It is preserved in the EBRAINS workspace. Local raw-capture import is pending.
+
+The next development run is
+`PINES_spinnaker1_runs/dvs_seed1701_reset_reuse_development07`. It loads both the
+original and repaired full models, executes two four-window calibration
+recordings, and repeats the first window after each recording. The probe tests
+whether PyNN simulation reset can reuse the loaded network without residual
+states, stale inputs or packet problems. This is an execution-level reset,
+distinct from a neuron's reset after firing. All layer traces and packet
+diagnostics are retained. Allocation reuse is not yet selected for the primary
+campaign, and the running SHD campaign is unchanged.
 
 ## Mapping contract
 
@@ -139,6 +152,13 @@ Run one complete-network development window first:
 ```sh
 python experiments/run_spinnaker1_dvs.py --bundle BUNDLE --inputs BUNDLE/development_inputs.npz --output CAPTURE --seed 1701 --variants original --count 1 --windows 0 --record-layers
 python experiments/analyze_spinnaker1_dvs_development.py --capture CAPTURE --bundle BUNDLE
+```
+
+The allocation-reuse development probe uses only the two bundled calibration
+recordings and writes separate diagnostic outputs:
+
+```sh
+python experiments/probe_spinnaker1_dvs_reset.py --bundle BUNDLE --output RESET_PROBE --seed 1701
 ```
 
 The default runner executes all four windows and both model variants. It records
