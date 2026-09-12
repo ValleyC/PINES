@@ -14,6 +14,7 @@ import zipfile
 from analyze_spinnaker1_matrix import analyze as analyze_shd
 from analyze_spinnaker1_dvs_matrix import analyze as analyze_dvs
 from analyze_spinnaker1_repeats import analyze as analyze_repeats
+from summarize_spinnaker1_reports import summarize as summarize_reports
 
 
 TERMINAL = {"finished", "error", "cancelled", "canceled"}
@@ -37,19 +38,29 @@ def collect_campaign(client, jobs, destination, audits, *, poll_seconds=300,
             if name in captured:
                 continue
             try:
-                # The deployed service rejected with_log=False. Use its working
-                # request form at a modest polling interval.
-                state = client.get_job(entry["job"], with_log=True)
+                # The service has intermittently rejected either request form.
+                # A log failure is not evidence that hardware execution stopped.
+                log_error = None
+                try:
+                    state = client.get_job(entry["job"], with_log=True)
+                except Exception as error:
+                    log_error = str(error)
+                    state = client.get_job(entry["job"], with_log=False)
                 status = state.get("status", "unknown")
                 log = state.get("log", "")
                 lines = [line for line in log.splitlines()
                          if " shd-test-" in line or line.startswith("input ")]
                 states[name] = dict(status=status, last_progress=lines[-1:] or [])
+                if log_error is not None:
+                    states[name]["log_retrieval_error"] = log_error
                 if status not in TERMINAL:
                     continue
                 target = destination / name
                 target.mkdir(exist_ok=True)
-                (target / "service.log").write_text(log, encoding="utf-8")
+                if log_error is None:
+                    (target / "service.log").write_text(log, encoding="utf-8")
+                else:
+                    (target / "service_log_unavailable.txt").write_text(log_error, encoding="utf-8")
                 files = (state.get("output_data") or {}).get("files", [])
                 capture_urls = [item["url"] for item in files
                                 if item["url"].endswith("_capture.zip")]
@@ -65,6 +76,8 @@ def collect_campaign(client, jobs, destination, audits, *, poll_seconds=300,
                 for item in files:
                     if item["url"].endswith("reports.zip"):
                         download(item["url"], target / "reports.zip")
+                        summary = summarize_reports([target / "reports.zip"])
+                        (target / "execution_log_summary.json").write_text(json.dumps(summary, indent=2)+"\n")
                 captured[name] = capture
                 states[name]["capture"] = "downloaded"
             except Exception as error:

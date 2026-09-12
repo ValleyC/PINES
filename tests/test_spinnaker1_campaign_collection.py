@@ -60,3 +60,24 @@ def test_terminal_job_without_capture_remains_missing_data(tmp_path, monkeypatch
     report = json.loads((tmp_path / "dvs_label_free_analysis.json").read_text())
     assert report["observations"] == 0
     assert report["physical_certificate"] is False
+
+
+def test_log_failure_falls_back_to_same_job_without_false_empty_log(tmp_path, monkeypatch):
+    calls = []
+
+    class Client:
+        def get_job(self, job, with_log):
+            calls.append((job, with_log))
+            if with_log:
+                raise RuntimeError("Error 500: Internal Server Error")
+            return dict(status="finished", output_data=None)
+
+    monkeypatch.setattr(collector, "analyze_shd", lambda paths, audit: dict(status="incomplete_capture"))
+    monkeypatch.setattr(collector, "analyze_repeats", lambda *args: {})
+    progress = collector.collect_campaign(Client(), [dict(job="existing-job", task="shd", name="batch")],
+        tmp_path, dict(shd=tmp_path / "audit"), sleep=lambda _: None)
+    assert calls == [("existing-job", True), ("existing-job", False)]
+    assert progress["jobs"]["batch"]["status"] == "finished"
+    assert "log_retrieval_error" in progress["jobs"]["batch"]
+    assert not (tmp_path / "batch/service.log").exists()
+    assert (tmp_path / "batch/service_log_unavailable.txt").exists()

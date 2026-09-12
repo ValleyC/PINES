@@ -252,10 +252,11 @@ worker = Thread(target=collect_campaign, args=(client, jobs, "collected", {
 worker.start()
 ```
 
-The deployed service returned 500/502 errors for the `with_log=False` request
-form while the original `with_log=True` request still returned running jobs.
-The collector uses the working form and keeps only the latest progress line
-between polls. Observation failures do not trigger resubmission.
+The deployed service intermittently returned 500/502 errors for either request
+form. The collector first requests the log and falls back to status-only if
+that request fails. It records an unavailable log explicitly and retains the
+final report archive and its warning summary when available. Observation
+failures do not trigger resubmission.
 
 `progress.json` records collection status. Each job directory retains its capture
 ZIP, extracted observations, service log and available report archive. Per-task
