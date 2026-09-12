@@ -1,7 +1,7 @@
 # Manuscript result artifacts
 
-This directory contains only the final aggregate software evidence used in the
-anonymous manuscript. JSON summaries preserve protocol details, provenance
+This directory contains the manuscript software evidence and separately labeled
+RTL simulation and hardware-audit evidence. JSON summaries preserve protocol details, provenance
 source filenames and full-precision statistics. CSV files contain the corresponding
 rows. Reported manuscript values are rounded from these artifacts.
 
@@ -25,9 +25,11 @@ The finite-family source aggregates are retained beside each dataset. The SHD
 continuous audit also retains its frozen screening summary because the final
 all-input audit records it as upstream provenance.
 
-Table V has no physical result artifact yet. Hardware-dependent values remain
-unreported until the paired SpiNNaker2 and Virtex-7 campaigns produce complete
-manifests and canary captures.
+The full SHD SpiNNaker-1 canary campaign is running. The semantic term for its
+held-out population is in `spinnaker1_shd/semantic_audit.json`. It is not a
+physical total bound. Table V's hardware-dependent values remain unreported
+until complete physical captures are available. The supplied FPGA simulation
+results are in `shd_rtl/` and do not replace physical Virtex-7 measurements.
 
 Run the consistency check from the repository root:
 

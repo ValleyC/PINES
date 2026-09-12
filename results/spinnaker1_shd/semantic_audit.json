@@ -1,0 +1,153 @@
+{
+  "status": "frozen_label_free_semantic_audit",
+  "labels_accessed": false,
+  "population": "SHD held-out test pool",
+  "audit": {
+    "dataset": "SHD",
+    "split": "held-out-test-semantic-audit",
+    "labels_included": false,
+    "time_bins": 50,
+    "input_channels": 700,
+    "bit_order": "little",
+    "selection_seed": 20260913
+  },
+  "canary": {
+    "dataset": "SHD",
+    "split": "held-out-test-canary",
+    "labels_included": false,
+    "time_bins": 50,
+    "input_channels": 700,
+    "bit_order": "little",
+    "selection_seed": 20260912
+  },
+  "confidence": 0.95,
+  "paper_cells": 40,
+  "alpha_per_term": 0.000625,
+  "correction": "Bonferroni over two terms for every task/backend/seed/repair cell",
+  "source_semantics": {
+    "version": "1.0",
+    "timestep": 1.0,
+    "integration_rule": "forward_euler",
+    "threshold_timing": "post_integration",
+    "update_ordering": "integrate>threshold>reset",
+    "reset_rule": "subtractive",
+    "state_format": {
+      "kind": "float32",
+      "total_bits": null,
+      "fractional_bits": null,
+      "rounding": "nearest_even",
+      "overflow": "saturate"
+    },
+    "weight_format": {
+      "kind": "float32",
+      "total_bits": null,
+      "fractional_bits": null,
+      "rounding": "nearest_even",
+      "overflow": "saturate"
+    },
+    "synaptic_delay_steps": 0,
+    "output_delay_steps": 0,
+    "randomness": {
+      "deterministic": true,
+      "seed": 0
+    }
+  },
+  "target_mapping": {
+    "version": "SpiNNaker1Mapping/v1",
+    "neuron": "IF_curr_delta",
+    "integration_mapping": "match_source_euler",
+    "timestep_ms": 1.0,
+    "reset": "to_value",
+    "threshold": "post-integration >=",
+    "refractory_ms": 0.0,
+    "projection_delay_steps": 1,
+    "weight_orientation": "source,destination",
+    "signed_weights": "positive excitatory, absolute negative inhibitory",
+    "voltage_recording": "pre-update",
+    "emulator_precision": "float64 ideal mapped dynamics, not bit-accurate",
+    "readout": "host sum of recorded hidden spikes times original output weights"
+  },
+  "rows": [
+    {
+      "seed": 1701,
+      "variant": "original",
+      "audit_samples": 861,
+      "disagreements": 279,
+      "disagreement_rate": 0.3240418118466899,
+      "semantic_upper": 0.3774375972240599
+    },
+    {
+      "seed": 1701,
+      "variant": "reset_repaired",
+      "audit_samples": 861,
+      "disagreements": 151,
+      "disagreement_rate": 0.1753774680603949,
+      "semantic_upper": 0.22047409417130975
+    },
+    {
+      "seed": 2718,
+      "variant": "original",
+      "audit_samples": 861,
+      "disagreements": 241,
+      "disagreement_rate": 0.27990708478513354,
+      "semantic_upper": 0.3315991174989261
+    },
+    {
+      "seed": 2718,
+      "variant": "reset_repaired",
+      "audit_samples": 861,
+      "disagreements": 140,
+      "disagreement_rate": 0.16260162601626016,
+      "semantic_upper": 0.20657752557535208
+    },
+    {
+      "seed": 3141,
+      "variant": "original",
+      "audit_samples": 861,
+      "disagreements": 266,
+      "disagreement_rate": 0.3089430894308943,
+      "semantic_upper": 0.3618174135533284
+    },
+    {
+      "seed": 3141,
+      "variant": "reset_repaired",
+      "audit_samples": 861,
+      "disagreements": 128,
+      "disagreement_rate": 0.148664343786295,
+      "semantic_upper": 0.19131675264978026
+    },
+    {
+      "seed": 5772,
+      "variant": "original",
+      "audit_samples": 861,
+      "disagreements": 234,
+      "disagreement_rate": 0.27177700348432055,
+      "semantic_upper": 0.323093470111805
+    },
+    {
+      "seed": 5772,
+      "variant": "reset_repaired",
+      "audit_samples": 861,
+      "disagreements": 149,
+      "disagreement_rate": 0.17305458768873402,
+      "semantic_upper": 0.21795364468099465
+    },
+    {
+      "seed": 8119,
+      "variant": "original",
+      "audit_samples": 861,
+      "disagreements": 209,
+      "disagreement_rate": 0.24274099883855982,
+      "semantic_upper": 0.2925449236955727
+    },
+    {
+      "seed": 8119,
+      "variant": "reset_repaired",
+      "audit_samples": 861,
+      "disagreements": 136,
+      "disagreement_rate": 0.15795586527293845,
+      "semantic_upper": 0.20150280796041453
+    }
+  ],
+  "physical_certificate": false
+}

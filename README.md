@@ -20,7 +20,8 @@ during double-blind review.
   retained manuscript experiments.
 - `experiments/` contains the runners, aggregators, and evidence verifiers for
   the reported results.
-- `results/` contains only the final software results used in the manuscript.
+- `results/` contains the manuscript software results and separately labeled
+  hardware-audit and RTL simulation evidence.
 - `schemas/` defines the certificate, repair, semantics, and hardware
   manifest formats.
 - `rtl/` contains the parameterized Virtex-7-oriented RTL and its verification
@@ -60,9 +61,16 @@ and upstream reports. Large datasets, trained checkpoints, per-input prediction
 arrays, and raw event caches are excluded from Git because of size and dataset
 licensing. The frozen configurations identify those inputs.
 
-Table V is reserved for physical SpiNNaker2 and Virtex-7 results. The software
-repository includes backend adapters, RTL, schemas, and a hardware runbook, but
-does not present uncollected hardware measurements as completed evidence.
+Table V is reserved for physical SpiNNaker-1 and Virtex-7 results. The full SHD
+SpiNNaker-1 campaign has been launched through EBRAINS using 861 held-out inputs,
+five seeds, and original/repaired models. It executes recurrent hidden dynamics
+on the device with a host linear readout. Physical results remain pending until
+the full captures are analyzed. DVS Gesture hardware runs remain outstanding.
+See [`docs/SPINNAKER1_EXPERIMENT.md`](docs/SPINNAKER1_EXPERIMENT.md).
+
+The supplied SHD RTL simulation outputs match all 8,610 frozen emulator class
+predictions. These are recorded separately in
+[`results/shd_rtl/`](results/shd_rtl/), not counted as physical measurements.
 
 The SHD FPGA handoff is documented in
 [`hardware/bundles/shd_floor_q8q16_v1/README.md`](hardware/bundles/shd_floor_q8q16_v1/README.md).

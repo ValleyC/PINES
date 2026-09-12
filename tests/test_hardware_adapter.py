@@ -8,12 +8,12 @@ import pytest
 from pines.adapters.hardware import load_hardware_capture
 
 
-def _write_manifest(path, capture, *, independent=True):
+def _write_manifest(path, capture, *, independent=True, backend="virtex7"):
     path.write_text(
         json.dumps(
             {
                 "schema_version": "HardwareRunManifest/v1",
-                "backend": "virtex7",
+                "backend": backend,
                 "backend_serial": "test-board",
                 "adapter_version": "test-1",
                 "firmware_version": "test-firmware-1",
@@ -32,7 +32,8 @@ def _write_manifest(path, capture, *, independent=True):
     )
 
 
-def test_hardware_capture_requires_unique_pairs(tmp_path) -> None:
+@pytest.mark.parametrize("backend", ["virtex7", "spinnaker1", "spinnaker2"])
+def test_hardware_capture_requires_unique_pairs(tmp_path, backend) -> None:
     capture = tmp_path / "capture.npz"
     manifest = tmp_path / "manifest.json"
     np.savez(
@@ -41,11 +42,11 @@ def test_hardware_capture_requires_unique_pairs(tmp_path) -> None:
         sample_ids=np.asarray(["a", "b"]),
         pair_ids=np.asarray(["pair-a", "pair-b"]),
     )
-    _write_manifest(manifest, capture)
+    _write_manifest(manifest, capture, backend=backend)
     predictions, sample_ids, record = load_hardware_capture(capture, manifest)
     assert predictions.tolist() == [0, 1]
     assert sample_ids.tolist() == ["a", "b"]
-    assert record.backend == "virtex7"
+    assert record.backend == backend
 
 
 def test_primary_capture_rejects_nonindependent_runs(tmp_path) -> None:

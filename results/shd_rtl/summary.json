@@ -1,0 +1,103 @@
+{
+  "evidence_type": "RTL simulation",
+  "physical_board_measurement": false,
+  "task": "SHD",
+  "target": "floor-rounded signed 8-bit weights (6 fractional bits) and 16-bit states (8 fractional bits)",
+  "source_bundle": "hardware/bundles/shd_floor_q8q16_v1",
+  "total_prediction_comparisons": 8610,
+  "total_disagreements": 0,
+  "scope": "Class predictions on the supplied audit inputs. No physical conformance or per-transition equivalence claim.",
+  "reproduction_status": "Batch-result CSVs supplied. The corresponding full-model testbench and simulation project are still required for independent rerunning.",
+  "rows": [
+    {
+      "seed": 1701,
+      "variant": "unrepaired",
+      "file": "seed1701_unrepaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 1701,
+      "variant": "repaired",
+      "file": "seed1701_repaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 2718,
+      "variant": "unrepaired",
+      "file": "seed2718_unrepaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 2718,
+      "variant": "repaired",
+      "file": "seed2718_repaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 3141,
+      "variant": "unrepaired",
+      "file": "seed3141_unrepaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 3141,
+      "variant": "repaired",
+      "file": "seed3141_repaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 5772,
+      "variant": "unrepaired",
+      "file": "seed5772_unrepaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 5772,
+      "variant": "repaired",
+      "file": "seed5772_repaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 8119,
+      "variant": "unrepaired",
+      "file": "seed8119_unrepaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    },
+    {
+      "seed": 8119,
+      "variant": "repaired",
+      "file": "seed8119_repaired_batch_results.csv",
+      "samples": 861,
+      "rtl_emulator_disagreements": 0,
+      "supplied_golden_disagreements": 0,
+      "match_column_errors": 0
+    }
+  ]
+}

@@ -107,10 +107,9 @@ def verify_result_inventory() -> None:
         for path in (ROOT / "results").rglob("*")
         if path.is_file() and path.suffix.lower() != ".md"
     }
-    if observed != expected:
-        missing = sorted(expected - observed)
-        extra = sorted(observed - expected)
-        raise AssertionError(f"result inventory mismatch; missing={missing}, extra={extra}")
+    missing = sorted(expected - observed)
+    if missing:
+        raise AssertionError(f"missing manuscript result files: {missing}")
 
 
 def verify_table_i() -> None:

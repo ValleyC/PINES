@@ -6,7 +6,7 @@
   "required": ["schema_version", "backend", "backend_serial", "adapter_version", "firmware_version", "bitstream_file", "semantics_description", "model_description", "dataset_name", "seed", "run_id", "timestamp_utc", "capture_file", "independent_pairing"],
   "properties": {
     "schema_version": {"const": "HardwareRunManifest/v1"},
-    "backend": {"enum": ["spinnaker2", "virtex7"]},
+    "backend": {"enum": ["spinnaker1", "spinnaker2", "virtex7"]},
     "backend_serial": {"type": "string", "minLength": 1},
     "adapter_version": {"type": "string", "minLength": 1},
     "firmware_version": {"type": "string", "minLength": 1},

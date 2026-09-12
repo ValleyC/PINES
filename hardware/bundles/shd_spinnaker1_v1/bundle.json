@@ -1,0 +1,21 @@
+{
+  "status": "frozen_inputs_not_hardware_results",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "source_checkpoint_root": "artifacts/shd_v1_final",
+  "repair_checkpoint_root": "artifacts/shd_v113_margin_0p25_full_da9c0f9_v1",
+  "repair_condition": "reset_to_value",
+  "mapping": "match_source_euler",
+  "readout": "host linear readout from hardware hidden spikes",
+  "development_samples": 8,
+  "audit_samples": 861,
+  "canary_samples": 861,
+  "labels_included": false,
+  "physical_population": "SHD held-out test pool, disjoint semantic-audit and hardware-canary samples",
+  "purpose": "Development inputs for debugging. Audit and canary inputs only after mapping freeze."
+}

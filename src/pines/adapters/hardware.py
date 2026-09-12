@@ -27,8 +27,8 @@ class HardwareRunManifest:
     def __post_init__(self) -> None:
         if self.schema_version != "HardwareRunManifest/v1":
             raise ValueError("unsupported hardware manifest")
-        if self.backend not in {"spinnaker2", "virtex7"}:
-            raise ValueError("backend must be spinnaker2 or virtex7")
+        if self.backend not in {"spinnaker1", "spinnaker2", "virtex7"}:
+            raise ValueError("backend must be spinnaker1, spinnaker2 or virtex7")
         required = (
             self.backend_serial,
             self.adapter_version,
