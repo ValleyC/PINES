@@ -264,3 +264,18 @@ incomplete analysis even when the service job has ended. Final scientific report
 include sample ranges, reset/loading profiles, reader choice and package versions
 from the capture configurations. Private service logs and account-related job
 bookkeeping remain outside the anonymous repository.
+
+Review the final report archive as well as per-input diagnostics. Shutdown can
+retrieve provenance that was not available to an earlier per-input query. The
+following command summarizes warning categories without including account paths
+or service identifiers in its output:
+
+```sh
+python experiments/summarize_spinnaker1_reports.py --reports BATCH_1/reports.zip BATCH_2/reports.zip --output EXECUTION_LOG_SUMMARY.json
+```
+
+Counts refer to log entries, not unique incidents or lost packets. In particular,
+router counters can recur across resets and packet reinjection. Keep every
+primary prediction in the conformance analysis and retain the raw logs for
+interpretation. Empty per-input diagnostics alone do not establish a warning-free
+hardware run.
