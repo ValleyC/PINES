@@ -8,6 +8,14 @@ giving 8,610 input-condition observations. One fresh allocation serves all ten
 conditions per input. Hidden recurrence executes on SpiNNaker-1. The original
 linear readout is computed on the host from captured spikes, a hybrid backend.
 
+The direct-access run stopped after 75 complete inputs (750 predictions) when
+the service rejected the next allocation with `quota exceeded`. Input indices
+0 through 74 are complete. Index 75 failed before hardware execution and is
+retained as an incomplete attempt. These partial captures do not supply the
+paper's final physical bound. Resume at index 75 only after access is restored,
+using a new output directory and preserving the earlier captures and log.
+The NMPI batch allocation is separate from the exhausted direct-access group.
+
 The remote output directory is
 `PINES_spinnaker1_runs/shd_canary_five_seeds_v1/`, with a sibling `.log`.
 The frozen execution bundle is `spinnaker1_ebrains_bundle_v8`.

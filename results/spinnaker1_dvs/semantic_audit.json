@@ -1,0 +1,120 @@
+{
+  "status": "frozen_label_free_semantic_audit",
+  "physical_certificate": false,
+  "labels_accessed": false,
+  "task": "DVS Gesture",
+  "population": "DVS Gesture held-out test pool",
+  "confidence": 0.95,
+  "paper_cells": 40,
+  "alpha_per_term": 0.000625,
+  "correction": "Bonferroni over two terms for every task/backend/seed/repair cell",
+  "source": "Original float32 source executor and original four-window aggregation for both variants",
+  "target_mapping": {
+    "version": "SpiNNaker1DVSMapping/v1",
+    "neuron": "IF_curr_delta",
+    "timestep_ms": 1.0,
+    "integration": "Euler-matched exponential leak",
+    "reset": "to_value_zero",
+    "threshold": "post-integration >=",
+    "refractory_ms": 0,
+    "weights": "signed 8-bit floor-rounded, 6 fractional bits",
+    "clocked_bias": "signed 16-bit floor-rounded, 8 fractional bits",
+    "state": "native device arithmetic, ideal float64 emulator",
+    "source_offset_steps": 2,
+    "conv1_latency_steps": 1,
+    "conv2_latency_steps": 2,
+    "hidden_latency_steps": 3,
+    "recurrent_delay_steps": 1,
+    "readout": "host linear readout using the same quantized output weights",
+    "aggregation": "original checkpoint mean-window softmax at its saved temperature",
+    "scope": "This is not the FPGA floor-rounded Q16-state executor. Its semantic and conformance terms must be measured separately."
+  },
+  "repair": "Existing floor-target repair is evaluated under this new mapped target, not claimed to be retrained for native SpiNNaker arithmetic.",
+  "windows_per_observation": 4,
+  "audit_samples": 104,
+  "canary_samples": 160,
+  "zero_disagreement_total_floor": 0.11354624377101186,
+  "evaluation_scope": "Development evidence. Earlier test performance informed the source DVS pipeline.",
+  "rows": [
+    {
+      "seed": 1701,
+      "variant": "original",
+      "audit_samples": 104,
+      "disagreements": 63,
+      "disagreement_rate": 0.6057692307692307,
+      "semantic_upper": 0.7533893870848143
+    },
+    {
+      "seed": 1701,
+      "variant": "floor_repaired",
+      "audit_samples": 104,
+      "disagreements": 14,
+      "disagreement_rate": 0.1346153846153846,
+      "semantic_upper": 0.27188854484360603
+    },
+    {
+      "seed": 2718,
+      "variant": "original",
+      "audit_samples": 104,
+      "disagreements": 71,
+      "disagreement_rate": 0.6826923076923077,
+      "semantic_upper": 0.8179075095134254
+    },
+    {
+      "seed": 2718,
+      "variant": "floor_repaired",
+      "audit_samples": 104,
+      "disagreements": 19,
+      "disagreement_rate": 0.18269230769230768,
+      "semantic_upper": 0.329790463116882
+    },
+    {
+      "seed": 3141,
+      "variant": "original",
+      "audit_samples": 104,
+      "disagreements": 82,
+      "disagreement_rate": 0.7884615384615384,
+      "semantic_upper": 0.8991006034125384
+    },
+    {
+      "seed": 3141,
+      "variant": "floor_repaired",
+      "audit_samples": 104,
+      "disagreements": 27,
+      "disagreement_rate": 0.25961538461538464,
+      "semantic_upper": 0.4166658600978558
+    },
+    {
+      "seed": 5772,
+      "variant": "original",
+      "audit_samples": 104,
+      "disagreements": 79,
+      "disagreement_rate": 0.7596153846153846,
+      "semantic_upper": 0.8779645514083285
+    },
+    {
+      "seed": 5772,
+      "variant": "floor_repaired",
+      "audit_samples": 104,
+      "disagreements": 16,
+      "disagreement_rate": 0.15384615384615385,
+      "semantic_upper": 0.29545802692461376
+    },
+    {
+      "seed": 8119,
+      "variant": "original",
+      "audit_samples": 104,
+      "disagreements": 77,
+      "disagreement_rate": 0.7403846153846154,
+      "semantic_upper": 0.8634236506535888
+    },
+    {
+      "seed": 8119,
+      "variant": "floor_repaired",
+      "audit_samples": 104,
+      "disagreements": 21,
+      "disagreement_rate": 0.20192307692307693,
+      "semantic_upper": 0.35209256255772026
+    }
+  ]
+}

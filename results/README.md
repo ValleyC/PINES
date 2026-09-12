@@ -20,12 +20,16 @@ rows. Reported manuscript values are rounded from these artifacts.
 | Table IV, DVS Gesture repair | `dvs_gesture_v3/repair_floor_task_tuned_clean_v5_rows.csv`, `dvs_gesture_v3/repair_floor_task_tuned_clean_v5_summary.json` |
 | Repair family diagnostic | `shd_v1/repair_task_tuned_family_grid_v5.json` |
 | Audit sample requirements | `sample_complexity/zero_disagreement_rows.csv`, `sample_complexity/zero_disagreement_summary.json` |
+| Table V, SpiNNaker-1 SHD semantic term | `spinnaker1_shd/semantic_audit.json`, `spinnaker1_shd/paired_predictions.npz` |
+| Table V, SpiNNaker-1 DVS semantic term | `spinnaker1_dvs/semantic_audit.json`, `spinnaker1_dvs/paired_predictions.npz` |
+| Table V, Virtex-7 SHD semantic term | `virtex7_shd/semantic_audit.json`, `virtex7_shd/paired_predictions.npz` |
 
 The finite-family source aggregates are retained beside each dataset. The SHD
 continuous audit also retains its frozen screening summary because the final
 all-input audit records it as upstream provenance.
 
-The full SHD SpiNNaker-1 canary campaign is running. The semantic term for its
+The full SHD SpiNNaker-1 canary campaign stopped at the direct-access quota
+after 75 inputs and 750 of 8,610 predictions. The semantic term for its
 held-out population is in `spinnaker1_shd/semantic_audit.json`. It is not a
 physical total bound. Table V's hardware-dependent values remain unreported
 until complete physical captures are available. The supplied FPGA simulation
@@ -38,6 +42,15 @@ points before/after repair. It uses the same source predictions and disjoint
 test-input splits as SpiNNaker-1. Board inputs and expected integer outputs are
 in `hardware/bundles/shd_virtex7_canary_v2/`. These software values fill only
 Table V's semantic column, not its physical conformance or accuracy columns.
+
+The DVS SpiNNaker-1 audit covers 104 held-out recordings for each of five seeds
+and both original/repaired checkpoints. Its mean prediction-disagreement rates
+are 71.5/18.7 percent and mean semantic upper bounds are 84.2/33.3 points.
+`spinnaker1_dvs/paired_predictions.npz` retains the audit predictions and the
+distinct 160-input canary predictions needed for the later physical comparison.
+Each observation aggregates all four windows. The audit accesses no labels and
+does not supply hardware-conformance or accuracy results. DVS remains development
+evidence because earlier test accuracy informed its source pipeline.
 
 Run the consistency check from the repository root:
 

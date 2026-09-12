@@ -61,15 +61,36 @@ The remote archive `PINES_DVS_dev04_capture.zip` contains the raw and binned
 spikes, logits, run configuration, development comparison and execution log.
 It is preserved in the EBRAINS workspace. Local raw-capture import is pending.
 
-The next development run is
+The subsequent development run was
 `PINES_spinnaker1_runs/dvs_seed1701_reset_reuse_development07`. It loads both the
 original and repaired full models, executes two four-window calibration
 recordings, and repeats the first window after each recording. The probe tests
 whether PyNN simulation reset can reuse the loaded network without residual
 states, stale inputs or packet problems. This is an execution-level reset,
 distinct from a neuron's reset after firing. All layer traces and packet
-diagnostics are retained. Allocation reuse is not yet selected for the primary
-campaign, and the running SHD campaign is unchanged.
+diagnostics are retained. The exact-repeat test rejected this reuse profile,
+as detailed below. The separate SHD campaign later stopped at its access quota.
+
+The fresh-initialization NMPI batch profile completed all four windows of the
+first development recording, with both original and repaired seed-1701 models.
+It used sPyNNaker, SpiNNFrontEndCommon and SpiNNMan 7.4.2, PyNN 0.12.4 and NumPy
+2.3.4. The original recording prediction is class 10 on both hardware and its
+emulator. The repaired recording prediction is class 3 on both. These are
+comparisons between executions, not a labeled accuracy measurement. Every
+individual window prediction also agrees. Hardware and emulator trajectories
+are not identical: the maximum logit difference across windows is 0.78125 for
+the original and 6.625 for the repaired model. Recorded pre-shutdown late-spike
+and message queries are empty, while the service reports retain router
+dump/reinjection warnings.
+
+The four window runtimes, including loading and capture, are 497.4, 486.5,
+481.7 and 472.8 seconds. The local directory
+`artifacts/spinnaker1_dvs_batch_development05/` retains the capture ZIP,
+service reports and extracted per-layer spikes, logits, configuration and
+recording-level development analysis. This completes one recording under two
+conditions, not the planned 1,600-observation physical matrix. Fresh setup for
+every window remains the selected execution profile. The declared v1 mapping
+and existing checkpoints are fixed for the five-seed semantic audit.
 
 ## Mapping contract
 
@@ -117,6 +138,13 @@ The planned physical matrix contains 160 inputs per seed and condition, five
 seeds and original/repaired models, for 1,600 recording-condition observations.
 Confidence allocation remains 0.05/(2 * 40), shared with the full paper matrix.
 Its semantic audit is computed only after development fixes and mapping freeze.
+
+The completed five-seed v1 audit is in `results/spinnaker1_dvs/`. Across 104
+recordings per condition, original/repaired mean disagreement is 71.5/18.7
+percent and the simultaneous semantic upper bound is 84.2/33.3 points. The
+saved per-input predictions include the separate 160-recording canary split.
+No labels were accessed. These are semantic terms for the mapped SpiNNaker
+emulator, not measurements of physical accuracy or hardware conformance.
 
 At these sample counts, even zero disagreements in both terms give bounds of
 6.848 points for the semantic audit and 4.506 points for hardware conformance.
