@@ -16,16 +16,15 @@ configuration-file override used the home-file naming convention and was ignored
 An early programmatic setting was rejected before simulator setup. Inspection of
 the installed loader identified the supported per-run file as `spynnaker.cfg`
 without a leading dot. The current attempt selects Python transfer through that
-file. That transfer has passed the earlier bulk-upload rejection and is loading
-application data onto the allocated machine. No complete physical window has
-been returned yet. The full DVS canary campaign has not started.
+file. That attempt completed a physical full-network window in 1,270.6 seconds,
+including loading and capture. The full DVS canary campaign has not started.
 
 Remote development bundle: `spinnaker1_dvs_development_v2`.
-Current attempt: `PINES_spinnaker1_runs/dvs_seed1701_original_development04_python`.
+Completed attempt: `PINES_spinnaker1_runs/dvs_seed1701_original_development04_python`.
 The separate `dvs_workspace_01` working directory isolates its report cleanup
 and transfer configuration from the concurrently running SHD campaign.
 
-A sequential comparison is queued after this attempt succeeds:
+A sequential comparison started after this attempt succeeded:
 `PINES_spinnaker1_runs/dvs_seed1701_original_development05_direct`. It repeats
 the same original model, development recording and window using
 `hardware/configs/spinnaker1_python_direct_transfer.cfg`. The installed 7.4.1
@@ -34,6 +33,26 @@ loader supports direct per-region writes through
 neuron dynamics or weights. Its runtime and layer traces must be compared before
 choosing the full-campaign transfer profile. The two DVS runs are sequenced to
 stay within the notebook server's memory limit.
+
+The completed window uses seed 1701, the original model, the first development
+recording and window zero. Hardware and emulator both predict class 3 for this
+window. The maximum absolute logit difference is 0.59375.
+
+| Layer | Physical spikes | Emulator spikes | Differing time-neuron cells |
+|---|---:|---:|---:|
+| First convolution | 42,319 | 42,312 | 87 |
+| Second convolution | 5,115 | 5,116 | 59 |
+| Recurrent hidden | 32 | 28 | 14 |
+
+The recorded pre-shutdown packet query returned no late-spike entries. The full
+log also contains router dump/reinjection warnings during shutdown provenance
+collection. Retain those warnings with the capture rather than calling the run
+warning-free. These traces establish a working full-network capture, not a
+four-window classification result or a population certificate.
+
+The remote archive `PINES_DVS_dev04_capture.zip` contains the raw and binned
+spikes, logits, run configuration, development comparison and execution log.
+It is preserved in the EBRAINS workspace. Local raw-capture import is pending.
 
 ## Mapping contract
 
