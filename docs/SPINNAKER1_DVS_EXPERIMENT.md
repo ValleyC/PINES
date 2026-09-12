@@ -25,6 +25,16 @@ Current attempt: `PINES_spinnaker1_runs/dvs_seed1701_original_development04_pyth
 The separate `dvs_workspace_01` working directory isolates its report cleanup
 and transfer configuration from the concurrently running SHD campaign.
 
+A sequential comparison is queued after this attempt succeeds:
+`PINES_spinnaker1_runs/dvs_seed1701_original_development05_direct`. It repeats
+the same original model, development recording and window using
+`hardware/configs/spinnaker1_python_direct_transfer.cfg`. The installed 7.4.1
+loader supports direct per-region writes through
+`Machine.disable_advanced_monitor_usage_for_data_in`. This changes loading, not
+neuron dynamics or weights. Its runtime and layer traces must be compared before
+choosing the full-campaign transfer profile. The two DVS runs are sequenced to
+stay within the notebook server's memory limit.
+
 ## Mapping contract
 
 Weights are floor-rounded to signed 8-bit values with six fractional bits.
