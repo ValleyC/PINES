@@ -18,6 +18,8 @@ takes about 31 hours before allocation or service delays.
 The submission manuscript is `transport_manuscript/`. DVS Gesture hardware
 execution and physical Virtex-7 captures remain outstanding. The peer's matching
 SHD predictions are RTL simulation evidence in `results/shd_rtl/`.
+The DVS mapping and development progress are described in
+[`SPINNAKER1_DVS_EXPERIMENT.md`](SPINNAKER1_DVS_EXPERIMENT.md).
 
 ## Development and frozen settings
 

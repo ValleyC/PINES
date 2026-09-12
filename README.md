@@ -65,8 +65,12 @@ Table V is reserved for physical SpiNNaker-1 and Virtex-7 results. The full SHD
 SpiNNaker-1 campaign has been launched through EBRAINS using 861 held-out inputs,
 five seeds, and original/repaired models. It executes recurrent hidden dynamics
 on the device with a host linear readout. Physical results remain pending until
-the full captures are analyzed. DVS Gesture hardware runs remain outstanding.
+the full captures are analyzed. The DVS Gesture device mapping is undergoing
+full-network development tests, with both convolutions and the recurrent layer
+on the device. Its full physical campaign remains outstanding.
 See [`docs/SPINNAKER1_EXPERIMENT.md`](docs/SPINNAKER1_EXPERIMENT.md).
+The distinct DVS mapping and its sample-complexity limit are described in
+[`docs/SPINNAKER1_DVS_EXPERIMENT.md`](docs/SPINNAKER1_DVS_EXPERIMENT.md).
 
 The supplied SHD RTL simulation outputs match all 8,610 frozen emulator class
 predictions. These are recorded separately in
