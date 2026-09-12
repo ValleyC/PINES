@@ -232,3 +232,35 @@ the matrix analyzer after they finish. The repeat analyzer reads the additional
 `repeat_first/` capture without adding it to the certificate sample count.
 Calibration observations and the older 75-input campaign are excluded from this
 new primary analysis. Labels remain reserved for post-capture evaluation.
+
+## Collecting the running matrix
+
+`experiments/collect_spinnaker1_campaign.py` accepts an authenticated NMPI client
+and the handles of jobs already submitted. It polls job details every five
+minutes, retains logs and capture archives once a job ends, and analyzes SHD or DVS after all its
+jobs end. It neither submits new jobs nor loads ground-truth labels. In the
+experiment notebook, run it in a background thread so the kernel stays usable:
+
+```python
+from threading import Thread
+from collect_spinnaker1_campaign import collect_campaign
+
+# Each entry identifies an existing submission, not a new experiment.
+# jobs = [{"job": job_handle, "task": "shd", "name": "shd_batch"}, ...]
+worker = Thread(target=collect_campaign, args=(client, jobs, "collected", {
+    "shd": "results/spinnaker1_shd", "dvs": "results/spinnaker1_dvs"}), daemon=True)
+worker.start()
+```
+
+The deployed service returned 500/502 errors for the `with_log=False` request
+form while the original `with_log=True` request still returned running jobs.
+The collector uses the working form and keeps only the latest progress line
+between polls. Observation failures do not trigger resubmission.
+
+`progress.json` records collection status. Each job directory retains its capture
+ZIP, extracted observations, service log and available report archive. Per-task
+label-free and repeat reports are separate. An incomplete capture remains an
+incomplete analysis even when the service job has ended. Final scientific reports
+include sample ranges, reset/loading profiles, reader choice and package versions
+from the capture configurations. Private service logs and account-related job
+bookkeeping remain outside the anonymous repository.

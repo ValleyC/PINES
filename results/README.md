@@ -28,12 +28,12 @@ The finite-family source aggregates are retained beside each dataset. The SHD
 continuous audit also retains its frozen screening summary because the final
 all-input audit records it as upstream provenance.
 
-The full SHD SpiNNaker-1 canary campaign stopped at the direct-access quota
-after 75 inputs and 750 of 8,610 predictions. The semantic term for its
-held-out population is in `spinnaker1_shd/semantic_audit.json`. It is not a
-physical total bound. Table V's hardware-dependent values remain unreported
-until complete physical captures are available. The supplied FPGA simulation
-results are in `shd_rtl/` and do not replace physical Virtex-7 measurements.
+The full SpiNNaker-1 primary matrix is running through NMPI, covering 8,610
+SHD and 1,600 DVS predictions. Table V's hardware-dependent values await the
+complete captures. The semantic audits supply only the source-to-emulator term.
+The older interrupted 75-input SHD run is separate from the current campaign.
+The supplied FPGA simulation results are in `shd_rtl/` and do not replace
+physical Virtex-7 measurements.
 
 The corresponding held-out SHD integer-FPGA audit is in
 `virtex7_shd/semantic_audit.json`, with per-input predictions in the adjacent

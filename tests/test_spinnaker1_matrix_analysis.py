@@ -46,6 +46,17 @@ def test_completed_matrix_composes_the_two_terms(tmp_path):
     assert "absolute_accuracy_change" not in report["rows"][0]
 
 
+def test_report_preserves_reused_execution_profile_and_runtime(tmp_path):
+    capture, audit = fixture(tmp_path)
+    profile = dict(sample_range=[0, 2], execution_profile="aligned_reset_reuse",
+                   spike_reader="numpy-current", packages={"sPyNNaker": "1!7.4.2"})
+    (capture / "config.json").write_text(json.dumps(profile))
+    report = module.analyze([capture], audit)
+    assert report["capture_profiles"] == [dict(capture_index=0, **profile)]
+    assert report["inputs_with_late_spikes"] == 0
+    assert "allocation pairs" not in " ".join(report["assumptions"])
+
+
 def test_incomplete_matrix_never_loads_labels_or_issues_certificate(tmp_path):
     capture, audit = fixture(tmp_path)
     (capture / "input_00001/summary.json").unlink()

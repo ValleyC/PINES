@@ -10,6 +10,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from pines.statistics import clopper_pearson_upper
+from analyze_spinnaker1_matrix import capture_profiles
 
 
 def collect(captures):
@@ -81,6 +82,7 @@ def analyze(captures, audit, labels=None):
         backend="SpiNNaker-1 convolutional and recurrent dynamics with host readout and window aggregation",
         population=semantic["population"], confidence=semantic["confidence"],
         paper_cells=semantic["paper_cells"], alpha_per_term=semantic["alpha_per_term"],
+        capture_profiles=capture_profiles(captures),
         windows_per_observation=4, rows=rows, five_seed_means=means,
         assumptions=["Representative independent recording/hardware-execution pairs for the declared population.",
                      "Fixed checkpoints, execution mapping, input preprocessing and four-window horizon.",

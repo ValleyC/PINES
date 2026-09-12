@@ -58,6 +58,7 @@ def test_four_windows_count_as_one_observation(tmp_path):
     assert all(row["canary_samples"] == 2 for row in report["rows"])
     assert all(row["total_upper"] == min(1., .1+row["conformance_upper"]) for row in report["rows"])
     assert "absolute_accuracy_change" not in report["rows"][0]
+    assert report["capture_profiles"][0]["seed"] == 1701
 
 
 def test_partial_windows_do_not_issue_a_certificate_or_read_labels(tmp_path):

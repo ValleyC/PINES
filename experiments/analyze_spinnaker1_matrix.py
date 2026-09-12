@@ -16,6 +16,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from pines.statistics import clopper_pearson_upper
 
 
+def capture_profiles(captures):
+    fields = ("sample_range", "seed", "seeds", "variants", "execution_profile",
+              "spike_reader", "recording_layers", "time_scale_factor", "mapping",
+              "packages", "repeat_first")
+    profiles = []
+    for index, capture in enumerate(captures):
+        path = capture / "config.json"
+        config = json.loads(path.read_text()) if path.exists() else {}
+        profiles.append(dict(capture_index=index, **{key: config[key] for key in fields if key in config}))
+    return profiles
+
+
 def collect(captures):
     observations = {}
     diagnostics = []
@@ -90,12 +102,13 @@ def analyze(captures, audit, labels=None):
                 backend="SpiNNaker-1 hidden recurrence with host linear readout",
                 population=semantic["population"], confidence=semantic["confidence"],
                 paper_cells=semantic["paper_cells"], alpha_per_term=semantic["alpha_per_term"],
-                assumptions=["Representative independent input/allocation pairs for the declared population.",
+                capture_profiles=capture_profiles(captures),
+                assumptions=["Representative independent input/hardware-execution pairs for the declared population.",
                              "Fixed model, mapping, finite horizon and input preprocessing.",
                              "Labels, when supplied, are used only for post-capture evaluation."],
                 rows=rows, five_seed_means=means,
-                allocations_with_late_spikes=sum(bool(d["late_spikes"]) for d in diagnostics),
-                allocations_with_provenance_messages=sum(bool(d["messages"]) for d in diagnostics),
+                inputs_with_late_spikes=sum(bool(d["late_spikes"]) for d in diagnostics),
+                inputs_with_provenance_messages=sum(bool(d["messages"]) for d in diagnostics),
                 log_review="Retain and review the execution logs, which can contain additional shutdown warnings.")
 
 
