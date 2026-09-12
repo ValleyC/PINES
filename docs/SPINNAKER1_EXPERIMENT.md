@@ -136,3 +136,33 @@ python experiments/analyze_spinnaker1_matrix.py --captures hardware/captures/spi
 Incomplete captures return progress counts, not certificates. The analysis checks
 captured emulator predictions against the frozen executor, counts primary pairs
 once, and reports per-seed terms before aggregation.
+
+## NMPI batch delivery
+
+The NMPI Git-source option requires a public repository. For a private review
+repository, build a self-contained Python job instead. It embeds the source,
+models and input archive in a compressed payload and submits through the normal
+authenticated NMPI client. No GitHub credential or repository visibility change
+is needed. The generated job uses the same SHD runner and execution settings.
+
+Start with development inputs to compare the batch runtime and captured spikes
+with the notebook route:
+
+```sh
+python experiments/build_spinnaker1_nmpi_job.py --bundle hardware/bundles/shd_spinnaker1_v1 --inputs hardware/bundles/shd_spinnaker1_v1/development_inputs.npz --output artifacts/shd_nmpi_development.py --seeds 1701 --count 1 --time-scale-factor 100
+```
+
+From an authenticated EBRAINS notebook with the existing allocated Collab:
+
+```python
+job = client.submit_job(
+    source="artifacts/shd_nmpi_development.py", platform="SpiNNaker",
+    collab_id=collab_id, config={"spynnaker_version": "7.4.1"},
+    command="run.py", tags=["PINES", "development"], wait=False)
+```
+
+The requested version is not proof of the installed version. Inspect the package
+versions saved by the runner and compare development traces before selecting this
+route for primary inputs. A failed development submission does not invalidate or
+restart the independent notebook campaign. Job IDs and private account details
+stay outside the anonymous artifact.
