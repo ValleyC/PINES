@@ -23,7 +23,10 @@ from pines.adapters.spinnaker1_dvs import (
 )
 from pines.adapters.spinnaker1_transfer import install_bounded_memory_transfer
 from pines.adapters.spinnaker1_timing import align_run_steps
-from run_spinnaker1_shd import input_spike_times, install_source_update_compatibility, spike_readout
+from run_spinnaker1_shd import (
+    input_spike_times, install_source_update_compatibility, spike_readout,
+    current_spike_readout,
+)
 from run_spinnaker1_matrix import read_packet_diagnostics
 
 
@@ -73,16 +76,21 @@ def capture_window(sim, models, networks, horizon, output, args, started,
                    *, clear=False, include_machine=True):
     from spinn_utilities.config_holder import get_config_bool
     from spinn_front_end_common.interface.provenance import ProvenanceReader
+
+    def read(population, latency, weights):
+        if args.spike_reader == "numpy-current":
+            return current_spike_readout(population, horizon, latency, 1., weights)
+        segment = population.get_data("spikes", clear=clear).segments[-1]
+        return spike_readout(segment, population.size, horizon, latency, 1., weights)
+
     results = []
     for (_, meta), (pops, projections, weights) in zip(models, networks):
         hidden = pops[-1]
-        segment = hidden.get_data("spikes", clear=clear).segments[-1]
-        spikes, logits, raw = spike_readout(segment, hidden.size, horizon, 5, 1., weights)
+        spikes, logits, raw = read(hidden, 5, weights)
         data = dict(hidden_spikes=spikes, window_logits=logits, raw_hidden_spikes_neuron_ms=raw)
         if args.record_layers:
             for name, pop, latency in zip(("conv1", "conv2"), pops[:2], (3, 4)):
-                segment = pop.get_data("spikes", clear=clear).segments[-1]
-                q, _, times = spike_readout(segment, pop.size, horizon, latency, 1., np.empty((pop.size, 0)))
+                q, _, times = read(pop, latency, np.empty((pop.size, 0)))
                 data[name+"_spikes"] = q
                 data["raw_"+name+"_spikes_neuron_ms"] = times
         np.savez_compressed(output / (meta["variant"]+".npz"), **data)
@@ -188,6 +196,7 @@ def run(args):
         memory_transfer=transfer,
         execution_profile="aligned_reset_reuse" if args.reuse_reset else "fresh_allocation_per_window",
         recording_layers="all" if args.record_layers else "hidden",
+        spike_reader=args.spike_reader,
         observation="One complete four-window recording per condition, never count individual windows as independent inputs.",
         packages={p:importlib.metadata.version(p) for p in ("sPyNNaker","SpiNNFrontEndCommon","SpiNNMan","PyNN","numpy")})
     (args.output / "config.json").write_text(json.dumps(config,indent=2)+"\n")
@@ -240,4 +249,5 @@ if __name__ == "__main__":
     parser.add_argument("--record-layers",action="store_true")
     parser.add_argument("--reuse-reset", action="store_true",
                         help="Use the calibration-qualified aligned-reset loading profile")
+    parser.add_argument("--spike-reader", choices=("neo-history", "numpy-current"), default="neo-history")
     run(parser.parse_args())

@@ -17,6 +17,7 @@ from run_spinnaker1_dvs import (
     SpiNNaker1DVSMapping, aggregate_windows, build_network, load_model,
     input_spike_times, install_source_update_compatibility, spike_readout,
     install_bounded_memory_transfer, read_packet_diagnostics,
+    current_spike_readout,
 )
 from pines.adapters.spinnaker1_timing import align_run_steps
 
@@ -35,12 +36,15 @@ def compare_arrays(observed, expected):
             for key in ("conv1_spikes", "conv2_spikes", "hidden_spikes", "window_logits")}
 
 
-def read_layers(populations, weights, horizon, offset):
+def read_layers(populations, weights, horizon, offset, spike_reader="neo-history"):
     data = {}
     for name, population, latency in zip(("conv1", "conv2", "hidden"), populations, (1, 2, 3)):
-        segment = population.get_data("spikes", clear=True).segments[-1]
         readout = weights if name == "hidden" else np.empty((population.size, 0))
-        spikes, logits, raw = spike_readout(segment, population.size, horizon, offset+latency, 1., readout)
+        if spike_reader == "numpy-current":
+            spikes, logits, raw = current_spike_readout(population, horizon, offset+latency, 1., readout)
+        else:
+            segment = population.get_data("spikes", clear=True).segments[-1]
+            spikes, logits, raw = spike_readout(segment, population.size, horizon, offset+latency, 1., readout)
         data[name+"_spikes"] = spikes
         data["raw_"+name+"_spikes_neuron_ms"] = raw
         if name == "hidden":
@@ -68,6 +72,7 @@ def run(args):
         time_scale_factor=args.time_scale_factor, conv_neurons_per_core=args.conv_neurons_per_core,
         hidden_neurons_per_core=args.hidden_neurons_per_core, source_neurons_per_core=args.source_neurons_per_core,
         host_compatibility=compatibility, memory_transfer=transfer,
+        spike_reader=args.spike_reader,
         packages={p: importlib.metadata.version(p) for p in ("sPyNNaker", "SpiNNFrontEndCommon", "SpiNNMan", "PyNN", "numpy")},
         scope="Development-only reset reuse. This profile is not yet selected for primary physical certification.")
     (args.output / "config.json").write_text(json.dumps(config, indent=2)+"\n")
@@ -108,7 +113,7 @@ def run(args):
             folder.mkdir()
             rows = []
             for (_, meta), (populations, projections, weights) in zip(models, networks):
-                data = read_layers(populations, weights, 60, args.input_offset_steps)
+                data = read_layers(populations, weights, 60, args.input_offset_steps, args.spike_reader)
                 variant = meta["variant"]
                 np.savez_compressed(folder / (variant+".npz"), **data)
                 row = dict(variant=variant, window_logits=data["window_logits"].tolist(),
@@ -157,5 +162,6 @@ if __name__ == "__main__":
     parser.add_argument("--transfer-chunk-bytes", type=int, default=256*1024)
     parser.add_argument("--align-reset", action="store_true",
                         help="Pad execution to a packet-colour wrap for a distinct reset-reuse diagnostic")
+    parser.add_argument("--spike-reader", choices=("neo-history", "numpy-current"), default="neo-history")
     parser.set_defaults(record_layers=True)
     run(parser.parse_args())

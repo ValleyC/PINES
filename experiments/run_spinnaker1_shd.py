@@ -90,6 +90,28 @@ def spike_readout(segment, hidden_size: int, horizon: int, latency: int,
     return spikes, logits, np.asarray(raw_rows, dtype=float).reshape(-1, 2)
 
 
+def spike_rows_readout(raw_rows, hidden_size: int, horizon: int, latency: int,
+                       timestep_ms: float, output_weights: np.ndarray):
+    """Bin current-segment (population neuron index, time in ms) rows."""
+    raw = np.asarray(raw_rows, dtype=float).reshape(-1, 2)
+    spikes = np.zeros((horizon, hidden_size), dtype=np.uint8)
+    steps = np.rint(raw[:, 1] / timestep_ms).astype(np.int64) - latency
+    observed = (steps >= 0) & (steps < horizon)
+    np.add.at(spikes, (steps[observed], raw[observed, 0].astype(np.int64)), 1)
+    logits = spikes.sum(axis=0, dtype=np.int64) @ output_weights
+    return spikes, logits, raw
+
+
+def current_spike_readout(population, horizon, latency, timestep_ms, output_weights):
+    """Read only the current reset segment through sPyNNaker's array API.
+
+    Population.get_data rebuilds earlier Neo segments on every call. This
+    public alternative reads the same current recording database directly.
+    """
+    return spike_rows_readout(population.spinnaker_get_data("spikes"),
+        population.size, horizon, latency, timestep_ms, output_weights)
+
+
 def run(args) -> dict:
     import pyNN.spiNNaker as sim
     from spinn_utilities.config_holder import get_config_bool, set_config

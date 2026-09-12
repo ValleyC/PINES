@@ -71,12 +71,18 @@ the full captures are analyzed. The DVS Gesture mapping completed a four-window
 development recording with both convolutions and recurrence on the device.
 Both original/repaired recording predictions match their respective emulators.
 The full five-seed software audit is in `results/spinnaker1_dvs/`: mean semantic
-bounds are 84.2/33.3 points. Its full physical campaign remains outstanding.
+bounds are 84.2/33.3 points. Its physical campaign has started with a bounded
+ten-recording batch for the first seed, covering original and repaired models.
+The complete five-seed physical matrix remains outstanding.
 An aligned-reset loading profile has since passed the complete SHD calibration
 and exact-repeat test for all ten models. Its replacement primary campaign has
 started with the first 100 of 861 inputs. Reused calibration inputs averaged
-23.6 seconds each. The corresponding full DVS reset-calibration test is still
-in progress. These loading changes preserve the models and observation horizons.
+23.6 seconds each. The full DVS reset-calibration test also completed: both
+repeated windows reproduced all three recorded layers and logits for both models.
+These loading changes preserve the models and observation horizons. An optional
+current-segment spike reader avoids rebuilding recording history after each
+reset. Its output matched the previous reader on nine physical comparisons and
+reconstructed all 150 stored SHD/DVS calibration traces exactly.
 See [`docs/SPINNAKER1_EXPERIMENT.md`](docs/SPINNAKER1_EXPERIMENT.md).
 The distinct DVS mapping and its sample-complexity limit are described in
 [`docs/SPINNAKER1_DVS_EXPERIMENT.md`](docs/SPINNAKER1_DVS_EXPERIMENT.md).

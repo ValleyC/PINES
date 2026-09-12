@@ -247,9 +247,13 @@ spike times. The failed capture and service reports are retained under
 `artifacts/spinnaker1_dvs_aligned_reset09/`, including packet-backpressure and
 shutdown warnings in the full log.
 
-A corrected full-model calibration attempt is in progress, not a completed
-primary campaign. Preserve its capture and compare both repeated windows with
-their initial physical execution before selecting the reuse profile.
+A corrected full-model calibration completed all ten steps: two four-window
+recordings and two additional executions of the first window. Both repeats
+reproduced every recorded layer and the logits exactly for both model variants.
+The first recording's four windows also matched their fresh-allocation physical
+captures. The complete calibration capture and service reports are retained in
+`artifacts/spinnaker1_dvs_aligned_reset10/`. Calibration is separate from the
+held-out primary matrix.
 
 The capture runner also has an optional `--reuse-reset` switch. It preserves
 the existing per-recording output format and four-window aggregation, but loads
@@ -257,6 +261,20 @@ the networks once and resets before each subsequent window. Configuration and
 per-window records distinguish this candidate profile from fresh allocation.
 It is not the default, and its software orchestration tests are not evidence of
 physical reset fidelity. The batch builder forwards this switch for DVS jobs.
+
+The optional `--spike-reader numpy-current` reads only the current execution's
+spike rows through the public `Population.spinnaker_get_data` method. The default
+Neo reader rebuilds previous reset segments before selecting the last segment.
+On a three-execution physical comparison, both readers returned identical spike
+rows for all nine population/run pairs, including a silent population. The new
+binning path also reproduced all 150 saved SHD/DVS calibration traces exactly.
+The comparison capture is in `artifacts/spinnaker1_recording_reader12/`.
+
+Primary DVS runs can omit `--record-layers`: both convolutions and recurrence
+still execute on the device, while only recurrent output spikes are collected
+for the host readout and hardware-table analysis. Full intermediate-layer traces
+remain available from calibration. This reduces data retrieval without changing
+weights, execution timing, the four observation windows, or classification.
 
 A self-contained NMPI job can instead run each window with fresh initialization:
 

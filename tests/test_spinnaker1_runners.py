@@ -46,6 +46,22 @@ def test_readout_uses_neuron_ids_and_exact_finite_window():
     np.testing.assert_array_equal(spikes, [[1, 0], [0, 1], [1, 0]])
     np.testing.assert_array_equal(logits, [1, 0])
     assert len(raw) == 5
+    array_spikes, array_logits, array_raw = runner.spike_rows_readout(
+        raw, 2, 3, 1, 1., np.array([[2., -1.], [-3., 2.]]))
+    np.testing.assert_array_equal(array_spikes, spikes)
+    np.testing.assert_array_equal(array_logits, logits)
+    np.testing.assert_array_equal(array_raw, raw)
+
+
+def test_array_reader_handles_empty_and_population_local_indices():
+    for raw in (np.empty((0, 0)), np.array([[3, 4.], [0, 2.], [3, 2.], [3, 9.]])):
+        population = SimpleNamespace(size=4, spinnaker_get_data=lambda name: raw)
+        spike_trains = [SpikeTrain(raw[raw[:, 0] == index, 1] if raw.size else [], index) for index in range(4)]
+        weights = np.arange(12).reshape(4, 3)
+        expected = runner.spike_readout(SimpleNamespace(spiketrains=spike_trains), 4, 5, 2, 1., weights)
+        observed = runner.current_spike_readout(population, 5, 2, 1., weights)
+        np.testing.assert_array_equal(observed[0], expected[0])
+        np.testing.assert_array_equal(observed[1], expected[1])
 
 
 def test_probe_covers_signed_weights_reset_bias_delay_and_recurrence():
@@ -176,7 +192,7 @@ def test_matrix_reuse_preserves_horizon_and_resets_before_new_input(monkeypatch,
         folder = tmp_path / str(index)
         folder.mkdir()
         result = matrix_runner.run_input(sim, models, np.zeros((50, 1)), f"calib-{index}", index,
-            folder, SimpleNamespace(time_scale_factor=100), mapping, allocation)
+            folder, SimpleNamespace(time_scale_factor=100, spike_reader="neo-history"), mapping, allocation)
         assert result["observation_steps"] == 50 and result["run_steps"] == 64
         assert len(result["rows"]) == 2
     assert actions.count(("setup",)) == 1

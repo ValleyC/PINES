@@ -21,7 +21,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from pines.adapters.spinnaker1 import SpiNNaker1Mapping, signed_connections
 from pines.models import DenseRecurrentSNN
 from pines.adapters.spinnaker1_timing import align_run_steps
-from run_spinnaker1_shd import input_spike_times, spike_readout, install_source_update_compatibility
+from run_spinnaker1_shd import (
+    input_spike_times, spike_readout, current_spike_readout,
+    install_source_update_compatibility,
+)
 
 
 SEEDS = (1701, 2718, 3141, 5772, 8119)
@@ -86,9 +89,12 @@ def run_input(sim, models, event, sample_id, index, output, args, mapping, alloc
         sim.run(run_steps)
         rows = []
         for (seed, variant, model), hidden in zip(models, hidden_populations):
-            segment = hidden.get_data("spikes", clear=reuse).segments[-1]
-            spikes, logits, raw = spike_readout(segment, model.hidden_size, len(event),
-                                               3, 1.0, model.output_weights)
+            if args.spike_reader == "numpy-current":
+                spikes, logits, raw = current_spike_readout(hidden, len(event), 3, 1., model.output_weights)
+            else:
+                segment = hidden.get_data("spikes", clear=reuse).segments[-1]
+                spikes, logits, raw = spike_readout(segment, model.hidden_size, len(event),
+                                                   3, 1.0, model.output_weights)
             emu = mapping.emulate(model, event[None])
             prediction = int(logits.argmax())
             emulator_prediction = int(emu["predictions"][0])
@@ -146,6 +152,7 @@ def run(args):
                            "one unique input per fresh allocation, shared across conditions",
                   independence="Independent inputs and execution-level hardware noise are assumed. Conditions need not be independent.",
                   repeat_first=args.repeat_first,
+                  spike_reader=args.spike_reader,
                   host_compatibility=compatibility,
                   packages={p: importlib.metadata.version(p) for p in
                             ("sPyNNaker", "SpiNNFrontEndCommon", "SpiNNMan", "PyNN", "numpy")})
@@ -197,4 +204,5 @@ if __name__ == "__main__":
     p.add_argument("--reuse-reset", action="store_true")
     p.add_argument("--repeat-first", action="store_true",
                    help="Capture a separate repeat for variability or calibration, excluded from primary counts")
+    p.add_argument("--spike-reader", choices=("neo-history", "numpy-current"), default="neo-history")
     run(p.parse_args())
