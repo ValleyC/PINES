@@ -1,0 +1,144 @@
+{
+  "status": "frozen_label_free_semantic_audit",
+  "physical_certificate": false,
+  "labels_accessed": false,
+  "population": "SHD held-out test pool",
+  "audit": {
+    "dataset": "SHD",
+    "split": "held-out-test-semantic-audit",
+    "labels_included": false,
+    "time_bins": 50,
+    "input_channels": 700,
+    "bit_order": "little",
+    "selection_seed": 20260913
+  },
+  "canary": {
+    "dataset": "SHD",
+    "split": "held-out-test-canary",
+    "labels_included": false,
+    "time_bins": 50,
+    "input_channels": 700,
+    "bit_order": "little",
+    "selection_seed": 20260912
+  },
+  "confidence": 0.95,
+  "paper_cells": 40,
+  "alpha_per_term": 0.000625,
+  "correction": "Bonferroni over two terms for each of 40 task/backend/seed/repair cells",
+  "source_semantics": {
+    "integration_rule": "forward_euler",
+    "output_delay_steps": 0,
+    "randomness": {
+      "deterministic": true,
+      "seed": 0
+    },
+    "reset_rule": "subtractive",
+    "state_format": {
+      "fractional_bits": null,
+      "kind": "float32",
+      "overflow": "saturate",
+      "rounding": "nearest_even",
+      "total_bits": null
+    },
+    "synaptic_delay_steps": 0,
+    "threshold_timing": "post_integration",
+    "timestep": 1.0,
+    "update_ordering": "integrate>threshold>reset",
+    "version": "1.0",
+    "weight_format": {
+      "fractional_bits": null,
+      "kind": "float32",
+      "overflow": "saturate",
+      "rounding": "nearest_even",
+      "total_bits": null
+    }
+  },
+  "target_mapping": "Existing floor Q8.6 weights and Q16.8 state parameters with Q0.24 leak, evaluated by exact integer transitions",
+  "parameter_bundle": "hardware/bundles/shd_floor_q8q16_v1",
+  "rows": [
+    {
+      "seed": 1701,
+      "variant": "unrepaired",
+      "audit_samples": 861,
+      "disagreements": 720,
+      "disagreement_rate": 0.8362369337979094,
+      "semantic_upper": 0.8745465355085087
+    },
+    {
+      "seed": 1701,
+      "variant": "repaired",
+      "audit_samples": 861,
+      "disagreements": 163,
+      "disagreement_rate": 0.18931475029036005,
+      "semantic_upper": 0.2355422731010599
+    },
+    {
+      "seed": 2718,
+      "variant": "unrepaired",
+      "audit_samples": 861,
+      "disagreements": 689,
+      "disagreement_rate": 0.8002322880371661,
+      "semantic_upper": 0.8421031151143026
+    },
+    {
+      "seed": 2718,
+      "variant": "repaired",
+      "audit_samples": 861,
+      "disagreements": 195,
+      "disagreement_rate": 0.2264808362369338,
+      "semantic_upper": 0.2753125590906602
+    },
+    {
+      "seed": 3141,
+      "variant": "unrepaired",
+      "audit_samples": 861,
+      "disagreements": 654,
+      "disagreement_rate": 0.759581881533101,
+      "semantic_upper": 0.8048074461285688
+    },
+    {
+      "seed": 3141,
+      "variant": "repaired",
+      "audit_samples": 861,
+      "disagreements": 182,
+      "disagreement_rate": 0.21138211382113822,
+      "semantic_upper": 0.25922333858913704
+    },
+    {
+      "seed": 5772,
+      "variant": "unrepaired",
+      "audit_samples": 861,
+      "disagreements": 735,
+      "disagreement_rate": 0.8536585365853658,
+      "semantic_upper": 0.8900035670918673
+    },
+    {
+      "seed": 5772,
+      "variant": "repaired",
+      "audit_samples": 861,
+      "disagreements": 161,
+      "disagreement_rate": 0.18699186991869918,
+      "semantic_upper": 0.23303720979959464
+    },
+    {
+      "seed": 8119,
+      "variant": "unrepaired",
+      "audit_samples": 861,
+      "disagreements": 699,
+      "disagreement_rate": 0.8118466898954704,
+      "semantic_upper": 0.8526354486146674
+    },
+    {
+      "seed": 8119,
+      "variant": "repaired",
+      "audit_samples": 861,
+      "disagreements": 189,
+      "disagreement_rate": 0.21951219512195122,
+      "semantic_upper": 0.2678976488946664
+    }
+  ],
+  "five_seed_semantic_means": {
+    "unrepaired": 0.852819222491583,
+    "repaired": 0.25420260589502364
+  }
+}

@@ -2,8 +2,8 @@
 
 ## Shared preflight
 
-1. Freeze model, NIR graph, sample IDs, semantics sidecar, adapter commit, and
-   protocol version.
+1. Freeze the checkpoint, sample IDs, execution mapping, adapter version, and
+   protocol. Include the NIR graph when that conversion route is used.
 2. Execute the scalar/vector differential suite and backend emulator on the
    exact samples.
 3. Record device serial, firmware, bitstream where applicable, conversion
@@ -12,13 +12,18 @@
 5. Save raw spikes, predictions, and diagnostic state when available. Record the
    capture filename in the run manifest.
 
-## SpiNNaker2
+## SpiNNaker-1 through EBRAINS
 
-Pin `py-spinnaker2` and firmware before conversion. Use the official
-`s2_nir.from_nir(graph, config=...)` route. Store the full conversion config and
-represent every reset/discretization translation in the execution sidecar.
-Repeated runs are a diagnostic artifact; the primary bound still uses independent
-input/run pairs.
+The current physical path uses PyNN and native SpiNNaker-1 neurons, not the
+SpiNNaker2 NIR converter. Preserve the explicit weight orientation, bias clock,
+Euler-matched leak and spike-delivery alignment recorded in the run configuration.
+SHD executes recurrence on the device with a host readout. DVS additionally
+executes both convolutions on the device and retains host window aggregation.
+
+Use [`SPINNAKER1_EXPERIMENT.md`](SPINNAKER1_EXPERIMENT.md) for the frozen SHD
+campaign and [`SPINNAKER1_DVS_EXPERIMENT.md`](SPINNAKER1_DVS_EXPERIMENT.md) for
+DVS mapping and development. These physical mappings have their own semantic
+audits. Software bounds for the FPGA target are not substituted for them.
 
 ## Virtex-7
 
@@ -28,17 +33,24 @@ bounded reset/overflow properties. Store synthesis reports, tool versions,
 constraints, firmware version, bitstream filename, board serial, raw UART/PCIe traces, and
 clock settings.
 
-The frozen SHD handoff is under
-`hardware/bundles/shd_floor_q8q16_v1`. Start with its eight cycle-level smoke
-inputs, then execute all 861 audit inputs in the recorded order. Run both the
-unrepaired and repaired parameter sets. The input files contain no labels.
-Compare physical predictions against the corresponding emulator prediction in
-`golden_audit.npz`, not against the reference prediction. The latter is used by
-PINES to compose reference--emulator and emulator--hardware disagreement.
+The frozen SHD parameter handoff is under
+`hardware/bundles/shd_floor_q8q16_v1`. Its earlier inputs and supplied batch CSVs
+remain RTL simulation evidence. For the paper's held-out physical comparison,
+use `hardware/bundles/shd_virtex7_canary_v2` with those same parameter files.
+Run all 861 canary inputs for five seeds and both repair states. Compare against
+the integer-emulator predictions in `golden_canary.npz`. The new disjoint
+semantic audit and canary use the same held-out population as SpiNNaker-1.
 
-## Stop conditions
+The checked-in `rtl/` contains semantic unit-test cores, not a complete SHD or
+DVS accelerator. Full-model simulation outputs do not establish physical-board
+execution. The board implementation, build files, raw captures and configuration
+remain part of the physical evidence needed from the hardware operator.
 
-Do not issue a physical certificate if sample ordering differs, pairs are reused,
-the backend semantics description is missing, or firmware and bitstream versions
-cannot be recovered. Such a run can diagnose a problem but is
-not evidence for the primary claim.
+## Analysis
+
+Align captured predictions by sample ID and keep one primary hardware execution
+per input. Compute emulator-device disagreement on the canary, combine it with
+the separate semantic term, then evaluate accuracy with labels. Preserve raw
+traces, mapping details and implementation versions so readers can interpret the
+result. Repeated executions describe variability and do not enlarge the primary
+sample count. Incomplete captures provide progress and diagnostics only.

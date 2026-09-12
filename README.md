@@ -87,6 +87,13 @@ plain experiment manifests. Verify it with:
 python experiments/verify_shd_hardware_bundle.py
 ```
 
+For the paper's held-out physical SHD comparison, use the new
+[`Virtex-7 canary inputs`](hardware/bundles/shd_virtex7_canary_v2/README.md)
+with the unchanged parameter files from that handoff. The old input batch and
+its matching RTL CSVs remain separate simulation evidence. The new semantic
+audit is in `results/virtex7_shd/`, alongside the distinct SpiNNaker-1 audit
+in `results/spinnaker1_shd/`.
+
 ## Scope
 
 PINES currently targets finite-horizon digital classification SNNs built from

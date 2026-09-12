@@ -31,6 +31,14 @@ physical total bound. Table V's hardware-dependent values remain unreported
 until complete physical captures are available. The supplied FPGA simulation
 results are in `shd_rtl/` and do not replace physical Virtex-7 measurements.
 
+The corresponding held-out SHD integer-FPGA audit is in
+`virtex7_shd/semantic_audit.json`, with per-input predictions in the adjacent
+`paired_predictions.npz`. Its five-seed mean semantic bounds are 85.3/25.4
+points before/after repair. It uses the same source predictions and disjoint
+test-input splits as SpiNNaker-1. Board inputs and expected integer outputs are
+in `hardware/bundles/shd_virtex7_canary_v2/`. These software values fill only
+Table V's semantic column, not its physical conformance or accuracy columns.
+
 Run the consistency check from the repository root:
 
 ```powershell

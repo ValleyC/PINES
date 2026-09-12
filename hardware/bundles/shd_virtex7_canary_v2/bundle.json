@@ -1,0 +1,20 @@
+{
+  "purpose": "Held-out physical Virtex-7 SHD canary, not the earlier training-pool RTL batch",
+  "parameter_bundle": "../shd_floor_q8q16_v1",
+  "parameter_changes": false,
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "canary_samples": 861,
+  "audit_samples": 861,
+  "labels_included": false,
+  "audit_results": "results/virtex7_shd",
+  "physical_measurements_completed": false,
+  "input_order": "common/canary_samples.csv",
+  "input_memory": "common/canary_input_spikes.mem",
+  "expected_predictions": "seeds/<seed>/golden_canary.npz"
+}

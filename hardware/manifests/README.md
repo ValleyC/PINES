@@ -6,6 +6,6 @@ one-dimensional arrays: `sample_ids`, `pair_ids`, and `predictions`. Every
 cannot replace the primary independent pairing.
 
 Create the capture first, then write a manifest conforming to
-`schemas/HardwareRunManifest.schema.json`. A SpiNNaker2 manifest uses a null
+`schemas/HardwareRunManifest.schema.json`. A SpiNNaker manifest uses a null
 bitstream filename, while a Virtex-7 manifest records its bitstream file. Use a
 new run ID for each hardware execution.
