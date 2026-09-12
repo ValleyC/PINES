@@ -23,6 +23,13 @@ Completion must be established from the process and complete captures, not from
 this document. At approximately 131 seconds per input, the sequential campaign
 takes about 31 hours before allocation or service delays.
 
+A replacement batch campaign now uses the calibration-qualified aligned-reset
+profile described below. Its first primary batch covers input indices 0--99,
+with all five seeds and both model variants. The target remains all 861 inputs
+and 8,610 observations. These 7.4.2 captures are kept separate from the interrupted
+7.4.1 campaign. A first primary input has completed, but no full physical bound
+is available yet.
+
 The submission manuscript is `transport_manuscript/`. DVS Gesture hardware
 execution and physical Virtex-7 captures remain outstanding. The peer's matching
 SHD predictions are RTL simulation evidence in `results/shd_rtl/`.
@@ -180,7 +187,7 @@ batch profile. Preserve the generated `*_capture.zip`, which retains per-input
 directories even when the service publishes individual files by basename.
 Job IDs and private account details stay outside the anonymous artifact.
 
-## Aligned reset reuse candidate
+## Aligned reset reuse
 
 The optional `--reuse-reset` runner keeps all selected SHD models loaded and
 resets their state before replacing each input. It pads the physical run from
@@ -201,5 +208,23 @@ primary input folders and never increases the population sample count:
 python experiments/build_spinnaker1_nmpi_job.py --task shd --bundle hardware/bundles/shd_spinnaker1_v1 --inputs hardware/bundles/shd_spinnaker1_v1/development_inputs.npz --count 8 --reuse-reset --repeat-first --output artifacts/shd_reset_calibration.py --run-output shd_reset_calibration
 ```
 
-This calibration has been submitted, but completion and reset fidelity have
-not yet been established. No primary aligned-reset SHD campaign has started.
+The batch 7.4.2 calibration completed all eight inputs and the separate repeat.
+Every one of the ten models reproduced its first-run binned spikes and logits
+exactly. Hardware and emulator disagreed on nine of 80 calibration predictions.
+The saved per-run diagnostic queries contain no late-spike entries or messages,
+while the full service log retains dense-source and configuration warnings.
+The initial run took 76.6 seconds. Subsequent inputs averaged 23.6 seconds, with
+a range of 22.1--26.9 seconds. The raw capture and service reports are retained
+locally under `artifacts/spinnaker1_shd_aligned_reset11/`.
+
+The primary campaign now uses this fixed profile in bounded batches. The first
+batch is:
+
+```sh
+python experiments/build_spinnaker1_nmpi_job.py --task shd --bundle hardware/bundles/shd_spinnaker1_v1 --inputs hardware/bundles/shd_spinnaker1_v1/canary_inputs.npz --start 0 --count 100 --reuse-reset --output artifacts/shd_canary_aligned_v1_0000_0099.py --run-output shd_canary_aligned_v1_0000_0099
+```
+
+It has started physical execution. Subsequent batches must cover indices
+100--860 exactly once with unchanged models, sampling and execution settings.
+Calibration observations and the older 75-input campaign are excluded from this
+new primary analysis. Labels remain reserved for post-capture evaluation.

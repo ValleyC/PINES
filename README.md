@@ -72,6 +72,11 @@ development recording with both convolutions and recurrence on the device.
 Both original/repaired recording predictions match their respective emulators.
 The full five-seed software audit is in `results/spinnaker1_dvs/`: mean semantic
 bounds are 84.2/33.3 points. Its full physical campaign remains outstanding.
+An aligned-reset loading profile has since passed the complete SHD calibration
+and exact-repeat test for all ten models. Its replacement primary campaign has
+started with the first 100 of 861 inputs. Reused calibration inputs averaged
+23.6 seconds each. The corresponding full DVS reset-calibration test is still
+in progress. These loading changes preserve the models and observation horizons.
 See [`docs/SPINNAKER1_EXPERIMENT.md`](docs/SPINNAKER1_EXPERIMENT.md).
 The distinct DVS mapping and its sample-complexity limit are described in
 [`docs/SPINNAKER1_DVS_EXPERIMENT.md`](docs/SPINNAKER1_DVS_EXPERIMENT.md).
