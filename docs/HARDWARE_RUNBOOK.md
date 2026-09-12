@@ -54,3 +54,6 @@ the separate semantic term, then evaluate accuracy with labels. Preserve raw
 traces, mapping details and implementation versions so readers can interpret the
 result. Repeated executions describe variability and do not enlarge the primary
 sample count. Incomplete captures provide progress and diagnostics only.
+
+The Virtex-7 SHD analyzer is `experiments/analyze_virtex7_shd.py`. Its input
+directory layout and command are documented in the held-out canary bundle.

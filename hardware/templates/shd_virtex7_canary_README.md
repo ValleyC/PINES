@@ -42,3 +42,21 @@ after the physical capture is complete to evaluate accuracy change.
 Recreate this bundle and its semantic audit with
 `python experiments/prepare_virtex7_shd_audit.py`. Physical data and measured
 emulator-board disagreement are still needed to form the total certificate.
+
+## Analyze completed board captures
+
+Place each capture in `CAPTURES/<seed>/<variant>/capture.npz`, where `variant`
+is `unrepaired` or `repaired`. Its adjacent `manifest.json` records the actual
+board, firmware, bitstream, mapping and run information using
+`schemas/HardwareRunManifest.schema.json`. Pair IDs can be ordinary run labels,
+with one distinct label for each primary input execution.
+
+```sh
+python experiments/analyze_virtex7_shd.py --captures CAPTURES --audit results/virtex7_shd --output results/virtex7_shd/physical_certificate.json
+```
+
+The analysis aligns sample IDs, computes each condition's conformance term and
+total bound, and reports five-seed means and budget verdicts. Add
+`--labels data/processed/shd_v1/test.npz` for post-capture accuracy evaluation.
+Missing conditions return progress counts without a physical certificate.
+Retain the raw board traces alongside these compact captures.
