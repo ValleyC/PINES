@@ -154,6 +154,12 @@ python experiments/run_spinnaker1_dvs.py --bundle BUNDLE --inputs BUNDLE/develop
 python experiments/analyze_spinnaker1_dvs_development.py --capture CAPTURE --bundle BUNDLE
 ```
 
+The development analysis reports layer and logit differences for each window.
+When all four window captures are present, it also compares the physical and
+emulated recording predictions using the checkpoint's mean-softmax aggregation.
+Partial windows do not enter this recording-level comparison. Neither diagnostic
+produces a population certificate.
+
 The allocation-reuse development probe uses only the two bundled calibration
 recordings and writes separate diagnostic outputs:
 

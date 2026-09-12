@@ -4,13 +4,18 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import sys
 
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from pines.adapters.spinnaker1_dvs import aggregate_windows
 
 
 def analyze(capture,bundle):
     config = json.loads((capture / "config.json").read_text())
     rows = []
+    recordings = []
     for folder in sorted(capture.glob("input_*")):
         index = int(folder.name.split("_")[1])
         for window_folder in sorted(folder.glob("window_*")):
@@ -36,9 +41,30 @@ def analyze(capture,bundle):
                             differing_time_neuron_cells=int(differences.sum()),
                             first_difference_step=int(steps[0]) if len(steps) else None)
                     rows.append(row)
+        for variant in config["variants"]:
+            paths = [folder / f"window_{w}" / (variant + ".npz") for w in range(4)]
+            if not all(path.exists() for path in paths):
+                continue
+            with np.load(bundle / "models" / str(config["seed"]) / (variant + ".npz")) as model:
+                meta = json.loads(str(model["metadata"]))
+            logits = []
+            for path in paths:
+                with np.load(path) as physical:
+                    logits.append(physical["window_logits"])
+            expected = bundle / "development_traces" / str(config["seed"]) / variant / f"input_{index:05d}.npz"
+            with np.load(expected) as emulator:
+                physical_scores = aggregate_windows(logits, meta["aggregation_temperature"])
+                emulator_scores = aggregate_windows(emulator["window_logits"], meta["aggregation_temperature"])
+                physical_prediction = int(physical_scores.argmax())
+                emulator_prediction = int(emulator_scores.argmax())
+                recordings.append(dict(input_index=index, sample_id=str(emulator["sample_id"]),
+                    variant=variant, windows=4, physical_prediction=physical_prediction,
+                    emulator_prediction=emulator_prediction,
+                    prediction_agrees=physical_prediction == emulator_prediction,
+                    max_absolute_score_difference=float(np.max(np.abs(physical_scores-emulator_scores)))))
     return dict(status="development_window_diagnostic",physical_certificate=False,
-        note="Window predictions are diagnostic. One DVS classification requires all four windows. No population bound is estimated here.",
-        rows=rows)
+        note="Window predictions are diagnostic. Complete four-window recording comparisons are listed separately. No population bound is estimated here.",
+        completed_recording_conditions=len(recordings), recordings=recordings, rows=rows)
 
 
 if __name__ == "__main__":
