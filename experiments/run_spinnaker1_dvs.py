@@ -20,6 +20,7 @@ from pines.adapters.spinnaker1_dvs import (
     SpiNNaker1DVSMapping, aggregate_windows, bias_connections,
     conv2d_connections, dense_connections, split_signed_rows,
 )
+from pines.adapters.spinnaker1_transfer import install_bounded_memory_transfer
 from run_spinnaker1_shd import input_spike_times, install_source_update_compatibility, spike_readout
 from run_spinnaker1_matrix import read_packet_diagnostics
 
@@ -106,6 +107,7 @@ def run_window(sim, models, event, output, args, mapping):
 def run(args):
     import pyNN.spiNNaker as sim
     compatibility = install_source_update_compatibility()
+    transfer = install_bounded_memory_transfer(args.transfer_chunk_bytes)
     models = [load_model(args.bundle / "models" / str(args.seed) / (variant+".npz")) for variant in args.variants]
     with np.load(args.inputs) as archive:
         packed = archive["packed_spikes"]
@@ -119,6 +121,7 @@ def run(args):
         windows=args.windows,mapping=mapping.contract(),time_scale_factor=args.time_scale_factor,
         conv_neurons_per_core=args.conv_neurons_per_core,hidden_neurons_per_core=args.hidden_neurons_per_core,
         source_neurons_per_core=args.source_neurons_per_core,host_compatibility=compatibility,
+        memory_transfer=transfer,
         observation="One complete four-window recording per condition, never count individual windows as independent inputs.",
         packages={p:importlib.metadata.version(p) for p in ("sPyNNaker","SpiNNFrontEndCommon","SpiNNMan","PyNN","numpy")})
     (args.output / "config.json").write_text(json.dumps(config,indent=2)+"\n")
@@ -158,5 +161,6 @@ if __name__ == "__main__":
     parser.add_argument("--conv-neurons-per-core",type=int,default=128)
     parser.add_argument("--hidden-neurons-per-core",type=int,default=32)
     parser.add_argument("--source-neurons-per-core",type=int,default=32)
+    parser.add_argument("--transfer-chunk-bytes",type=int,default=256*1024)
     parser.add_argument("--record-layers",action="store_true")
     run(parser.parse_args())

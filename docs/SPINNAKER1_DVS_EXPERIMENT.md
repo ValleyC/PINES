@@ -24,15 +24,19 @@ Completed attempt: `PINES_spinnaker1_runs/dvs_seed1701_original_development04_py
 The separate `dvs_workspace_01` working directory isolates its report cleanup
 and transfer configuration from the concurrently running SHD campaign.
 
-A sequential comparison started after this attempt succeeded:
+A sequential comparison followed this attempt:
 `PINES_spinnaker1_runs/dvs_seed1701_original_development05_direct`. It repeats
 the same original model, development recording and window using
 `hardware/configs/spinnaker1_python_direct_transfer.cfg`. The installed 7.4.1
 loader supports direct per-region writes through
 `Machine.disable_advanced_monitor_usage_for_data_in`. This changes loading, not
-neuron dynamics or weights. Its runtime and layer traces must be compared before
-choosing the full-campaign transfer profile. The two DVS runs are sequenced to
-stay within the notebook server's memory limit.
+neuron dynamics or weights. The direct transfer was also rejected with HTTP 413
+before execution. A subsequent development run, ending in `development06_chunked`,
+uses contiguous memory writes of at most 256 KiB through the installed transceiver.
+This changes only transfer granularity, preserving the data bytes and device
+addresses. Its physical traces and runtime are being compared with the completed
+Python-transfer capture before choosing the full-campaign profile. Only one DVS
+process runs at a time within the notebook server's memory limit.
 
 The completed window uses seed 1701, the original model, the first development
 recording and window zero. Hardware and emulator both predict class 3 for this
@@ -126,6 +130,9 @@ Use an isolated working directory in the configured EBRAINS environment. Copy
 `hardware/configs/spinnaker1_python_transfer.cfg` to `spynnaker.cfg` in that
 directory, without a leading dot. This selects the supported Python transfer
 path while retaining the account's existing home-directory connection settings.
+The direct-transfer comparison uses `spinnaker1_python_direct_transfer.cfg` in
+the same way. The runner's `--transfer-chunk-bytes` defaults to 262144 and records
+the selected memory-transfer profile in its run configuration.
 
 Run one complete-network development window first:
 
@@ -159,3 +166,20 @@ Incomplete runs produce progress counts only. Optional `--labels` points to the
 original processed test archive for post-capture accuracy evaluation. The opaque
 recording IDs are aligned through saved dataset row indices. Window-level
 development results are never substituted for the full recording-level matrix.
+
+## Repeated-run variability
+
+Use separate capture directories for additional executions of the same fixed
+inputs, checkpoints and execution configuration. These repeats describe device
+variability, not additional independent deployment inputs:
+
+```sh
+python experiments/analyze_spinnaker1_repeats.py --task dvs --captures REPEAT_1 REPEAT_2 REPEAT_3 --output REPEATS.json
+```
+
+The report gives both the fraction of input-condition groups with any prediction
+change and the fraction of executions that differ from the first execution.
+Their denominators and individual prediction sequences are included. Only
+complete four-window DVS classifications enter this analysis. Use `--task shd`
+for the corresponding SHD captures. The primary confidence calculation does not
+include these additional repeated executions.
