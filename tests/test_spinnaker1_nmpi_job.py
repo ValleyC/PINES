@@ -50,7 +50,7 @@ def test_embedded_job_preserves_models_and_passes_run_arguments(tmp_path, task):
                                start=2, count=3, time_scale_factor=100,
                                task=task, windows=[0, 1, 2, 3], record_layers=True,
                                align_reset=task == "dvs-reset", reuse_reset=task != "dvs-reset",
-                               repeat_first=task == "shd", spike_reader="numpy-current")
+                               repeat_first=task != "dvs-reset", spike_reader="numpy-current")
     job = tmp_path / "job.py"
     job.write_text(source)
     result = subprocess.run([sys.executable, str(job)], cwd=tmp_path,
@@ -69,6 +69,7 @@ def test_embedded_job_preserves_models_and_passes_run_arguments(tmp_path, task):
         assert args[args.index("--windows") + 1:args.index("--windows") + 5] == ["0", "1", "2", "3"]
         assert "--record-layers" in args
         assert "--reuse-reset" in args
+        assert "--repeat-first" in args
     else:
         assert args[args.index("--seed") + 1] == "1701"
         assert "--align-reset" in args

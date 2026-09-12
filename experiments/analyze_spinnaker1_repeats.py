@@ -38,6 +38,18 @@ def analyze(captures, task):
         observations, _ = collect([capture])
         for key, value in observations.items():
             groups[key].append(int(value["prediction"] if task == "shd" else value))
+        repeat_path = capture / "repeat_first" / "summary.json"
+        if repeat_path.exists():
+            repeated = json.loads(repeat_path.read_text())
+            if task == "shd":
+                for row in repeated["rows"]:
+                    key = (row["seed"], row["variant"], repeated["sample_id"])
+                    groups[key].append(int(row["prediction"]))
+            elif (repeated["status"] == "physical_classification_capture_completed"
+                  and repeated["windows"] == [0, 1, 2, 3]):
+                seed = json.loads((capture / "config.json").read_text())["seed"]
+                for variant, prediction in repeated["predictions"].items():
+                    groups[(seed, variant, repeated["sample_id"])].append(int(prediction))
     return dict(task=task, **summarize(groups))
 
 

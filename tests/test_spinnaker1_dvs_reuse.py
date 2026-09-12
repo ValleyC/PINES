@@ -17,6 +17,12 @@ finally:
     sys.path.pop(0)
 
 
+def test_complete_recording_repeat_has_a_separate_folder_after_primary_inputs():
+    assert list(runner.recording_schedule(10, 2)) == [(10, "input_00010"), (11, "input_00011")]
+    assert list(runner.recording_schedule(10, 2, True)) == [
+        (10, "input_00010"), (11, "input_00011"), (10, "repeat_first")]
+
+
 def test_reuse_loads_each_model_once_and_resets_before_replacing_inputs(monkeypatch, tmp_path):
     actions, sources, captured = [], [], []
 

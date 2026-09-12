@@ -9,15 +9,25 @@ convolutional channels, 6,272 and 2,304 convolutional neurons, and 256 recurrent
 neurons. The original and repaired checkpoints are the five-seed manuscript
 checkpoints, not newly trained smaller networks.
 
+The complete primary matrix has been submitted through NMPI: 160 held-out
+recordings for each of five seeds and both model variants, or 1,600 predictions.
+The first seed uses disjoint 0--9 and 10--159 jobs. Each other seed uses 0--159.
+All jobs use aligned reset reuse, current-segment spike reading, hidden-output
+recording, and the same four-window observation horizon. Each remaining seed job
+also captures one additional complete recording for the separate repeat analysis.
+The primary captures are in progress and the final physical bound is pending.
+
+## Earlier notebook development
+
 The first development attempt mapped one window of seed 1701's original model
 to 140 device cores. The service rejected the Java bulk-data transfer with HTTP
 413 before neural execution. It produced no physical prediction. A local
 configuration-file override used the home-file naming convention and was ignored.
 An early programmatic setting was rejected before simulator setup. Inspection of
 the installed loader identified the supported per-run file as `spynnaker.cfg`
-without a leading dot. The current attempt selects Python transfer through that
+without a leading dot. The Python-transfer attempt selected that supported
 file. That attempt completed a physical full-network window in 1,270.6 seconds,
-including loading and capture. The full DVS canary campaign has not started.
+including loading and capture, before the full DVS canary campaign was launched.
 
 Remote development bundle: `spinnaker1_dvs_development_v2`.
 Completed attempt: `PINES_spinnaker1_runs/dvs_seed1701_original_development04_python`.
@@ -88,9 +98,10 @@ The four window runtimes, including loading and capture, are 497.4, 486.5,
 `artifacts/spinnaker1_dvs_batch_development05/` retains the capture ZIP,
 service reports and extracted per-layer spikes, logits, configuration and
 recording-level development analysis. This completes one recording under two
-conditions, not the planned 1,600-observation physical matrix. Fresh setup for
-every window remains the selected execution profile. The declared v1 mapping
-and existing checkpoints are fixed for the five-seed semantic audit.
+conditions, not the planned 1,600-observation physical matrix. These development
+captures used fresh setup for every window. The primary campaign uses the
+aligned-reset profile described below. The declared v1 mapping and existing
+checkpoints are fixed for the five-seed semantic audit.
 
 The service timing databases identify the runtime bottleneck. Mean times across
 these four windows are 311.3 seconds for application-data loading, 75.8 seconds
@@ -313,6 +324,12 @@ recording IDs are aligned through saved dataset row indices. Window-level
 development results are never substituted for the full recording-level matrix.
 
 ## Repeated-run variability
+
+The DVS runner and batch builder accept `--repeat-first`. After the primary
+recordings, this executes all four windows of the first recording again and
+writes them under `repeat_first/`. It reuses the loaded network when
+`--reuse-reset` is selected. The matrix analyzer ignores that directory, while
+the repeat analyzer pairs it with the corresponding primary recording.
 
 Use separate capture directories for additional executions of the same fixed
 inputs, checkpoints and execution configuration. These repeats describe device

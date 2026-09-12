@@ -37,6 +37,13 @@ def load_model(path):
     return state,meta
 
 
+def recording_schedule(start, count, repeat_first=False):
+    for index in range(start, start + count):
+        yield index, f"input_{index:05d}"
+    if repeat_first:
+        yield start, "repeat_first"
+
+
 def connect(sim, source, target, rows, projections):
     for receptor, selected in split_signed_rows(rows).items():
         projections.append(sim.Projection(source,target,sim.FromListConnector(selected),
@@ -197,13 +204,14 @@ def run(args):
         execution_profile="aligned_reset_reuse" if args.reuse_reset else "fresh_allocation_per_window",
         recording_layers="all" if args.record_layers else "hidden",
         spike_reader=args.spike_reader,
+        repeat_first=args.repeat_first,
         observation="One complete four-window recording per condition, never count individual windows as independent inputs.",
         packages={p:importlib.metadata.version(p) for p in ("sPyNNaker","SpiNNFrontEndCommon","SpiNNMan","PyNN","numpy")})
     (args.output / "config.json").write_text(json.dumps(config,indent=2)+"\n")
     allocation = AlignedDVSAllocation(sim, models, args, mapping) if args.reuse_reset else None
     try:
-        for index in range(args.start,args.start+args.count):
-            folder = args.output / f"input_{index:05d}"
+        for index, folder_name in recording_schedule(args.start, args.count, args.repeat_first):
+            folder = args.output / folder_name
             folder.mkdir()
             records = []
             for window in args.windows:
@@ -214,15 +222,19 @@ def run(args):
                           run_window(sim,models,event,target,args,mapping))
                 (target / "summary.json").write_text(json.dumps(record,indent=2)+"\n")
                 records.append(record)
-                print(f"input {index} window {window} completed in {record['seconds']:.1f}s",flush=True)
+                print(f"input {index} window {window} repeat={folder_name == 'repeat_first'} "
+                      f"completed in {record['seconds']:.1f}s",flush=True)
             result = dict(sample_id=ids[index],windows=args.windows,status="development_partial_windows")
             if args.windows == [0,1,2,3]:
                 result["status"] = "physical_classification_capture_completed"
                 result["predictions"] = {meta["variant"]:int(aggregate_windows(
                     [record["rows"][position]["window_logits"] for record in records],meta["aggregation_temperature"]).argmax())
                     for position,(_,meta) in enumerate(models)}
+            if folder_name == "repeat_first":
+                result["additional_repeat"] = True
             (folder / "summary.json").write_text(json.dumps(result,indent=2)+"\n")
-        completed = dict(samples=args.count, windows=args.windows)
+        completed = dict(samples=args.count, windows=args.windows,
+                         additional_repeats=int(args.repeat_first))
         if allocation:
             completed["machine"] = str(sim.get_machine())
         (args.output / "completed.json").write_text(json.dumps(completed)+"\n")
@@ -249,5 +261,7 @@ if __name__ == "__main__":
     parser.add_argument("--record-layers",action="store_true")
     parser.add_argument("--reuse-reset", action="store_true",
                         help="Use the calibration-qualified aligned-reset loading profile")
+    parser.add_argument("--repeat-first", action="store_true",
+                        help="Repeat one complete recording after the primary inputs, excluded from primary counts")
     parser.add_argument("--spike-reader", choices=("neo-history", "numpy-current"), default="neo-history")
     run(parser.parse_args())

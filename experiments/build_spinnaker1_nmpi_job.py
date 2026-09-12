@@ -100,6 +100,8 @@ elif options["task"] == "dvs":
         sys.argv.append("--record-layers")
     if options["reuse_reset"]:
         sys.argv.append("--reuse-reset")
+    if options["repeat_first"]:
+        sys.argv.append("--repeat-first")
 else:
     sys.argv.extend(["--seed", str(options["seeds"][0])])
     if options["align_reset"]:

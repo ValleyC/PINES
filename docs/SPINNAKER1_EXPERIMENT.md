@@ -2,39 +2,32 @@
 
 ## Current campaign
 
-The full SHD hardware campaign was launched through EBRAINS on 12 September
-2026 UTC: 861 held-out inputs, five training seeds, and original/repaired models,
-giving 8,610 input-condition observations. One fresh allocation serves all ten
-conditions per input. Hidden recurrence executes on SpiNNaker-1. The original
-linear readout is computed on the host from captured spikes, a hybrid backend.
+The full SHD hardware campaign is running through EBRAINS: 861 held-out inputs,
+five training seeds, and original/repaired models, giving 8,610 input-condition
+observations. All inputs have been submitted in two disjoint ranges, 0--99 and
+100--860. The batch 7.4.2 runtime uses the calibration-qualified aligned-reset
+profile described below. All ten model conditions share each input execution.
+Hidden recurrence executes on SpiNNaker-1, followed by the original linear
+readout on the host. The remaining-input job uses current-segment spike reading
+and captures a separate first-input repeat after its primary inputs finish.
+The full physical bound awaits completion and analysis of both capture batches.
 
-The direct-access run stopped after 75 complete inputs (750 predictions) when
-the service rejected the next allocation with `quota exceeded`. Input indices
-0 through 74 are complete. Index 75 failed before hardware execution and is
-retained as an incomplete attempt. These partial captures do not supply the
-paper's final physical bound. Resume at index 75 only after access is restored,
-using a new output directory and preserving the earlier captures and log.
-The NMPI batch allocation is separate from the exhausted direct-access group.
-
-The remote output directory is
-`PINES_spinnaker1_runs/shd_canary_five_seeds_v1/`, with a sibling `.log`.
-The frozen execution bundle is `spinnaker1_ebrains_bundle_v8`.
-Completion must be established from the process and complete captures, not from
-this document. At approximately 131 seconds per input, the sequential campaign
-takes about 31 hours before allocation or service delays.
-
-A replacement batch campaign now uses the calibration-qualified aligned-reset
-profile described below. Its first primary batch covers input indices 0--99,
-with all five seeds and both model variants. The target remains all 861 inputs
-and 8,610 observations. These 7.4.2 captures are kept separate from the interrupted
-7.4.1 campaign. A first primary input has completed, but no full physical bound
-is available yet.
-
-The submission manuscript is `transport_manuscript/`. DVS Gesture hardware
-execution and physical Virtex-7 captures remain outstanding. The peer's matching
+The submission manuscript is `transport_manuscript/`. The full five-seed DVS
+matrix has also been submitted. Physical Virtex-7 captures remain outstanding.
+The peer's matching
 SHD predictions are RTL simulation evidence in `results/shd_rtl/`.
 The DVS mapping and development progress are described in
 [`SPINNAKER1_DVS_EXPERIMENT.md`](SPINNAKER1_DVS_EXPERIMENT.md).
+
+### Earlier direct-access capture
+
+The earlier fresh-allocation 7.4.1 run stopped after 75 complete inputs
+(750 predictions) when the next allocation was rejected with `quota exceeded`.
+Its captures and incomplete input 75 remain in
+`PINES_spinnaker1_runs/shd_canary_five_seeds_v1/`, with a sibling log and the
+`spinnaker1_ebrains_bundle_v8` execution bundle. These observations are separate
+from the new 7.4.2 primary matrix. The NMPI batch allocation is separate from
+the exhausted direct-access group.
 
 ## Development and frozen settings
 
@@ -224,7 +217,18 @@ batch is:
 python experiments/build_spinnaker1_nmpi_job.py --task shd --bundle hardware/bundles/shd_spinnaker1_v1 --inputs hardware/bundles/shd_spinnaker1_v1/canary_inputs.npz --start 0 --count 100 --reuse-reset --output artifacts/shd_canary_aligned_v1_0000_0099.py --run-output shd_canary_aligned_v1_0000_0099
 ```
 
-It has started physical execution. Subsequent batches must cover indices
-100--860 exactly once with unchanged models, sampling and execution settings.
+It has started physical execution. The remaining 761 inputs have also been
+submitted as one job, with the same models, sampling and execution settings:
+
+```sh
+python experiments/build_spinnaker1_nmpi_job.py --task shd --bundle hardware/bundles/shd_spinnaker1_v1 --inputs hardware/bundles/shd_spinnaker1_v1/canary_inputs.npz --start 100 --count 761 --reuse-reset --repeat-first --spike-reader numpy-current --output artifacts/shd_canary_aligned_v1_0100_0860.py --run-output shd_canary_aligned_v1_0100_0860
+```
+
+The second job reads current-segment spikes through the physically compared
+array API instead of rebuilding Neo history. It adds one separate first-input
+repeat after completing its primary inputs. The two primary ranges are disjoint
+and together cover all 861 inputs. Pass both extracted capture directories to
+the matrix analyzer after they finish. The repeat analyzer reads the additional
+`repeat_first/` capture without adding it to the certificate sample count.
 Calibration observations and the older 75-input campaign are excluded from this
 new primary analysis. Labels remain reserved for post-capture evaluation.

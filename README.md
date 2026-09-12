@@ -61,28 +61,22 @@ and upstream reports. Large datasets, trained checkpoints, per-input prediction
 arrays, and raw event caches are excluded from Git because of size and dataset
 licensing. The frozen configurations identify those inputs.
 
-Table V is reserved for physical SpiNNaker-1 and Virtex-7 results. The full SHD
-SpiNNaker-1 campaign has been launched through EBRAINS using 861 held-out inputs,
-five seeds, and original/repaired models. It executes recurrent hidden dynamics
-on the device with a host linear readout. Direct-access quota exhaustion stopped
-the run after 75 complete inputs (750 predictions). The saved partial captures
-are not a final physical certificate. Physical results remain pending until
-the full captures are analyzed. The DVS Gesture mapping completed a four-window
-development recording with both convolutions and recurrence on the device.
-Both original/repaired recording predictions match their respective emulators.
-The full five-seed software audit is in `results/spinnaker1_dvs/`: mean semantic
-bounds are 84.2/33.3 points. Its physical campaign has started with a bounded
-ten-recording batch for the first seed, covering original and repaired models.
-The complete five-seed physical matrix remains outstanding.
-An aligned-reset loading profile has since passed the complete SHD calibration
-and exact-repeat test for all ten models. Its replacement primary campaign has
-started with the first 100 of 861 inputs. Reused calibration inputs averaged
-23.6 seconds each. The full DVS reset-calibration test also completed: both
-repeated windows reproduced all three recorded layers and logits for both models.
-These loading changes preserve the models and observation horizons. An optional
-current-segment spike reader avoids rebuilding recording history after each
-reset. Its output matched the previous reader on nine physical comparisons and
-reconstructed all 150 stored SHD/DVS calibration traces exactly.
+Table V reports physical SpiNNaker-1 and Virtex-7 results. The complete
+SpiNNaker-1 capture matrix has been submitted through EBRAINS: 861 held-out SHD
+inputs and 160 DVS recordings per condition, each covering five seeds and
+original/repaired models. These are 8,610 SHD and 1,600 DVS primary predictions.
+Physical execution is in progress. SHD recurrence and both DVS convolutions and
+recurrence execute on the device, followed by host readouts. Each DVS
+classification aggregates four windows. The five-seed DVS software audit in
+`results/spinnaker1_dvs/` has mean semantic bounds of 84.2/33.3 points.
+
+The aligned-reset loading profile passed SHD and DVS calibration repeats while
+preserving the models and observation horizons. A current-segment spike reader
+avoids rebuilding recording history after each reset. It matched the previous
+reader on nine physical comparisons and reconstructed all 150 stored SHD/DVS
+calibration traces exactly. Additional complete-input repeats are stored
+separately for variability analysis and do not enlarge the primary sample count.
+Final physical values await completion and analysis of the full captures.
 See [`docs/SPINNAKER1_EXPERIMENT.md`](docs/SPINNAKER1_EXPERIMENT.md).
 The distinct DVS mapping and its sample-complexity limit are described in
 [`docs/SPINNAKER1_DVS_EXPERIMENT.md`](docs/SPINNAKER1_DVS_EXPERIMENT.md).
