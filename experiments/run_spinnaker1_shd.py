@@ -48,11 +48,13 @@ def invalidate_source_buffer_cache(vertex) -> None:
 
 
 def install_source_update_compatibility() -> str | None:
-    # In 7.4.1 _send_buffer_times returns a Python list for per-neuron trains,
+    # In 7.4.1 and the observed batch 7.4.2, _send_buffer_times returns a list,
     # but ReverseIpTagMultiCastSource.send_buffer_times indexes that result
     # with vertex_slice.get_raster_ids(), a NumPy array. This host-only shim
     # changes the container, not the time conversion or any neuron binary.
-    if importlib.metadata.version("sPyNNaker") != "1!7.4.1":
+    installed = importlib.metadata.version("sPyNNaker")
+    supported = ("1!7.4.1", "1!7.4.2")
+    if installed not in supported:
         return None
     module = importlib.import_module("spynnaker.pyNN.models.spike_source.spike_source_array_vertex")
     original = module._send_buffer_times
@@ -61,7 +63,7 @@ def install_source_update_compatibility() -> str | None:
         return source_tick_array(original(spike_times, time_step))
 
     module._send_buffer_times = indexed_times
-    if importlib.metadata.version("SpiNNFrontEndCommon") == "1!7.4.1":
+    if importlib.metadata.version("SpiNNFrontEndCommon") in supported:
         from spinn_front_end_common.utility_models.reverse_ip_tag_multicast_source_machine_vertex import ReverseIPTagMulticastSourceMachineVertex
         install = ReverseIPTagMulticastSourceMachineVertex._install_send_buffer
 
@@ -70,7 +72,7 @@ def install_source_update_compatibility() -> str | None:
             invalidate_source_buffer_cache(vertex)
 
         ReverseIPTagMulticastSourceMachineVertex._install_send_buffer = install_and_invalidate
-    return "7.4.1 host ragged tick-array indexing and replaced-buffer cache invalidation, no numeric changes"
+    return f"{installed} host ragged tick-array indexing and replaced-buffer cache invalidation, no numeric changes"
 
 
 def spike_readout(segment, hidden_size: int, horizon: int, latency: int,

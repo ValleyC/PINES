@@ -179,3 +179,27 @@ This is development evidence, separate from the primary notebook campaign using
 batch profile. Preserve the generated `*_capture.zip`, which retains per-input
 directories even when the service publishes individual files by basename.
 Job IDs and private account details stay outside the anonymous artifact.
+
+## Aligned reset reuse candidate
+
+The optional `--reuse-reset` runner keeps all selected SHD models loaded and
+resets their state before replacing each input. It pads the physical run from
+55 to 64 steps to align the four-bit packet-colour counter, while retaining
+exactly the same 50 hidden-output bins. This is a separate execution profile,
+not a continuation of the interrupted fresh-allocation 7.4.1 campaign.
+
+The source-update compatibility shim now covers both observed 7.4.1 and batch
+7.4.2 runtimes. The 7.4.2 DVS calibration exposed the same ragged-array indexing
+failure when replacing inputs. The shim changes host containers and buffer
+refill bookkeeping, not spike times or device binaries.
+
+The five-seed SHD reset calibration uses the existing eight development inputs
+and then repeats the first. Its `repeat_first/` directory is separate from
+primary input folders and never increases the population sample count:
+
+```sh
+python experiments/build_spinnaker1_nmpi_job.py --task shd --bundle hardware/bundles/shd_spinnaker1_v1 --inputs hardware/bundles/shd_spinnaker1_v1/development_inputs.npz --count 8 --reuse-reset --repeat-first --output artifacts/shd_reset_calibration.py --run-output shd_reset_calibration
+```
+
+This calibration has been submitted, but completion and reset fidelity have
+not yet been established. No primary aligned-reset SHD campaign has started.

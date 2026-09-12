@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 
 def load_script(name):
@@ -68,6 +69,31 @@ def test_source_update_shim_keeps_exact_ticks_and_supports_vertex_selection():
     assert runner.source_tick_array(single) is single
 
 
+@pytest.mark.parametrize("version", ["1!7.4.1", "1!7.4.2"])
+def test_host_shim_is_installed_for_both_observed_runtimes(monkeypatch, version):
+    tick_module = SimpleNamespace(_send_buffer_times=lambda values, dt: values)
+
+    class Vertex:
+        def _install_send_buffer(self, times):
+            self.times = times
+
+    monkeypatch.setattr(runner.importlib.metadata, "version", lambda name: version)
+    monkeypatch.setattr(runner.importlib, "import_module", lambda name: tick_module)
+    monkeypatch.setitem(sys.modules,
+        "spinn_front_end_common.utility_models.reverse_ip_tag_multicast_source_machine_vertex",
+        SimpleNamespace(ReverseIPTagMulticastSourceMachineVertex=Vertex))
+    description = runner.install_source_update_compatibility()
+    times = [np.array([2, 5]), np.array([3])]
+    indexed = tick_module._send_buffer_times(times, 1.)
+    np.testing.assert_array_equal(indexed[np.array([1])][0], [3])
+    vertex = Vertex()
+    vertex._first_machine_time_step, vertex._run_until_timesteps = 0, 80
+    vertex._install_send_buffer(indexed)
+    assert vertex.times is indexed
+    assert vertex._first_machine_time_step is None and vertex._run_until_timesteps is None
+    assert version in description
+
+
 def test_input_offset_moves_events_and_clocked_bias_together():
     trains = runner.input_spike_times(np.array([[0, 1], [1, 0], [0, 0]]), 1.0, 2)
     for actual, expected in zip(trains, [[3.0], [2.0], [2.0, 3.0, 4.0]]):
@@ -104,3 +130,58 @@ def test_packet_query_uses_coordinate_view_from_installed_schema():
     reader = SimpleNamespace(run_query=lambda q: db.execute(q).fetchall(), messages=lambda: [])
     assert matrix_runner.read_packet_diagnostics(reader)["late_spikes"] == [(0, 1, 2, 7)]
     db.close()
+
+
+def test_matrix_reuse_preserves_horizon_and_resets_before_new_input(monkeypatch, tmp_path):
+    actions = []
+
+    class Population:
+        def __init__(self, size, cell, label, **kwargs):
+            self.size, self.label = size, label
+            actions.append(("population", label))
+        def initialize(self, **kwargs): pass
+        def record(self, name): pass
+        def set(self, **kwargs): actions.append(("set", self.label))
+        def get_data(self, name, clear):
+            assert clear
+            return SimpleNamespace(segments=[object()])
+
+    sim = SimpleNamespace(setup=lambda **kw: actions.append(("setup",)),
+        reset=lambda: actions.append(("reset",)),
+        run=lambda steps: actions.append(("run", steps)),
+        end=lambda: actions.append(("end",)), Population=Population,
+        SpikeSourceArray=lambda **kw: kw, IF_curr_delta=lambda **kw: kw,
+        set_number_of_neurons_per_core=lambda *a: None,
+        Projection=lambda *a, **kw: object(), FromListConnector=lambda x: x,
+        StaticSynapse=lambda: None)
+    monkeypatch.setitem(sys.modules, "spinn_utilities.config_holder", SimpleNamespace(
+        get_config_bool=lambda *a: False, get_config_int=lambda *a: 4, set_config=lambda *a: None))
+
+    class Reader:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+
+    monkeypatch.setitem(sys.modules, "spinn_front_end_common.interface.provenance",
+                        SimpleNamespace(ProvenanceReader=Reader))
+    monkeypatch.setattr(matrix_runner, "read_packet_diagnostics", lambda r: dict(late_spikes=[], messages=[]))
+    monkeypatch.setattr(matrix_runner, "spike_readout", lambda *a:
+        (np.zeros((50, 1)), np.array([1., 0.]), np.empty((0, 2))))
+    model = SimpleNamespace(hidden_size=1, bias=np.zeros(1), output_weights=np.ones((1, 2)))
+    mapping = SimpleNamespace(neuron_parameters=lambda m: {},
+        projection_weights=lambda m: (np.ones((1, 1)), np.ones((1, 1))),
+        emulate=lambda *a: dict(predictions=np.array([0]), spikes=np.zeros((1, 50, 1))))
+    models = [(1701, variant, model) for variant in matrix_runner.VARIANTS]
+    allocation = {}
+    for index in range(2):
+        folder = tmp_path / str(index)
+        folder.mkdir()
+        result = matrix_runner.run_input(sim, models, np.zeros((50, 1)), f"calib-{index}", index,
+            folder, SimpleNamespace(time_scale_factor=100), mapping, allocation)
+        assert result["observation_steps"] == 50 and result["run_steps"] == 64
+        assert len(result["rows"]) == 2
+    assert actions.count(("setup",)) == 1
+    assert sum(a[0] == "population" for a in actions) == 3
+    assert [a for a in actions if a[0] == "run"] == [("run", 64), ("run", 64)]
+    reset = actions.index(("reset",))
+    assert actions[reset:reset+3] == [("reset",), ("set", "shared_input_and_bias"), ("run", 64)]
+    assert ("end",) not in actions

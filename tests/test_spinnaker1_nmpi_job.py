@@ -49,7 +49,8 @@ def test_embedded_job_preserves_models_and_passes_run_arguments(tmp_path, task):
     source = builder.build_job(runtime, bundle, inputs, seeds=[1701],
                                start=2, count=3, time_scale_factor=100,
                                task=task, windows=[0, 1, 2, 3], record_layers=True,
-                               align_reset=task == "dvs-reset", reuse_reset=task == "dvs")
+                               align_reset=task == "dvs-reset", reuse_reset=task != "dvs-reset",
+                               repeat_first=task == "shd")
     job = tmp_path / "job.py"
     job.write_text(source)
     result = subprocess.run([sys.executable, str(job)], cwd=tmp_path,
@@ -61,7 +62,7 @@ def test_embedded_job_preserves_models_and_passes_run_arguments(tmp_path, task):
         assert args[args.index("--count") + 1] == "3"
     assert args[args.index("--time-scale-factor") + 1] == "100"
     if task == "shd":
-        assert args[args.index("--seeds") + 1:] == ["1701"]
+        assert args[args.index("--seeds") + 1:] == ["1701", "--reuse-reset", "--repeat-first"]
     elif task == "dvs":
         assert args[args.index("--seed") + 1] == "1701"
         assert args[args.index("--windows") + 1:args.index("--windows") + 5] == ["0", "1", "2", "3"]

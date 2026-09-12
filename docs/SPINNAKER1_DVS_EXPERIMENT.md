@@ -237,9 +237,19 @@ python experiments/build_spinnaker1_nmpi_job.py --task dvs-reset --bundle BUNDLE
 
 This packages only the two development recordings and their emulator traces,
 alongside both complete model variants. It does not package held-out canary inputs.
-The aligned batch calibration attempt is in progress, not a completed primary
-campaign. Preserve its capture and compare both repeated windows with their
-initial physical execution before selecting the reuse profile.
+The first aligned batch attempt completed its initial window in 483.3 seconds.
+All three binned layer traces and logits exactly matched the corresponding
+fresh-allocation capture for both models. It then stopped at `source.set` with
+a ragged-array indexing error before executing a second window. The existing
+host compatibility fix covered 7.4.1 only, while the batch 7.4.2 runtime exhibited
+the same error. The fix now covers both observed versions and preserves converted
+spike times. The failed capture and service reports are retained under
+`artifacts/spinnaker1_dvs_aligned_reset09/`, including packet-backpressure and
+shutdown warnings in the full log.
+
+A corrected full-model calibration attempt is in progress, not a completed
+primary campaign. Preserve its capture and compare both repeated windows with
+their initial physical execution before selecting the reuse profile.
 
 The capture runner also has an optional `--reuse-reset` switch. It preserves
 the existing per-recording output format and four-window aggregation, but loads
