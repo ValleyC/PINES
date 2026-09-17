@@ -40,3 +40,15 @@ sampled post-repair diagnostic.
   comparisons.
 - The hybrid-audit verifiers check row accounting, provenance, and soundness
   metadata.
+
+## DVS FPGA handoff
+
+- `export_dvs_hardware_bundle.py` exports frozen inputs/models, fixed-point
+  memory images and target-specific golden outputs. It does not train a model.
+- `verify_dvs_hardware_bundle.py` checks the images and reproduces development
+  traces. `--full --device cuda` also regenerates all audit/canary logits.
+- `analyze_dvs_fpga_capture.py` converts captured window logits into recording
+  predictions and compares them with the FPGA emulator.
+
+The ready-to-use package and run instructions are in
+[`hardware/bundles/dvs_floor_q8q16_v1/`](../hardware/bundles/dvs_floor_q8q16_v1/README.md).

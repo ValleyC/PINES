@@ -1,0 +1,3 @@
+# Generated memory images should not overwhelm code review or language statistics.
+*.mem -diff linguist-generated=true
+*.npz -diff linguist-generated=true

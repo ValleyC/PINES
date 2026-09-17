@@ -1,0 +1,56 @@
+{
+  "version": "DVSFPGAHandoff/v1",
+  "status": "software_golden_not_board_results",
+  "task": "DVS Gesture",
+  "seeds": [
+    1701,
+    2718,
+    3141,
+    5772,
+    8119
+  ],
+  "variants": [
+    "unrepaired",
+    "repaired"
+  ],
+  "samples": {
+    "development": 2,
+    "audit": 104,
+    "canary": 160
+  },
+  "windows_per_sample": 4,
+  "timesteps_per_window": 60,
+  "input_shape": [
+    2,
+    32,
+    32
+  ],
+  "layer_shapes": {
+    "conv1": [
+      32,
+      14,
+      14
+    ],
+    "conv2": [
+      64,
+      6,
+      6
+    ],
+    "hidden": [
+      256
+    ],
+    "readout": [
+      11
+    ]
+  },
+  "primary_hardware_split": "canary",
+  "development_split": "repair-calibration-development",
+  "audit_and_canary_selection_seed": 20260914,
+  "labels_included": false,
+  "source_models": "Frozen original and final floor-repaired manuscript checkpoints, unchanged",
+  "source_export": "experiments/export_spinnaker1_dvs_bundle.py (models and inputs only, not target execution)",
+  "generator": "experiments/export_dvs_hardware_bundle.py",
+  "contract_file": "target_contract.json",
+  "evaluation_scope": "Development evidence. Test performance informed earlier source-pipeline design.",
+  "hardware_scope": "Both convolutions, recurrence and integer readout on FPGA. Four-window softmax aggregation on host."
+}

@@ -96,6 +96,16 @@ plain experiment manifests. Verify it with:
 python experiments/verify_shd_hardware_bundle.py
 ```
 
+The **DVS Gesture FPGA handoff** is in
+[`hardware/bundles/dvs_floor_q8q16_v1/`](hardware/bundles/dvs_floor_q8q16_v1/README.md).
+It includes five original/repaired models, FPGA memory images, two development
+recordings with full layer traces, 104 audit recordings, and 160 held-out canary
+recordings. Its Q8-weight/Q16-state/Q0.24-leak golden outputs are generated for
+the FPGA mapping, not copied from SpiNNaker. The package requires a two-convolution
+plus recurrent implementation and is not a bitstream. Verify it with
+`python experiments/verify_dvs_hardware_bundle.py`; use
+`experiments/analyze_dvs_fpga_capture.py` to compare captured window logits.
+
 For the paper's held-out physical SHD comparison, use the new
 [`Virtex-7 canary inputs`](hardware/bundles/shd_virtex7_canary_v2/README.md)
 with the unchanged parameter files from that handoff. The old input batch and

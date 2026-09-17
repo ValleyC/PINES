@@ -1,5 +1,11 @@
 # DVS Gesture on SpiNNaker-1
 
+For FPGA work use the separate
+[`DVS FPGA frozen handoff`](../hardware/bundles/dvs_floor_q8q16_v1/README.md).
+It shares the original/repaired models and frozen inputs, but has its own
+fixed-point arithmetic, subtractive reset, memory layout, and golden outputs.
+The SpiNNaker mapping below is not an FPGA golden reference.
+
 ## Scope and status
 
 The new runner represents both convolutional layers and the recurrent layer on

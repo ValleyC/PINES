@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "physical_results": false,
+  "full": true,
+  "device": "cuda",
+  "configurations": 10,
+  "reproduced_recording_predictions": 2660,
+  "independent_numpy_int64_windows": 10,
+  "input_memory_images": "all splits match packed inputs byte for byte",
+  "parameter_memory_images": "all variants match floor-quantized source arrays and declared layout",
+  "traces": "all development membranes, spikes and timestep logits reproduced",
+  "golden_window_logits": "all compared as signed integers, not tolerance-based"
+}
