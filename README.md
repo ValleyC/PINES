@@ -76,7 +76,11 @@ avoids rebuilding recording history after each reset. It matched the previous
 reader on nine physical comparisons and reconstructed all 150 stored SHD/DVS
 calibration traces exactly. Additional complete-input repeats are stored
 separately for variability analysis and do not enlarge the primary sample count.
-Final physical values await completion and analysis of the full captures.
+The retained primary captures now support the SpiNNaker table entries:
+100 SHD inputs per seed across five seeds and ten DVS recordings for seed 1701.
+Measured repair gains and full-population bounds are reported separately, with
+unreturned planned pairs counted as unresolved disagreements. See
+[`results/spinnaker1_retained/`](results/spinnaker1_retained/README.md).
 See [`docs/SPINNAKER1_EXPERIMENT.md`](docs/SPINNAKER1_EXPERIMENT.md).
 The distinct DVS mapping and its sample-complexity limit are described in
 [`docs/SPINNAKER1_DVS_EXPERIMENT.md`](docs/SPINNAKER1_DVS_EXPERIMENT.md).

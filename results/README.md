@@ -22,15 +22,20 @@ rows. Reported manuscript values are rounded from these artifacts.
 | Audit sample requirements | `sample_complexity/zero_disagreement_rows.csv`, `sample_complexity/zero_disagreement_summary.json` |
 | Table V, SpiNNaker-1 SHD semantic term | `spinnaker1_shd/semantic_audit.json`, `spinnaker1_shd/paired_predictions.npz` |
 | Table V, SpiNNaker-1 DVS semantic term | `spinnaker1_dvs/semantic_audit.json`, `spinnaker1_dvs/paired_predictions.npz` |
+| Table V, retained SpiNNaker physical observations | `spinnaker1_retained/observations.csv`, `spinnaker1_retained/summary.json`, captured trace archives |
 | Table V, Virtex-7 SHD semantic term | `virtex7_shd/semantic_audit.json`, `virtex7_shd/paired_predictions.npz` |
 
 The finite-family source aggregates are retained beside each dataset. The SHD
 continuous audit also retains its frozen screening summary because the final
 all-input audit records it as upstream provenance.
 
-The full SpiNNaker-1 primary matrix is running through NMPI, covering 8,610
-SHD and 1,600 DVS predictions. Table V's hardware-dependent values await the
-complete captures. The semantic audits supply only the source-to-emulator term.
+The planned SpiNNaker-1 primary matrix covers 8,610 SHD and 1,600 DVS
+predictions. Table V now uses the retained 1,000 SHD and 20 DVS physical
+observations. Their ordered-prefix sampling is handled by counting unreturned
+planned pairs as unresolved disagreements in the population bounds, with the
+original confidence allocation. Empirical accuracy and disagreement describe
+the recorded inputs. See `spinnaker1_retained/README.md` for sample counts,
+per-seed aggregation and the reproducible calculation.
 The older interrupted 75-input SHD run is separate from the current campaign.
 The supplied FPGA simulation results are in `shd_rtl/` and do not replace
 physical Virtex-7 measurements.

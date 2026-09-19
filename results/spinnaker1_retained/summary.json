@@ -1,0 +1,683 @@
+{
+  "status": "retained_primary_measurements_with_unresolved_pair_bounds",
+  "completed_jobs": {
+    "shd": 420693,
+    "dvs": 420695
+  },
+  "selection": "All returned observations from the two completed aligned-reset primary jobs. No outcome filtering.",
+  "sampling": "Completed batches are prefixes of dataset-index-sorted canary sets, not independently sampled smaller audits.",
+  "confidence": 0.95,
+  "paper_cells": 40,
+  "alpha_per_term": 0.000625,
+  "bound": "Clopper-Pearson(k + N - n, N, alpha), unresolved planned pairs counted as disagreements; total capped at one.",
+  "justification": "For the predeclared N-pair audit, its eventual error count is at most k+N-n. Monotonicity preserves the original simultaneous bound without assuming the returned prefix is representative.",
+  "assumptions": [
+    "The original planned audit sampling and independent execution assumptions hold.",
+    "Models, mapping and execution profile remain fixed.",
+    "Accuracy and disagreement point estimates describe recorded inputs only."
+  ],
+  "labels": "Used only for descriptive accuracy after freezing the retained observation set.",
+  "calibrated_repeat_variability": "Not estimated from these primary batches.",
+  "shd": {
+    "alpha_per_term": 0.000625,
+    "rows": [
+      {
+        "seed": 1701,
+        "variant": "original",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 18,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 779,
+        "semantic_upper": 0.3774375972240599,
+        "conformance_upper": 0.9341242753982448,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.72,
+        "hardware_accuracy": 0.62,
+        "accuracy_loss": 0.09999999999999998,
+        "absolute_accuracy_change": 0.09999999999999998,
+        "hardware_disagreement_rate": 0.18,
+        "source_emulator_disagreement": 0.31,
+        "source_hardware_disagreement": 0.34
+      },
+      {
+        "seed": 1701,
+        "variant": "reset_repaired",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 12,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 773,
+        "semantic_upper": 0.22047409417130975,
+        "conformance_upper": 0.9282395553094516,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.72,
+        "hardware_accuracy": 0.74,
+        "accuracy_loss": -0.020000000000000018,
+        "absolute_accuracy_change": 0.020000000000000018,
+        "hardware_disagreement_rate": 0.12,
+        "source_emulator_disagreement": 0.12,
+        "source_hardware_disagreement": 0.16
+      },
+      {
+        "seed": 2718,
+        "variant": "original",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 13,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 774,
+        "semantic_upper": 0.3315991174989261,
+        "conformance_upper": 0.9292237705935966,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.71,
+        "hardware_accuracy": 0.58,
+        "accuracy_loss": 0.13,
+        "absolute_accuracy_change": 0.13,
+        "hardware_disagreement_rate": 0.13,
+        "source_emulator_disagreement": 0.32,
+        "source_hardware_disagreement": 0.32
+      },
+      {
+        "seed": 2718,
+        "variant": "reset_repaired",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 13,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 774,
+        "semantic_upper": 0.20657752557535208,
+        "conformance_upper": 0.9292237705935966,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.71,
+        "hardware_accuracy": 0.72,
+        "accuracy_loss": -0.010000000000000009,
+        "absolute_accuracy_change": 0.010000000000000009,
+        "hardware_disagreement_rate": 0.13,
+        "source_emulator_disagreement": 0.18,
+        "source_hardware_disagreement": 0.13
+      },
+      {
+        "seed": 3141,
+        "variant": "original",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 18,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 779,
+        "semantic_upper": 0.3618174135533284,
+        "conformance_upper": 0.9341242753982448,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.77,
+        "hardware_accuracy": 0.67,
+        "accuracy_loss": 0.09999999999999998,
+        "absolute_accuracy_change": 0.09999999999999998,
+        "hardware_disagreement_rate": 0.18,
+        "source_emulator_disagreement": 0.33,
+        "source_hardware_disagreement": 0.25
+      },
+      {
+        "seed": 3141,
+        "variant": "reset_repaired",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 10,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 771,
+        "semantic_upper": 0.19131675264978026,
+        "conformance_upper": 0.9262671755057137,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.77,
+        "hardware_accuracy": 0.75,
+        "accuracy_loss": 0.020000000000000018,
+        "absolute_accuracy_change": 0.020000000000000018,
+        "hardware_disagreement_rate": 0.1,
+        "source_emulator_disagreement": 0.08,
+        "source_hardware_disagreement": 0.16
+      },
+      {
+        "seed": 5772,
+        "variant": "original",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 13,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 774,
+        "semantic_upper": 0.323093470111805,
+        "conformance_upper": 0.9292237705935966,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.73,
+        "hardware_accuracy": 0.58,
+        "accuracy_loss": 0.15000000000000002,
+        "absolute_accuracy_change": 0.15000000000000002,
+        "hardware_disagreement_rate": 0.13,
+        "source_emulator_disagreement": 0.3,
+        "source_hardware_disagreement": 0.29
+      },
+      {
+        "seed": 5772,
+        "variant": "reset_repaired",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 8,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 769,
+        "semantic_upper": 0.21795364468099465,
+        "conformance_upper": 0.9242896582568869,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.73,
+        "hardware_accuracy": 0.69,
+        "accuracy_loss": 0.040000000000000036,
+        "absolute_accuracy_change": 0.040000000000000036,
+        "hardware_disagreement_rate": 0.08,
+        "source_emulator_disagreement": 0.2,
+        "source_hardware_disagreement": 0.15
+      },
+      {
+        "seed": 8119,
+        "variant": "original",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 9,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 770,
+        "semantic_upper": 0.2925449236955727,
+        "conformance_upper": 0.9252790497085157,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.74,
+        "hardware_accuracy": 0.69,
+        "accuracy_loss": 0.050000000000000044,
+        "absolute_accuracy_change": 0.050000000000000044,
+        "hardware_disagreement_rate": 0.09,
+        "source_emulator_disagreement": 0.24,
+        "source_hardware_disagreement": 0.26
+      },
+      {
+        "seed": 8119,
+        "variant": "reset_repaired",
+        "observed_pairs": 100,
+        "planned_pairs": 861,
+        "observed_hardware_disagreements": 9,
+        "unresolved_pairs": 761,
+        "bound_failure_count": 770,
+        "semantic_upper": 0.20150280796041453,
+        "conformance_upper": 0.9252790497085157,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.74,
+        "hardware_accuracy": 0.72,
+        "accuracy_loss": 0.020000000000000018,
+        "absolute_accuracy_change": 0.020000000000000018,
+        "hardware_disagreement_rate": 0.09,
+        "source_emulator_disagreement": 0.12,
+        "source_hardware_disagreement": 0.13
+      }
+    ],
+    "measured_seed_means": {
+      "original": {
+        "source_accuracy": 0.734,
+        "hardware_accuracy": 0.628,
+        "accuracy_loss": 0.10600000000000001,
+        "absolute_accuracy_change": 0.10600000000000001,
+        "hardware_disagreement_rate": 0.142,
+        "source_emulator_disagreement": 0.3,
+        "source_hardware_disagreement": 0.292,
+        "semantic_upper": 0.3372985044167384,
+        "conformance_upper": 0.9303950283384396,
+        "total_upper": 1.0,
+        "seeds": [
+          1701,
+          2718,
+          3141,
+          5772,
+          8119
+        ],
+        "samples_per_seed": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ]
+      },
+      "reset_repaired": {
+        "source_accuracy": 0.734,
+        "hardware_accuracy": 0.724,
+        "accuracy_loss": 0.010000000000000009,
+        "absolute_accuracy_change": 0.02200000000000002,
+        "hardware_disagreement_rate": 0.10400000000000001,
+        "source_emulator_disagreement": 0.14,
+        "source_hardware_disagreement": 0.14600000000000002,
+        "semantic_upper": 0.2075649650075703,
+        "conformance_upper": 0.9266598418748331,
+        "total_upper": 1.0,
+        "seeds": [
+          1701,
+          2718,
+          3141,
+          5772,
+          8119
+        ],
+        "samples_per_seed": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ]
+      }
+    },
+    "execution_profile": {
+      "dataset": {
+        "dataset": "SHD",
+        "split": "held-out-test-canary",
+        "labels_included": false,
+        "time_bins": 50,
+        "input_channels": 700,
+        "bit_order": "little",
+        "selection_seed": 20260912
+      },
+      "inputs_file": "canary_inputs.npz",
+      "sample_range": [
+        0,
+        100
+      ],
+      "seeds": [
+        1701,
+        2718,
+        3141,
+        5772,
+        8119
+      ],
+      "variants": [
+        "original",
+        "reset_repaired"
+      ],
+      "conditions": 10,
+      "mapping": {
+        "version": "SpiNNaker1Mapping/v1",
+        "neuron": "IF_curr_delta",
+        "integration_mapping": "match_source_euler",
+        "timestep_ms": 1.0,
+        "reset": "to_value",
+        "threshold": "post-integration >=",
+        "refractory_ms": 0.0,
+        "projection_delay_steps": 1,
+        "weight_orientation": "source,destination",
+        "signed_weights": "positive excitatory, absolute negative inhibitory",
+        "voltage_recording": "pre-update",
+        "emulator_precision": "float64 ideal mapped dynamics, not bit-accurate",
+        "readout": "host sum of recorded hidden spikes times original output weights"
+      },
+      "time_scale_factor": 100,
+      "input_offset_steps": 2,
+      "source_neurons_per_core": 32,
+      "hidden_neurons_per_core": 32,
+      "incoming_spike_buffer_size": 2048,
+      "execution_profile": "aligned_reset_reuse",
+      "sampling": "one unique input per reset execution, shared across conditions",
+      "independence": "Independent inputs and execution-level hardware noise are assumed. Conditions need not be independent.",
+      "repeat_first": false,
+      "host_compatibility": "1!7.4.2 host ragged tick-array indexing and replaced-buffer cache invalidation, no numeric changes",
+      "packages": {
+        "sPyNNaker": "1!7.4.2",
+        "SpiNNFrontEndCommon": "1!7.4.2",
+        "SpiNNMan": "1!7.4.2",
+        "PyNN": "0.12.4",
+        "numpy": "2.3.4"
+      }
+    }
+  },
+  "dvs": {
+    "alpha_per_term": 0.000625,
+    "rows": [
+      {
+        "seed": 1701,
+        "variant": "original",
+        "observed_pairs": 10,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 1,
+        "unresolved_pairs": 150,
+        "bound_failure_count": 151,
+        "semantic_upper": 0.7533893870848143,
+        "conformance_upper": 0.9854164775690986,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.9,
+        "hardware_accuracy": 0.5,
+        "accuracy_loss": 0.4,
+        "absolute_accuracy_change": 0.4,
+        "hardware_disagreement_rate": 0.1,
+        "source_emulator_disagreement": 0.5,
+        "source_hardware_disagreement": 0.4
+      },
+      {
+        "seed": 1701,
+        "variant": "floor_repaired",
+        "observed_pairs": 10,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 150,
+        "bound_failure_count": 150,
+        "semantic_upper": 0.27188854484360603,
+        "conformance_upper": 0.9822788178216602,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        },
+        "source_accuracy": 0.9,
+        "hardware_accuracy": 0.9,
+        "accuracy_loss": 0.0,
+        "absolute_accuracy_change": 0.0,
+        "hardware_disagreement_rate": 0.0,
+        "source_emulator_disagreement": 0.0,
+        "source_hardware_disagreement": 0.0
+      },
+      {
+        "seed": 2718,
+        "variant": "original",
+        "observed_pairs": 0,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 160,
+        "bound_failure_count": 160,
+        "semantic_upper": 0.8179075095134254,
+        "conformance_upper": 1.0,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        }
+      },
+      {
+        "seed": 2718,
+        "variant": "floor_repaired",
+        "observed_pairs": 0,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 160,
+        "bound_failure_count": 160,
+        "semantic_upper": 0.329790463116882,
+        "conformance_upper": 1.0,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        }
+      },
+      {
+        "seed": 3141,
+        "variant": "original",
+        "observed_pairs": 0,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 160,
+        "bound_failure_count": 160,
+        "semantic_upper": 0.8991006034125384,
+        "conformance_upper": 1.0,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        }
+      },
+      {
+        "seed": 3141,
+        "variant": "floor_repaired",
+        "observed_pairs": 0,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 160,
+        "bound_failure_count": 160,
+        "semantic_upper": 0.4166658600978558,
+        "conformance_upper": 1.0,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        }
+      },
+      {
+        "seed": 5772,
+        "variant": "original",
+        "observed_pairs": 0,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 160,
+        "bound_failure_count": 160,
+        "semantic_upper": 0.8779645514083285,
+        "conformance_upper": 1.0,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        }
+      },
+      {
+        "seed": 5772,
+        "variant": "floor_repaired",
+        "observed_pairs": 0,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 160,
+        "bound_failure_count": 160,
+        "semantic_upper": 0.29545802692461376,
+        "conformance_upper": 1.0,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        }
+      },
+      {
+        "seed": 8119,
+        "variant": "original",
+        "observed_pairs": 0,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 160,
+        "bound_failure_count": 160,
+        "semantic_upper": 0.8634236506535888,
+        "conformance_upper": 1.0,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        }
+      },
+      {
+        "seed": 8119,
+        "variant": "floor_repaired",
+        "observed_pairs": 0,
+        "planned_pairs": 160,
+        "observed_hardware_disagreements": 0,
+        "unresolved_pairs": 160,
+        "bound_failure_count": 160,
+        "semantic_upper": 0.35209256255772026,
+        "conformance_upper": 1.0,
+        "total_upper": 1.0,
+        "verdicts": {
+          "0.01": "reject",
+          "0.02": "reject",
+          "0.05": "reject"
+        }
+      }
+    ],
+    "measured_seed_means": {
+      "original": {
+        "source_accuracy": 0.9,
+        "hardware_accuracy": 0.5,
+        "accuracy_loss": 0.4,
+        "absolute_accuracy_change": 0.4,
+        "hardware_disagreement_rate": 0.1,
+        "source_emulator_disagreement": 0.5,
+        "source_hardware_disagreement": 0.4,
+        "semantic_upper": 0.7533893870848143,
+        "conformance_upper": 0.9854164775690986,
+        "total_upper": 1.0,
+        "seeds": [
+          1701
+        ],
+        "samples_per_seed": [
+          10
+        ]
+      },
+      "floor_repaired": {
+        "source_accuracy": 0.9,
+        "hardware_accuracy": 0.9,
+        "accuracy_loss": 0.0,
+        "absolute_accuracy_change": 0.0,
+        "hardware_disagreement_rate": 0.0,
+        "source_emulator_disagreement": 0.0,
+        "source_hardware_disagreement": 0.0,
+        "semantic_upper": 0.27188854484360603,
+        "conformance_upper": 0.9822788178216602,
+        "total_upper": 1.0,
+        "seeds": [
+          1701
+        ],
+        "samples_per_seed": [
+          10
+        ]
+      }
+    },
+    "execution_profile": {
+      "seed": 1701,
+      "variants": [
+        "original",
+        "floor_repaired"
+      ],
+      "input_metadata": {
+        "dataset": "DVS Gesture",
+        "split": "held-out-test-canary",
+        "labels_included": false,
+        "selection_seed": 20260914,
+        "layout": "sample,window,time,packed-CHW",
+        "preprocessing": {
+          "binary_frames": true,
+          "polarities": 2,
+          "schema_version": "DVSGesturePreprocess/v2",
+          "sensor_height": 32,
+          "sensor_width": 32,
+          "source_height": 128,
+          "source_width": 128,
+          "time_bins": 60,
+          "window_microseconds": 1500000,
+          "window_position": "uniform",
+          "windows_per_sample": 4
+        }
+      },
+      "start": 0,
+      "count": 10,
+      "windows": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "mapping": {
+        "version": "SpiNNaker1DVSMapping/v1",
+        "neuron": "IF_curr_delta",
+        "timestep_ms": 1.0,
+        "integration": "Euler-matched exponential leak",
+        "reset": "to_value_zero",
+        "threshold": "post-integration >=",
+        "refractory_ms": 0,
+        "weights": "signed 8-bit floor-rounded, 6 fractional bits",
+        "clocked_bias": "signed 16-bit floor-rounded, 8 fractional bits",
+        "state": "native device arithmetic, ideal float64 emulator",
+        "source_offset_steps": 2,
+        "conv1_latency_steps": 1,
+        "conv2_latency_steps": 2,
+        "hidden_latency_steps": 3,
+        "recurrent_delay_steps": 1,
+        "readout": "host linear readout using the same quantized output weights",
+        "aggregation": "original checkpoint mean-window softmax at its saved temperature",
+        "scope": "This is not the FPGA floor-rounded Q16-state executor. Its semantic and conformance terms must be measured separately."
+      },
+      "time_scale_factor": 100,
+      "conv_neurons_per_core": 128,
+      "hidden_neurons_per_core": 32,
+      "source_neurons_per_core": 32,
+      "host_compatibility": "1!7.4.2 host ragged tick-array indexing and replaced-buffer cache invalidation, no numeric changes",
+      "memory_transfer": {
+        "name": "bounded_proxy_memory_writes",
+        "max_payload_bytes": 262144,
+        "effect": "Contiguous byte-identical writes through the installed transceiver"
+      },
+      "execution_profile": "aligned_reset_reuse",
+      "recording_layers": "hidden",
+      "spike_reader": "numpy-current",
+      "observation": "One complete four-window recording per condition, never count individual windows as independent inputs.",
+      "packages": {
+        "sPyNNaker": "1!7.4.2",
+        "SpiNNFrontEndCommon": "1!7.4.2",
+        "SpiNNMan": "1!7.4.2",
+        "PyNN": "0.12.4",
+        "numpy": "2.3.4"
+      }
+    }
+  }
+}

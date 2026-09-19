@@ -260,6 +260,27 @@ def verify_sample_complexity() -> None:
         raise AssertionError("sample-complexity values do not match the manuscript")
 
 
+def verify_table_v_spinnaker() -> None:
+    report = load("results/spinnaker1_retained/summary.json")
+    metrics = (
+        "absolute_accuracy_change", "hardware_disagreement_rate",
+        "semantic_upper", "conformance_upper", "total_upper",
+    )
+    expected = {
+        "shd": ((10.6, 14.2, 33.7, 93.0, 100.0), (2.2, 10.4, 20.8, 92.7, 100.0)),
+        "dvs": ((40.0, 10.0, 75.3, 98.5, 100.0), (0.0, 0.0, 27.2, 98.2, 100.0)),
+    }
+    for task, targets in expected.items():
+        repaired = "reset_repaired" if task == "shd" else "floor_repaired"
+        for variant, target in zip(("original", repaired), targets):
+            means = report[task]["measured_seed_means"][variant]
+            actual = tuple(point(means[metric]) for metric in metrics)
+            if actual != target:
+                raise AssertionError(
+                    f"Table V SpiNNaker {task} {variant}: expected {target}, observed {actual}"
+                )
+
+
 def main() -> None:
     verify_result_inventory()
     verify_table_i()
@@ -268,8 +289,9 @@ def main() -> None:
     verify_table_iii()
     verify_table_iv()
     verify_sample_complexity()
+    verify_table_v_spinnaker()
     print("Verified final PINES artifacts for Tables I-IV and Figure 2.")
-    print("Table V remains pending physical-backend evidence.")
+    print("Verified retained SpiNNaker measurements and unresolved-pair bounds for Table V.")
 
 
 if __name__ == "__main__":
