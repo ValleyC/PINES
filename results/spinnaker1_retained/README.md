@@ -2,9 +2,9 @@
 
 These files support the SpiNNaker rows of manuscript Table V:
 
-- SHD job 420693: first 100 canary inputs, five seeds, original/repaired models,
+- SHD primary batch: first 100 canary inputs, five seeds, original/repaired models,
   1,000 recording-condition predictions.
-- DVS job 420695: first ten four-window recordings, seed 1701, original/repaired
+- DVS primary batch: first ten four-window recordings, seed 1701, original/repaired
   models, 20 recording-condition predictions.
 
 Every retained primary observation is included. The older SHD 75-input capture,

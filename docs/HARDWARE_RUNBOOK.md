@@ -1,59 +1,55 @@
-# Physical backend runbook
+# Hardware evaluation
 
-## Shared preflight
+## Common procedure
 
-1. Freeze the checkpoint, sample IDs, execution mapping, adapter version, and
-   protocol. Include the NIR graph when that conversion route is used.
-2. Execute the scalar/vector differential suite and backend emulator on the
-   exact samples.
-3. Record device serial, firmware, bitstream where applicable, conversion
-   parameters, random seeds, and clock/timestep configuration.
-4. Assign each primary input one independent hardware run pair ID.
-5. Save raw spikes, predictions, and diagnostic state when available. Record the
-   capture filename in the run manifest.
+1. Freeze the model parameters, input IDs, execution mapping and run settings.
+2. Check the target against the supplied software oracle and development traces.
+3. Record the backend, tool/runtime versions, clock and logical timestep.
+4. Run one primary execution per canary input, resetting model state between inputs.
+5. Preserve captured predictions and available spikes, logits and raw traces.
+6. Align predictions by sample ID, compute emulator-device disagreement and
+   combine it with the separate source-emulator semantic bound.
+7. Use ground truth only for post-capture accuracy evaluation. Keep repeated
+   executions separate from the primary population sample.
 
 ## SpiNNaker-1 through EBRAINS
 
-The current physical path uses PyNN and native SpiNNaker-1 neurons, not the
-SpiNNaker2 NIR converter. Preserve the explicit weight orientation, bias clock,
-Euler-matched leak and spike-delivery alignment recorded in the run configuration.
-SHD executes recurrence on the device with a host readout. DVS additionally
-executes both convolutions on the device and retains host window aggregation.
+The supplied path uses PyNN and native SpiNNaker-1 neurons, not the SpiNNaker2
+NIR converter. The [SHD guide](SPINNAKER1_EXPERIMENT.md) and
+[DVS guide](SPINNAKER1_DVS_EXPERIMENT.md) specify weight orientation, neuron
+parameters, delays, loading/reset profiles and host readouts.
 
-Use [`SPINNAKER1_EXPERIMENT.md`](SPINNAKER1_EXPERIMENT.md) for the frozen SHD
-campaign and [`SPINNAKER1_DVS_EXPERIMENT.md`](SPINNAKER1_DVS_EXPERIMENT.md) for
-DVS mapping and development. These physical mappings have their own semantic
-audits. Software bounds for the FPGA target are not substituted for them.
+The [retained measurements](../results/spinnaker1_retained/README.md) include
+recorded logits, hidden spikes and paired predictions. Planned observations
+without returned captures are unresolved in the reported population bound.
+Complete-campaign analyzers and partial-capture accounting remain separate.
 
-## Virtex-7
+## FPGA mapping and Zynq-7000 captures
 
-Generate a synthesis configuration from the exact semantics JSON. Verify every
-neuron transition against the bit-accurate Python oracle and cocotb, then run
-bounded reset/overflow properties. Store synthesis reports, tool versions,
-constraints, firmware version, bitstream filename, board serial, raw UART/PCIe traces, and
-clock settings.
+For SHD, use the parameters from `hardware/bundles/shd_floor_q8q16_v1/` with
+the held-out inputs from `hardware/bundles/shd_virtex7_canary_v2/`. The earlier
+training-pool input batch is separate from these 861 test-pool canaries.
 
-The frozen SHD parameter handoff is under
-`hardware/bundles/shd_floor_q8q16_v1`. Its earlier inputs and supplied batch CSVs
-remain RTL simulation evidence. For the paper's held-out physical comparison,
-use `hardware/bundles/shd_virtex7_canary_v2` with those same parameter files.
-Run all 861 canary inputs for five seeds and both repair states. Compare against
-the integer-emulator predictions in `golden_canary.npz`. The new disjoint
-semantic audit and canary use the same held-out population as SpiNNaker-1.
+For DVS, use `hardware/bundles/dvs_floor_q8q16_v1/`. It includes both
+convolutional layers, recurrence, the integer readout, 104 audit recordings
+and 160 canary recordings. Its README defines every memory layout and update.
 
-The checked-in `rtl/` contains semantic unit-test cores, not a complete SHD or
-DVS accelerator. Full-model simulation outputs do not establish physical-board
-execution. The board implementation, build files, raw captures and configuration
-remain part of the physical evidence needed from the hardware operator.
+The integer mapping is board-independent. Historical `virtex7` paths are
+retained to keep scripts and frozen artifacts compatible. Actual supplied
+Zynq-7000 CSVs are catalogued in [results/zynq_shd](../results/zynq_shd/README.md).
+Capture metadata must identify the board actually used, not the historical
+directory name. The legacy full SHD analyzer expects its `virtex7` manifest
+value, so its backend field must be adapted before using it for a new board.
 
-## Analysis
+The checked-in RTL contains semantic unit-test cores, not a complete SHD/DVS
+accelerator. Keep full-model RTL simulation, synthesis and physical-board
+measurements distinct. Preserve tool versions, constraints, bitstream filename,
+clock settings and raw board traces alongside each acquisition.
 
-Align captured predictions by sample ID and keep one primary hardware execution
-per input. Compute emulator-device disagreement on the canary, combine it with
-the separate semantic term, then evaluate accuracy with labels. Preserve raw
-traces, mapping details and implementation versions so readers can interpret the
-result. Repeated executions describe variability and do not enlarge the primary
-sample count. Incomplete captures provide progress and diagnostics only.
+## Evaluate accuracy change
 
-The Virtex-7 SHD analyzer is `experiments/analyze_virtex7_shd.py`. Its input
-directory layout and command are documented in the held-out canary bundle.
+[hardware/evaluation](../hardware/evaluation/README.md) provides complete canary
+ground truth, frozen source predictions and a NumPy-only delta A calculator.
+It accepts class-prediction CSVs or NumPy captures without requiring a board
+manifest. For DVS, first aggregate the four window logits with
+`experiments/analyze_dvs_fpga_capture.py`.

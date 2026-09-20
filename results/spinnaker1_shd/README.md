@@ -10,6 +10,6 @@ ground-truth labels. Array names identify the seed, split and model variant.
 
 The original/repaired five-seed mean semantic bounds are approximately
 33.7/20.8 percentage points. These are not accuracy measurements or physical
-total bounds. The full physical canary campaign is still running. Its completed
-analysis will be added here without substituting development captures for
-the primary inputs.
+total bounds. The recorded primary observations and their unresolved-pair
+physical bounds are in [spinnaker1_retained](../spinnaker1_retained/README.md).
+That archive states the exact returned sample count for each condition.

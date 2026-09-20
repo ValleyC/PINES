@@ -1,5 +1,5 @@
 {
-  "code_revision": "7a3614ba6defa02c7e270f07acdff68d6c64622d",
+  "code_revision": "review-revision-009",
   "condition": "floor_rounding_saturation",
   "formulation_assessment": "Restricted label-free calibration clears 70 percent recovery for every seed and beats logit-only in 4/5 paired seeds. Its mean recovery is 5.6 points higher, while its audit bound is 2.3 points looser. Labeled QAT has the strongest mean recovery when included. The task-tuned objective supports a distinct recovery advantage, but not universal bound dominance or a five-point certificate. This remains development rather than sequestered evidence.",
   "gate_assessment": {

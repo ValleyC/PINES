@@ -1,7 +1,7 @@
 {
   "audit_samples_per_seed": 104,
   "cells": 50,
-  "code_revision": "14f487ee29d43a17a7df9deac504890840af4089",
+  "code_revision": "review-revision-002",
   "conditions_with_mean_loss_over_five_points": 2,
   "decision_metrics": {
     "0.01": {

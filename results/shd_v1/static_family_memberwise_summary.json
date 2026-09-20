@@ -1,6 +1,6 @@
 {
   "audit_samples_per_seed": 861,
-  "code_revision": "33043d0dcc76eba847830d4e2b40aa4c87358747",
+  "code_revision": "review-revision-005",
   "formulation_assessment": "The declared 20-percent static-coverage gate passes for the finite 16-member discrete SHD family once mutually exclusive semantics are certified separately. This reverses the earlier interval-gate failure, which was caused by cross-member logit mixing. It does not resolve the loose distribution certificate, continuous semantic ranges, or physical emulator-to-hardware conformance.",
   "full_family_per_seed_certified_fraction": {
     "1701": 0.38443670150987225,

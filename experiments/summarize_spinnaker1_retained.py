@@ -163,7 +163,7 @@ def main():
     root=Path(__file__).resolve().parents[1]
     args.output.mkdir(parents=True,exist_ok=True)
     report=dict(status="retained_primary_measurements_with_unresolved_pair_bounds",
-        completed_jobs=dict(shd=420693,dvs=420695),
+        completed_jobs=dict(shd="shd-primary",dvs="dvs-primary"),
         selection="All returned observations from the two completed aligned-reset primary jobs. No outcome filtering.",
         sampling="Completed batches are prefixes of dataset-index-sorted canary sets, not independently sampled smaller audits.",
         confidence=.95,paper_cells=40,alpha_per_term=.05/80,

@@ -1,8 +1,8 @@
 {
   "status": "retained_primary_measurements_with_unresolved_pair_bounds",
   "completed_jobs": {
-    "shd": 420693,
-    "dvs": 420695
+    "shd": "shd-primary",
+    "dvs": "dvs-primary"
   },
   "selection": "All returned observations from the two completed aligned-reset primary jobs. No outcome filtering.",
   "sampling": "Completed batches are prefixes of dataset-index-sorted canary sets, not independently sampled smaller audits.",

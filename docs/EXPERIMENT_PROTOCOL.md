@@ -1,39 +1,50 @@
-# Frozen evaluation protocol v1
+# Evaluation protocol
 
-The machine-readable authority is `configs/protocol_v1.json`. Changes after the
-first physical run require a new protocol version and must be reported.
+`configs/protocol_v1.json` records the original study design. Per-study configs,
+result summaries and frozen sample IDs specify the executed experiments.
+Existing partition salts, seeds and filenames are retained unchanged.
 
 ## Tasks and partitions
 
-- SHD recurrent SNN and DVS Gesture convolutional/recurrent SNN are primary.
-- N-MNIST feedforward SNN is a transport-robust negative control.
-- SSC begins only after every primary gate passes.
-- The canonical training partition is reproducibly split into 80%
-  training, 10% label-free repair calibration, and 10% unlabeled certificate
-  audit. The canonical labeled test split remains sequestered evaluation.
-- All five training seeds use identical sample IDs and semantic conditions.
+- SHD: 700 input channels and 128 recurrent neurons, 50 binary steps.
+- DVS Gesture: two convolutional layers and 256 recurrent neurons, four
+  60-step windows per recording.
+- N-MNIST: 128 feedforward neurons, 30 steps, used as a transport-robust control.
+- Five training seeds: 1701, 2718, 3141, 5772 and 8119.
 
-Labels are inaccessible to repair and certification code paths. Repair choices
-are made only on calibration IDs. Every selected repair is re-certified on audit
-IDs that are checked disjoint at runtime. Labeled evaluation is read only after
-the model, repair, certificate decision, and costs have been frozen.
+Software training/repair/audit splits follow the frozen 80/10/10 allocation.
+Per-seed audit sizes are 861/104/6,005 for SHD/DVS/N-MNIST. SHD and DVS repair
+sets contain 800/97 unlabeled inputs and remain disjoint from their audit sets.
+N-MNIST is not repaired. Physical semantic audits and canaries use separate
+held-out test-pool splits specified by each backend bundle.
+
+SHD/N-MNIST test labels are reserved for evaluation. DVS and repair comparisons
+are marked as development evidence in the manuscript. DVS test performance
+informed source-pipeline development. Labels are not used by the label-free
+repair or certificate calculation. Supervised baselines report their label use.
 
 ## Conditions and comparisons
 
-Single axes cover reset, integration, threshold timing, precision,
-rounding/saturation, and one-step delay. Four high-risk combinations are frozen
-in the protocol. Every method receives matched calibration examples, label
-counts, optimization evaluations, wall-clock allowance, and reported hardware
-runs.
+Ten fixed targets vary integration, threshold timing, reset, finite precision,
+rounding/saturation and delay individually or jointly. Finite-family analysis
+covers 16 combinations. The continuous SHD study varies timestep and threshold
+under reset-to-value, with fixed proof budgets and explicit unresolved outcomes.
 
-Baselines are no repair, PTQ, global threshold scaling, per-platform QAT,
-logit-only distillation, and fully supervised target retraining. Stage-2
-per-neuron label-free calibration is primary; any few-shot stage reports its
-nonzero label count.
+Repair baselines include no repair/PTQ, global threshold scaling, logit-only
+distillation, target QAT and few-shot training from random initialization.
+Gradient methods use 280 updates with the samples, labels and trainable
+parameters recorded in their retained summaries.
 
-## Outputs
+## Outputs and interpretation
 
-Each cell records actual absolute accuracy change, total upper bound, slack,
-static certified fraction, emulator/hardware disagreement, 1/2/5-point
-accept/reject decisions, repair recovery, labels, runtime, hardware runs, and
-all source files and versions. Causal single-axis results precede combination results.
+Each experiment reports accuracy change, prediction disagreement and the
+applicable upper bound. Family studies additionally report certified, falsified
+and unresolved inputs. Repair studies report recovery, post-repair bounds,
+labels and optimization cost. Physical studies add measured emulator-device
+mismatch and retain captured observations separately from emulator outputs.
+
+The decision budgets are one, two and five percentage points. Confidence
+allocation is specified for each experiment, including `0.05/(2*40)` per
+physical term. In the retained partial SpiNNaker batches, unreturned planned
+pairs count as unresolved disagreements. Repeats characterize variability
+and do not enlarge the primary population sample.

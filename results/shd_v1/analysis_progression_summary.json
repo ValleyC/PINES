@@ -1,5 +1,5 @@
 {
-  "code_revision": "c837ab82d7de0682be859a122d43e3b615b290a0",
+  "code_revision": "review-revision-014",
   "contract": "reset-to-value with joint plus/minus one-percent timestep and threshold ranges",
   "dataset_index": 6,
   "interpretation": "Shared affine boxes preserve semantic dependence but leave guard ambiguity. Polygonal cuts close most of the parameter area. Exact local enumeration of the remaining guard branches completes the certificate for the same input and contract.",

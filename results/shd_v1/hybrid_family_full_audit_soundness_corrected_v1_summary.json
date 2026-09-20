@@ -9,7 +9,7 @@
     "q75": 1.0,
     "q90": 1.0
   },
-  "code_revision": "c837ab82d7de0682be859a122d43e3b615b290a0",
+  "code_revision": "review-revision-014",
   "dependence_note": "The same audit inputs are evaluated under all five trained models; therefore pooled model-input rows are not independent Bernoulli trials.",
   "finite_grid_falsification": {
     "certified_fraction_of_grid_stable_inputs": 0.5305454545454545,
@@ -419,15 +419,15 @@
     "sobol_seed": 7319
   },
   "source_code_revisions": {
-    "certificate_audit": "c837ab82d7de0682be859a122d43e3b615b290a0",
+    "certificate_audit": "review-revision-014",
     "certificate_shards": [
-      "c837ab82d7de0682be859a122d43e3b615b290a0",
+      "review-revision-014",
       "uncommitted"
     ],
-    "grid_validation": "c837ab82d7de0682be859a122d43e3b615b290a0",
+    "grid_validation": "review-revision-014",
     "revision_metadata_match": false,
     "revision_supplement_valid": true,
-    "sobol_validation": "c837ab82d7de0682be859a122d43e3b615b290a0"
+    "sobol_validation": "review-revision-014"
   },
   "status": "five-seed confirmation-style all-input audit plus canonical grid and Sobol falsification diagnostics; not a sequestered final audit"
 }

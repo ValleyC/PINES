@@ -11,7 +11,7 @@
     0.28807845793944453,
     0.4421183265419606
   ],
-  "code_revision": "078519b6bb998c768fa400f303b28f1b190f725a",
+  "code_revision": "review-revision-001",
   "finite_grid_falsification": {
     "certified_fraction_of_grid_stable_inputs": 0.5178571428571429,
     "certified_grid_violation_count": 0,
@@ -99,8 +99,8 @@
   },
   "seed_count": 5,
   "source_code_revisions": {
-    "certificate_audit": "d68168ceb1cce1d7026706f1d7820a94de6d26f8",
-    "grid_validation": "d68168ceb1cce1d7026706f1d7820a94de6d26f8"
+    "certificate_audit": "review-revision-015",
+    "grid_validation": "review-revision-015"
   },
   "status": "frozen five-seed screen plus independent finite-grid falsification; the screen passed and triggered the separately frozen full audit"
 }

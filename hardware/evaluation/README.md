@@ -48,7 +48,8 @@ python experiments/evaluate_fpga_delta_a.py --task shd --seed 1701 --variant unr
 
 Alternatively, provide a CSV with `sample_id,prediction` or
 `sample_index,prediction`. The evaluator also accepts `hardware_prediction`
-and `rtl_prediction` column names. Index-only files must follow the exact
+and `rtl_prediction` column names, as well as the uploaded `device_prediction`
+format. Index-only files must follow the exact
 canary input order above. It never substitutes golden predictions for captured
 predictions. Keep results from RTL simulation and physical boards separate.
 

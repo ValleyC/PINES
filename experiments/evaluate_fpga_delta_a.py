@@ -29,10 +29,10 @@ def read_predictions(path: Path, expected_ids: np.ndarray):
             raise ValueError("No predictions in capture")
         if "window_index" in rows[0]:
             raise ValueError("Aggregate DVS window logits with analyze_dvs_fpga_capture.py first")
-        prediction_key = next((key for key in ("prediction", "hardware_prediction", "rtl_prediction")
+        prediction_key = next((key for key in ("prediction", "hardware_prediction", "device_prediction", "rtl_prediction")
                                if key in rows[0]), None)
         if prediction_key is None:
-            raise ValueError("CSV needs a prediction, hardware_prediction or rtl_prediction column")
+            raise ValueError("CSV needs a prediction, hardware_prediction, device_prediction or rtl_prediction column")
         if "sample_id" in rows[0]:
             ids = np.asarray([row["sample_id"] for row in rows])
         else:

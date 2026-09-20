@@ -24,6 +24,7 @@ rows. Reported manuscript values are rounded from these artifacts.
 | Table V, SpiNNaker-1 DVS semantic term | `spinnaker1_dvs/semantic_audit.json`, `spinnaker1_dvs/paired_predictions.npz` |
 | Table V, retained SpiNNaker physical observations | `spinnaker1_retained/observations.csv`, `spinnaker1_retained/summary.json`, captured trace archives |
 | Table V, Virtex-7 SHD semantic term | `virtex7_shd/semantic_audit.json`, `virtex7_shd/paired_predictions.npz` |
+| Supplied Zynq-7000 SHD capture inventory | `zynq_shd/README.md`, four held-out canary CSVs and a separate earlier-batch CSV |
 
 The finite-family source aggregates are retained beside each dataset. The SHD
 continuous audit also retains its frozen screening summary because the final
@@ -38,7 +39,9 @@ the recorded inputs. See `spinnaker1_retained/README.md` for sample counts,
 per-seed aggregation and the reproducible calculation.
 The older interrupted 75-input SHD run is separate from the current campaign.
 The supplied FPGA simulation results are in `shd_rtl/` and do not replace
-physical Virtex-7 measurements.
+physical-board measurements. The separate supplied Zynq CSVs are catalogued in
+[`zynq_shd/README.md`](zynq_shd/README.md). Historical `virtex7` paths below
+identify the frozen integer mapping and are retained for compatibility.
 
 The corresponding held-out SHD integer-FPGA audit is in
 `virtex7_shd/semantic_audit.json`, with per-input predictions in the adjacent

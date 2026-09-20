@@ -10,7 +10,7 @@
   "certified_fraction_mean": 0.5769230769230769,
   "certified_fraction_min": 0.4519230769230769,
   "certified_fraction_std": 0.1191299201284987,
-  "code_revision": "c837ab82d7de0682be859a122d43e3b615b290a0",
+  "code_revision": "review-revision-014",
   "elapsed_seconds_mean": 11.255497339999419,
   "elapsed_seconds_total": 56.2774866999971,
   "interpretation": "Exact enumeration proves prediction invariance only for the 16 listed point semantics. It does not cover continuous parameter tolerances or emulator-to-hardware error.",

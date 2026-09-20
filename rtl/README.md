@@ -1,20 +1,19 @@
-# Virtex-7 transport target
+# FPGA semantic reference cores
 
-This RTL is a parameterized semantic unit-test target. `lif_neuron.sv` selects
-integration, threshold timing, reset, signed overflow, and fixed-point
-coefficients at synthesis time. The dense recurrent core adds explicit synaptic
-and output delay stages. It is not the complete 700-input, 20-output SHD
-accelerator described by `hardware/bundles/shd_floor_q8q16_v1/README.md`.
+The checked-in RTL implements parameterized execution-semantics test cores.
+`lif_neuron.sv` selects integration, threshold timing, reset, signed overflow
+and fixed-point coefficients. `dense_srnn_core.sv` adds recurrent processing
+and explicit delay stages.
 
-The primary verification path is:
+These modules are not the complete SHD or convolutional DVS accelerator.
+The [hardware runbook](../docs/HARDWARE_RUNBOOK.md) links the full-model data
+handoffs and supplied Zynq-7000 captures. Historical Virtex-7 mapping names
+identify the original interface, not a claim about the board used for a result.
 
-1. generate fixed-point traces from `pines.rtl_reference`;
-2. run the same current/threshold sequence through cocotb;
-3. compare every state and spike transition, not only the final prediction;
-4. run bounded formal properties for overflow and reset invariants;
-5. repeat against captured board traces while recording the bitstream filename.
+Verification proceeds from `pines.rtl_reference` traces to the same RTL current
+sequences, comparing every state and spike. HDL execution requires an installed
+simulator and cocotb. Bounded formal properties and captured board traces are
+additional implementation checks, separate from Python unit tests.
 
-The current checked-in environment has no HDL simulator, so software tests cover
-the bit-accurate oracle while HDL execution remains an explicit hardware gate.
-Before synthesis, the deployment generator must prove that every dense MAC fits
-`STATE_BITS`; `dense_srnn_core.sv` intentionally labels the narrowing point.
+Before synthesis, check that every dense accumulation fits `STATE_BITS`.
+The narrowing point is explicitly marked in `dense_srnn_core.sv`.

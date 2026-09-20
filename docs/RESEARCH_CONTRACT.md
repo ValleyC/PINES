@@ -31,10 +31,10 @@ per sample. Repeats characterize nondeterminism but are secondary.
 ## Certificate hierarchy
 
 1. Structural identity or a proved closed-form mapping.
-2. Static per-input family certification by sound interval propagation with
-   reset branch splitting and merging, a cap-limited path-separated diagnostic,
-   or exhaustive finite-state checking on tiny systems. A cap-limited run is
-   inconclusive, never certified.
+2. Per-input family certification using interval/shared-affine enclosures,
+   polygonal guard refinement and local threshold branches, with exhaustive
+   finite-state checking on tiny systems. Inputs unresolved at the proof budget
+   count as failures, not preservation certificates.
 3. Exact Clopper-Pearson disagreement limits on an untouched unlabeled audit
    split, corrected simultaneously across target family members.
 4. The physical conformance term from a manifest-bound canary capture.

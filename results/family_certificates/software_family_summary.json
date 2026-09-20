@@ -4,7 +4,7 @@
     0.02,
     0.05
   ],
-  "code_revision": "c837ab82d7de0682be859a122d43e3b615b290a0",
+  "code_revision": "review-revision-014",
   "confidence": 0.95,
   "interpretation": "Finite families are exactly enumerated. The continuous SHD row counts every unresolved input as a possible disagreement, so its population bound remains sound even when the analyzer is incomplete.",
   "per_cell_alpha": 0.0025,

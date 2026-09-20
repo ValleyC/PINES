@@ -68,6 +68,9 @@ def test_csv_adapter_and_window_rejection(tmp_path):
     capture.write_text("sample_index,rtl_prediction\n1,0\n0,1\n")
     ids, predictions = read_predictions(capture, np.array(["a", "b"]))
     assert ids.tolist() == ["b", "a"] and predictions.tolist() == [0, 1]
+    capture.write_text("sample_id,device_prediction\na,1\nb,0\n")
+    ids, predictions = read_predictions(capture, np.array(["a", "b"]))
+    assert ids.tolist() == ["a", "b"] and predictions.tolist() == [1, 0]
     capture.write_text("sample_index,window_index,prediction\n0,0,1\n")
     with pytest.raises(ValueError, match="Aggregate DVS"):
         read_predictions(capture, np.array(["a", "b"]))
