@@ -37,6 +37,10 @@ sampled post-repair diagnostic.
 
 ## Verification
 
+- `export_fpga_evaluation_labels.py` exports canary ground truth and frozen
+  source predictions to `hardware/evaluation/`.
+- `evaluate_fpga_delta_a.py` computes both accuracies and signed/absolute
+  accuracy change from completed SHD or DVS recording predictions.
 - `verify_manuscript_results.py` checks the rounded
   values used in the manuscript.
 - `verify_repair_evidence.py` checks repair artifact identity and method

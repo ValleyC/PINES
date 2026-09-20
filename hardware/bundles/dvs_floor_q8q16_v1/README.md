@@ -36,6 +36,9 @@ python experiments/analyze_dvs_fpga_capture.py --seed 1701 --variant unrepaired 
 
 The analyzer computes the host decision and emulator disagreement. It does not
 pretend a partial capture is a complete experiment or calculate labeled accuracy.
+For completed captures, the separate [hardware/evaluation](../../evaluation/README.md)
+folder supplies all 160 aligned canary labels, five-seed source predictions,
+and the command to calculate accuracy and delta A.
 Also retain the bitstream, tool version, board model, clock, run settings and
 whether the CSV came from RTL simulation or a physical board. Hardware clock
 frequency is separate from the 60 logical SNN timesteps.

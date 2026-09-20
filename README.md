@@ -29,6 +29,8 @@ during double-blind review.
 - `hardware/` contains the physical-run manifest instructions.
 - `hardware/bundles/` contains compact, attributed hardware handoff bundles
   for the frozen models and unlabeled canary inputs.
+- [`hardware/evaluation/`](hardware/evaluation/README.md) supplies aligned SHD
+  and DVS canary ground truth, source predictions and post-capture delta A instructions.
 - `tests/` contains unit, differential, statistics, data-layout, and hardware
   arithmetic tests.
 

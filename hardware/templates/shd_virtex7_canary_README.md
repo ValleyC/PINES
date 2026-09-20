@@ -30,6 +30,10 @@ integer-emulator predictions, and final Q16 logits for both target models.
 These are software outputs, not physical board measurements. Ground-truth
 labels are absent.
 
+For completed captures, aligned ground truth and five-seed source predictions
+are available separately in [hardware/evaluation](../../evaluation/README.md).
+That folder includes an accuracy and delta A evaluator.
+
 The separate 861-input semantic audit is in `results/virtex7_shd/` at repository
 root. Both splits come from the held-out SHD test pool and are disjoint. The
 earlier RTL CSVs must not be joined to these different input IDs.
