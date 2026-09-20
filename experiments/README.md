@@ -19,7 +19,10 @@ and `artifacts/` directories. Final aggregate evidence is written to `results/`.
 - Continuous SHD audit: `run_shd_hybrid_family_audit.py`,
   `run_shd_hybrid_family_full_audit.py`, validation scripts, and matching
   aggregators
-- Contract-width figure: `aggregate_shd_hybrid_radius_sweep.py`
+- Contract-width aggregation: `aggregate_shd_hybrid_radius_sweep.py`
+- Figure 2 from frozen results: `python experiments/plot_shd_hybrid_radius_sweep.py`
+  (vector PDF, no experiment rerun). Use `--output` to select the manuscript's
+  `figures/shd_hybrid_radius_sweep.pdf` destination.
 
 ## Analysis progression
 

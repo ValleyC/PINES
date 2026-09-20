@@ -5,10 +5,14 @@ import csv
 import json
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from pines.artifacts import code_revision, file_reference, write_json
+
+if __package__:
+    from .plot_shd_hybrid_radius_sweep import plot_radius_sweep
+else:
+    from plot_shd_hybrid_radius_sweep import plot_radius_sweep
 
 
 def main() -> None:
@@ -175,80 +179,7 @@ def main() -> None:
         "rows_csv_reference": file_reference(rows_path),
         "code_revision": code_revision(root),
     }
-    certified = np.asarray(
-        [float(row["certified_fraction"]) for row in rows]
-    ) * 100.0
-    falsified = np.asarray(
-        [float(row["grid_falsified_fraction"]) for row in rows]
-    ) * 100.0
-    unresolved = np.asarray(
-        [float(row["stable_unresolved_fraction"]) for row in rows]
-    ) * 100.0
-    positions = np.arange(len(rows))
-    labels = [
-        f"$\\pm${float(row['radius_percent']):g}%" for row in rows
-    ]
-    fig, axis = plt.subplots(figsize=(3.45, 1.35), constrained_layout=True)
-    axis.barh(
-        positions,
-        certified,
-        color="#4477AA",
-        edgecolor="white",
-        linewidth=0.4,
-        label="Certified",
-    )
-    axis.barh(
-        positions,
-        falsified,
-        left=certified,
-        color="#CC6677",
-        edgecolor="white",
-        linewidth=0.4,
-        label="Falsified",
-    )
-    axis.barh(
-        positions,
-        unresolved,
-        left=certified + falsified,
-        color="#BBBBBB",
-        edgecolor="white",
-        linewidth=0.4,
-        label="Unresolved",
-    )
-    for row_index, segments in enumerate(
-        zip(certified, falsified, unresolved, strict=True)
-    ):
-        offset = 0.0
-        for value in segments:
-            if value >= 9.0:
-                axis.text(
-                    offset + value / 2.0,
-                    row_index,
-                    f"{value:.1f}",
-                    ha="center",
-                    va="center",
-                    fontsize=6.5,
-                    color="black",
-                )
-            offset += value
-    axis.set_yticks(positions, labels)
-    axis.invert_yaxis()
-    axis.set_xlim(0.0, 100.0)
-    axis.set_xlabel("Audit inputs (%)", fontsize=7.5)
-    axis.tick_params(axis="both", labelsize=7)
-    axis.grid(axis="x", alpha=0.2, linewidth=0.5)
-    axis.set_axisbelow(True)
-    axis.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.20),
-        ncol=3,
-        frameon=False,
-        fontsize=6.8,
-        handlelength=1.2,
-        columnspacing=1.0,
-    )
-    fig.savefig(figure_path, bbox_inches="tight")
-    plt.close(fig)
+    plot_radius_sweep(rows, figure_path)
     write_json(summary_path, summary)
 
 
